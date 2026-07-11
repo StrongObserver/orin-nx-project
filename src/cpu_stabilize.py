@@ -76,18 +76,33 @@ class VPIWarpPerspective:
         return cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
 
 
-def estimate_transform(prev_gray: np.ndarray, curr_gray: np.ndarray):
+def resize_for_estimation(frame_gray: np.ndarray, estimate_scale: float) -> np.ndarray:
+    if estimate_scale <= 0 or estimate_scale > 1:
+        raise ValueError("estimate_scale must be in (0, 1]")
+    if estimate_scale == 1:
+        return frame_gray
+    h, w = frame_gray.shape[:2]
+    scaled_w = max(16, int(round(w * estimate_scale)))
+    scaled_h = max(16, int(round(h * estimate_scale)))
+    return cv2.resize(frame_gray, (scaled_w, scaled_h), interpolation=cv2.INTER_AREA)
+
+
+def estimate_transform(prev_gray: np.ndarray, curr_gray: np.ndarray, estimate_scale: float):
+    prev_est = resize_for_estimation(prev_gray, estimate_scale)
+    curr_est = resize_for_estimation(curr_gray, estimate_scale)
+    min_distance = max(5, int(round(30 * estimate_scale)))
+
     prev_pts = cv2.goodFeaturesToTrack(
-        prev_gray,
+        prev_est,
         maxCorners=200,
         qualityLevel=0.01,
-        minDistance=30,
+        minDistance=min_distance,
         blockSize=3,
     )
     if prev_pts is None or len(prev_pts) < 8:
         return np.array([0.0, 0.0, 0.0], dtype=np.float32), 0
 
-    curr_pts, status, _ = cv2.calcOpticalFlowPyrLK(prev_gray, curr_gray, prev_pts, None)
+    curr_pts, status, _ = cv2.calcOpticalFlowPyrLK(prev_est, curr_est, prev_pts, None)
     if curr_pts is None or status is None:
         return np.array([0.0, 0.0, 0.0], dtype=np.float32), 0
 
@@ -101,8 +116,8 @@ def estimate_transform(prev_gray: np.ndarray, curr_gray: np.ndarray):
     if mat is None:
         return np.array([0.0, 0.0, 0.0], dtype=np.float32), int(len(prev_good))
 
-    dx = mat[0, 2]
-    dy = mat[1, 2]
+    dx = mat[0, 2] / estimate_scale
+    dy = mat[1, 2] / estimate_scale
     da = math.atan2(mat[1, 0], mat[0, 0])
     return np.array([dx, dy, da], dtype=np.float32), int(len(prev_good))
 
@@ -115,6 +130,7 @@ def stabilize_video(
     border_scale: float,
     crop_ratio: float,
     warp_backend: str,
+    estimate_scale: float,
 ):
     cap = cv2.VideoCapture(str(input_path))
     if not cap.isOpened():
@@ -141,7 +157,7 @@ def stabilize_video(
         curr_gray = cv2.cvtColor(curr, cv2.COLOR_BGR2GRAY)
 
         t0 = time.perf_counter()
-        transform, n_features = estimate_transform(prev_gray, curr_gray)
+        transform, n_features = estimate_transform(prev_gray, curr_gray, estimate_scale)
         t1 = time.perf_counter()
 
         transforms.append(transform)
@@ -237,8 +253,19 @@ def stabilize_video(
         "border_scale": border_scale,
         "crop_ratio": crop_ratio,
         "warp_backend": warp_backend,
+        "estimate_scale": estimate_scale,
     }
     return summary
+
+
+def write_summary_csv(summary_path: Path, summary: dict, total_wall_time_s: float):
+    summary_path.parent.mkdir(parents=True, exist_ok=True)
+    row = dict(summary)
+    row["total_wall_time_s"] = f"{total_wall_time_s:.3f}"
+    with summary_path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=list(row.keys()))
+        writer.writeheader()
+        writer.writerow(row)
 
 
 def main():
@@ -249,6 +276,8 @@ def main():
     parser.add_argument("--smoothing-radius", type=int, default=45, help="Moving average radius for trajectory smoothing")
     parser.add_argument("--border-scale", type=float, default=1.00, help="Extra scale before final fixed crop")
     parser.add_argument("--crop-ratio", type=float, default=0.80, help="Fixed center crop ratio, then resize back to original size")
+    parser.add_argument("--estimate-scale", type=float, default=1.0, help="Scale factor for motion estimation; final warp still runs at full resolution")
+    parser.add_argument("--summary", type=Path, default=None, help="Optional one-row summary CSV path")
     parser.add_argument(
         "--warp-backend",
         choices=["opencv_cpu", "vpi_cpu", "vpi_cuda", "vpi_vic"],
@@ -258,13 +287,19 @@ def main():
     args = parser.parse_args()
 
     total_t0 = time.perf_counter()
-    summary = stabilize_video(args.input, args.output, args.metrics, args.smoothing_radius, args.border_scale, args.crop_ratio, args.warp_backend)
+    summary = stabilize_video(args.input, args.output, args.metrics, args.smoothing_radius, args.border_scale, args.crop_ratio, args.warp_backend, args.estimate_scale)
     total_t1 = time.perf_counter()
+    total_wall_time_s = total_t1 - total_t0
+
+    if args.summary is not None:
+        write_summary_csv(args.summary, summary, total_wall_time_s)
 
     print("CPU stabilization baseline finished")
     for key, value in summary.items():
         print(f"{key}: {value}")
-    print(f"total_wall_time_s: {total_t1 - total_t0:.3f}")
+    print(f"total_wall_time_s: {total_wall_time_s:.3f}")
+    if args.summary is not None:
+        print(f"summary: {args.summary}")
 
 
 if __name__ == "__main__":
