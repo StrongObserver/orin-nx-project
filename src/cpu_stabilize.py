@@ -48,6 +48,34 @@ def black_pixel_ratio(frame: np.ndarray, threshold: int = 8) -> float:
     return float(np.mean(gray <= threshold))
 
 
+class VPIWarpPerspective:
+    def __init__(self, backend_name: str):
+        import vpi
+
+        backend_map = {
+            "vpi_cpu": vpi.Backend.CPU,
+            "vpi_cuda": vpi.Backend.CUDA,
+            "vpi_vic": vpi.Backend.VIC,
+        }
+        if backend_name not in backend_map:
+            raise ValueError(f"Unsupported VPI warp backend: {backend_name}")
+        self.vpi = vpi
+        self.backend = backend_map[backend_name]
+
+    def warp_affine(self, frame_bgr: np.ndarray, mat_2x3: np.ndarray) -> np.ndarray:
+        mat_3x3 = np.eye(3, dtype=np.float64)
+        mat_3x3[:2, :] = mat_2x3.astype(np.float64)
+        with self.vpi.Backend.CUDA:
+            frame_vpi = self.vpi.asimage(frame_bgr).convert(self.vpi.Format.NV12_ER)
+        with self.backend:
+            warped = frame_vpi.perspwarp(mat_3x3)
+        with self.vpi.Backend.CUDA:
+            warped = warped.convert(self.vpi.Format.RGB8)
+        with warped.rlock_cpu() as data_rgb:
+            rgb = np.array(data_rgb, copy=True)
+        return cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+
+
 def estimate_transform(prev_gray: np.ndarray, curr_gray: np.ndarray):
     prev_pts = cv2.goodFeaturesToTrack(
         prev_gray,
@@ -86,6 +114,7 @@ def stabilize_video(
     smoothing_radius: int,
     border_scale: float,
     crop_ratio: float,
+    warp_backend: str,
 ):
     cap = cv2.VideoCapture(str(input_path))
     if not cap.isOpened():
@@ -151,6 +180,7 @@ def stabilize_video(
     black_ratios = []
     frames_written = 1
     black_ratios.append(black_pixel_ratio(fixed_center_crop_and_resize(frame, crop_ratio)))
+    vpi_warper = None if warp_backend == "opencv_cpu" else VPIWarpPerspective(warp_backend)
 
     for i, transform in enumerate(transforms_smooth):
         ok, frame = cap.read()
@@ -167,7 +197,10 @@ def stabilize_video(
         )
 
         t0 = time.perf_counter()
-        stabilized = cv2.warpAffine(frame, mat, (width, height), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+        if vpi_warper is None:
+            stabilized = cv2.warpAffine(frame, mat, (width, height), flags=cv2.INTER_LINEAR, borderMode=cv2.BORDER_REFLECT)
+        else:
+            stabilized = vpi_warper.warp_affine(frame, mat)
         stabilized = fix_border(stabilized, border_scale)
         stabilized = fixed_center_crop_and_resize(stabilized, crop_ratio)
         t1 = time.perf_counter()
@@ -203,6 +236,7 @@ def stabilize_video(
         "smoothing_radius": smoothing_radius,
         "border_scale": border_scale,
         "crop_ratio": crop_ratio,
+        "warp_backend": warp_backend,
     }
     return summary
 
@@ -215,10 +249,16 @@ def main():
     parser.add_argument("--smoothing-radius", type=int, default=45, help="Moving average radius for trajectory smoothing")
     parser.add_argument("--border-scale", type=float, default=1.00, help="Extra scale before final fixed crop")
     parser.add_argument("--crop-ratio", type=float, default=0.80, help="Fixed center crop ratio, then resize back to original size")
+    parser.add_argument(
+        "--warp-backend",
+        choices=["opencv_cpu", "vpi_cpu", "vpi_cuda", "vpi_vic"],
+        default="opencv_cpu",
+        help="Backend for the per-frame geometric warp stage",
+    )
     args = parser.parse_args()
 
     total_t0 = time.perf_counter()
-    summary = stabilize_video(args.input, args.output, args.metrics, args.smoothing_radius, args.border_scale, args.crop_ratio)
+    summary = stabilize_video(args.input, args.output, args.metrics, args.smoothing_radius, args.border_scale, args.crop_ratio, args.warp_backend)
     total_t1 = time.perf_counter()
 
     print("CPU stabilization baseline finished")

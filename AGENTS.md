@@ -237,7 +237,15 @@ This project should continuously collect evidence useful for resume and intervie
 - Nsight Systems screenshots or exported summaries;
 - notes explaining why an optimization helped, what it cost, and when it would not help.
 
-If an AI agent produces a result that is easier to show visually, remind the user to save screenshots, videos, or plots for the final project portfolio.
+Follow a **minimal-but-critical evidence policy**: do not preserve large numbers of screenshots or videos for every experiment. By default, keep concise text records, commands, parameters, metrics, selected output paths, and conclusions in the long-term context document. Keep only the smallest set of visual artifacts that are necessary to prove a milestone.
+
+When a milestone truly needs visual evidence, the agent must explicitly remind the user and give concrete capture/storage instructions. Typical cases:
+
+- Stabilization quality: keep one selected side-by-side comparison video, not every parameter trial. Generate it with `src/make_comparison.py` and store it under `results/evidence/<YYYYMMDD>_<milestone>/` or copy the final chosen clip to a Nutstore project assets folder if it must survive local cleanup.
+- Runtime/profiling proof: keep one screenshot or exported summary from `tegrastats`, Nsight Systems, or terminal benchmark output. Store it under `results/evidence/<YYYYMMDD>_<milestone>/` and record the exact command and file path in the long-term context.
+- Demo/presentation proof: if a video is needed for the final portfolio, remind the user to record a short 10-20 second clip showing original vs stabilized or CPU vs accelerated output, then record its path in the long-term context.
+
+Do not commit these visual artifacts by default. `results/` is local evidence storage and is ignored by Git unless the user explicitly chooses a small representative artifact for version control.
 
 ## Safety Gate
 
@@ -252,5 +260,7 @@ If an AI agent produces a result that is easier to show visually, remind the use
 - Do not expand the project just to use more technologies.
 - Do not optimize before measuring.
 - Do not treat OpenCV `videostab` as code to deeply modify unless there is a strong reason; prefer building a controllable pipeline around mature OpenCV/VPI primitives.
+- When planning the next step, avoid presenting many routes by default. In normal cases, choose and communicate the single best, most feasible, and most useful next action for the current project state. Only present multiple options when the project is at a real functional fork that affects the overall direction and requires the user's decision.
+- For long-term notes, use the Jetson Orin NX context document listed in this file. If a requested context path appears to belong to another independent project, stop and point out the mismatch before writing.
 - Always distinguish measured data from placeholders. Never invent FPS, latency, power, or quality numbers.
 - When reporting progress, state what was done, how it was verified, what evidence was produced, and the next most valuable step.
