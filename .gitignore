@@ -1,0 +1,35 @@
+# Build outputs
+build/
+cmake-build-*/
+out/
+
+# Runtime outputs
+results/
+logs/
+
+# Raw input data and large media
+data/raw/
+*.mp4
+*.avi
+*.mov
+*.mkv
+
+# Python local files
+__pycache__/
+*.py[cod]
+.venv/
+.venv*/
+venv/
+
+# IDE and OS local files
+.idea/
+.vscode/
+*.user
+*.suo
+Thumbs.db
+Desktop.ini
+
+# Secrets / local env
+.env
+*.key
+*.pem
