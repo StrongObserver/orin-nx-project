@@ -105,13 +105,15 @@ https://s3.amazonaws.com/python-vidstab/ostrich.mp4
 
 Do not commit raw videos by default. Record the source URL and keep raw data under `data/raw/` unless the user explicitly decides otherwise.
 
-- Current Jetson CPU baseline comparison output:
+- Current preferred visual evidence and immediate quality-gate clips:
 
 ```text
-C:\Users\Admin\Desktop\orin nx project\results\jetson_cpu_baseline\ostrich_compare_side_by_side_r45_crop80_reflect.mp4
+C:\Users\Admin\Desktop\orin nx project\results\vidstab_baseline\ostrich_vidstab_compare.mp4
+C:\Users\Admin\Desktop\orin nx project\results\estimate_scale_sweep_1080p\stabilized_opencv_cpu_est0p33.mp4
+C:\Users\Admin\Desktop\orin nx project\results\estimate_scale_sweep_1080p\compare_est0p33_side_by_side.mp4
 ```
 
-This side-by-side video is the preferred first visual check: left is the original shaky input, right is the CPU stabilized baseline with reflected borders and fixed center crop (`smoothing_radius=45`, `crop_ratio=0.80`). If the right side still looks shaky or the crop appears to jump, improve motion estimation / trajectory smoothing / outlier handling before moving to VPI acceleration.
+`ostrich_vidstab_compare.mp4` is the current mature external stabilization evidence. `compare_est0p33_side_by_side.mp4` was generated as a 1080p check clip, but the source is mostly smooth ocean footage and is **not a valid stabilization-quality dataset**; use it only for performance / no-regression sanity, not for proving EIS quality. Do not package the naive VPI CUDA full-pipeline integration as an acceleration result unless a same-input end-to-end speedup is actually measured.
 
 ## Environment Setup Policy
 
@@ -144,7 +146,8 @@ When time or implementation choices conflict, follow this order:
 2. **Resume value first**: prefer work that yields before/after numbers, visual comparison, or profiling evidence.
 3. **Baseline before optimization**: do not claim acceleration without a reproducible CPU or simple baseline.
 4. **One solid optimization beats many slogans**: at least one VPI/CUDA/GStreamer replacement with measured improvement is better than many half-finished features.
-5. **Defer non-core ideas**: rolling-shutter correction, gyro fusion, full zero-copy, multi-stream concurrency, and complex smoothing algorithms are advanced items unless the core path is already stable.
+5. **Validation boundary before more coding**: before adding a new optimization, define what counts as good/bad on stabilization quality, crop/black-border behavior, and same-input latency/FPS.
+6. **Defer non-core ideas**: rolling-shutter correction, gyro fusion, full zero-copy, multi-stream concurrency, and complex smoothing algorithms are advanced items unless the core path is already stable.
 
 ## Open-Source-First Problem Solving
 
@@ -164,6 +167,40 @@ Current reference roles:
 - OpenCV `videostab`: reference for classic visual stabilization flow, motion estimation, and smoothing abstractions.
 - CUVISTA: reference for stronger stabilization quality ideas such as trajectory smoothing, dynamic zoom, outlier rejection, background fill, CLI output, and profiling-style artifacts.
 - NVIDIA VPI / Jetson multimedia / GStreamer samples: preferred references for hardware acceleration, VIC/CUDA/PVA/OFA backend usage, NVMM, NVDEC, and NVENC.
+- Internal references, if accessible through the user/company network: `影级防抖CIS技术方案` for EIS metrics, `Dora-G2 相机基础效果及算法生效验收 SOP` for pass/fail gates, `头戴设备防抖浅析` for brightness x motion scene matrix, and `lab-cv/video-stab` for C++ traditional stabilization. Treat these as internal L2/L4 references: do not copy their content into public GitHub outputs, and verify access/permission before cloning or quoting details.
+
+## Internal-AI Escalation Workflow
+
+The user may have access to compliant company-internal AI and open technical assets. When public search and local attempts do not quickly unblock a real issue, ask the user to relay a focused prompt to the internal AI instead of spending too long guessing.
+
+Use this only for material blockers, for example: stabilization quality remains poor after several attempts, VPI/GStreamer/NVMM usage is unclear, Jetson multimedia samples are hard to adapt, or a comparable internal project/document may exist.
+
+Workflow:
+
+1. State the blocker in one sentence.
+2. Provide a copy-paste prompt for the user to send to the internal AI.
+3. Ask for specific return artifacts: document links, repo paths, sample names, key commands, API usage, known pitfalls, and minimal reproducible snippets.
+4. After the user pastes the answer back, inspect only the relevant material and adapt the useful parts into this project.
+
+Known access caveat: this local agent environment has seen HTTP 403 when cloning `https://code.byted.org/lab-cv/video-stab.git` and `https://code.byted.org/em/eistep_visualize.git`. If code-level inspection is needed, ask the user/internal AI for either access guidance or a focused export of the key files: entry point, motion estimation, trajectory smoothing, warp/crop, metrics scripts, README/build commands.
+
+Prompt template:
+
+```text
+我在做 Jetson Orin NX 上的实时 EIS 视频稳像与异构加速项目，当前卡点是：【用一句话描述卡点】。
+
+请优先搜索公司内部开放且合规可参考的技术文档、代码仓库、sample、历史项目或最佳实践，重点找：
+1. 与 Jetson / NVIDIA VPI / CUDA / GStreamer / NVMM / NVDEC / NVENC / 视频稳像 / 光流 / warp / remap 相关的资料；
+2. 能直接说明工程架构、关键 API、命令、性能数据、踩坑和适用边界的内容；
+3. 可复用或可借鉴的最小代码路径，而不是只给概念介绍。
+
+请按以下格式返回：
+- 最相关的 3-5 个资料或仓库：名称 + 链接/路径 + 为什么相关；
+- 每个资料中最值得看的文件/章节/函数；
+- 可直接借鉴的命令、API 或代码片段；
+- 已知坑点和不适合照搬的地方；
+- 如果没有强相关资料，请明确说没有，并给出最接近的替代方向。
+```
 
 ## Milestones
 
@@ -260,6 +297,7 @@ Do not commit these visual artifacts by default. `results/` is local evidence st
 - Do not expand the project just to use more technologies.
 - Do not optimize before measuring.
 - Do not treat OpenCV `videostab` as code to deeply modify unless there is a strong reason; prefer building a controllable pipeline around mature OpenCV/VPI primitives.
+- Ask the user for internal-AI help when a real blocker is likely to have company-internal references; provide a precise prompt instead of asking vague questions.
 - When planning the next step, avoid presenting many routes by default. In normal cases, choose and communicate the single best, most feasible, and most useful next action for the current project state. Only present multiple options when the project is at a real functional fork that affects the overall direction and requires the user's decision.
 - For long-term notes, use the Jetson Orin NX context document listed in this file. If a requested context path appears to belong to another independent project, stop and point out the mismatch before writing.
 - Always distinguish measured data from placeholders. Never invent FPS, latency, power, or quality numbers.
