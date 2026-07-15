@@ -9,6 +9,7 @@ logs/
 
 # Raw input data and large media
 data/raw/
+data/sources/
 *.mp4
 *.avi
 *.mov

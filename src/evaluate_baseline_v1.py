@@ -309,7 +309,7 @@ def summarize_cpu_pose_metrics(metrics_csv: Path, angle_scale: float = 0.0) -> d
     }
 
 
-def analyze_video(video_path: Path, estimate_scale: float, max_frames: int, black_threshold: int, residual_radius: int, angle_scale: float) -> dict:
+def analyze_video(video_path: Path, estimate_scale: float, max_frames: int, black_threshold: int, residual_radius: int, angle_scale: float, warmup_frames: int = 0) -> dict:
     cap = cv2.VideoCapture(str(video_path))
     if not cap.isOpened():
         raise RuntimeError(f"Cannot open video: {video_path}")
@@ -348,6 +348,13 @@ def analyze_video(video_path: Path, estimate_scale: float, max_frames: int, blac
 
     cap.release()
 
+    warmup_frames = max(0, int(warmup_frames))
+    if warmup_frames > 0:
+        transforms = transforms[warmup_frames:]
+        tracked_counts = tracked_counts[warmup_frames:]
+        inlier_counts = inlier_counts[warmup_frames:]
+        black_ratios = black_ratios[min(warmup_frames, len(black_ratios)) :]
+
     transforms_np = np.array(transforms, dtype=np.float64)
     effective_angle_scale = float(angle_scale) if angle_scale > 0 else float(0.5 * math.hypot(width, height))
     summary = summarize_motion(transforms_np, residual_radius, effective_angle_scale)
@@ -359,6 +366,7 @@ def analyze_video(video_path: Path, estimate_scale: float, max_frames: int, blac
             "fps": fps,
             "reported_frame_count": frame_count,
             "frames_analyzed": frames_read,
+            "warmup_frames_skipped": warmup_frames,
             "avg_tracked_features": float(np.mean(tracked_counts)) if tracked_counts else 0.0,
             "avg_inliers": float(np.mean(inlier_counts)) if inlier_counts else 0.0,
             "avg_black_border_ratio": float(np.mean(black_ratios)) if black_ratios else 0.0,
@@ -475,10 +483,10 @@ def derive_layered_acceptance(result: dict, scenario_role: str) -> str:
     return "stability_fail"
 
 
-def evaluate_pair(name: str, original: Path, stabilized: Path, crop_ratio: float, estimate_scale: float, max_frames: int, black_threshold: int, residual_radius: int, angle_scale: float, scenario_role: str, mask_metrics_csv: Path | None = None) -> dict:
+def evaluate_pair(name: str, original: Path, stabilized: Path, crop_ratio: float, estimate_scale: float, max_frames: int, black_threshold: int, residual_radius: int, angle_scale: float, scenario_role: str, mask_metrics_csv: Path | None = None, warmup_frames: int = 0) -> dict:
     t0 = time.perf_counter()
-    original_metrics = analyze_video(original, estimate_scale, max_frames, black_threshold, residual_radius, angle_scale)
-    stabilized_metrics = analyze_video(stabilized, estimate_scale, max_frames, black_threshold, residual_radius, angle_scale)
+    original_metrics = analyze_video(original, estimate_scale, max_frames, black_threshold, residual_radius, angle_scale, warmup_frames)
+    stabilized_metrics = analyze_video(stabilized, estimate_scale, max_frames, black_threshold, residual_radius, angle_scale, warmup_frames)
     if mask_metrics_csv is not None:
         stabilized_metrics.update(summarize_invalid_mask_metrics(mask_metrics_csv))
         stabilized_metrics.update(summarize_cpu_pose_metrics(mask_metrics_csv, angle_scale))
@@ -495,6 +503,7 @@ def evaluate_pair(name: str, original: Path, stabilized: Path, crop_ratio: float
         "max_frames": max_frames,
         "residual_radius": residual_radius,
         "angle_scale": angle_scale,
+        "warmup_frames": int(max(0, warmup_frames)),
         "scenario_role": scenario_role,
         "original_metrics": original_metrics,
         "stabilized_metrics": stabilized_metrics,
@@ -540,6 +549,7 @@ def flatten_pair_result(result: dict) -> dict:
         "crop_ratio": result["crop_ratio"],
         "crop_loss_ratio": result["crop_loss_ratio"],
         "scenario_role": result["scenario_role"],
+        "warmup_frames": result["warmup_frames"],
         "layered_acceptance": result["layered_acceptance"],
         "frames_analyzed": min(original["frames_analyzed"], stabilized["frames_analyzed"]),
         "orig_dx_std": original["dx_std"],
@@ -635,6 +645,7 @@ def main():
     parser.add_argument("--black-threshold", type=int, default=8, help="Pixel threshold for black border detection")
     parser.add_argument("--residual-radius", type=int, default=45, help="Moving-average radius for intent trajectory used by residual metrics")
     parser.add_argument("--angle-scale", type=float, default=0.0, help="Pixel-equivalent scale for rotation when combining dx/dy/da norms; <=0 uses half image diagonal")
+    parser.add_argument("--warmup-frames", type=int, default=0, help="Skip this many initial motion samples when computing image-motion proxy metrics")
     parser.add_argument("--scenario-role", choices=["gate", "challenge", "diagnostic"], default="gate", help="Evaluation role: gate requires all objective dimensions; challenge/diagnostic keep smoothness failures separate from hard degradation gates")
     args = parser.parse_args()
 
@@ -643,7 +654,22 @@ def main():
     for pair_text in args.pair:
         name, original, stabilized, crop_ratio, pair_role = parse_pair(pair_text)
         scenario_role = pair_role or args.scenario_role
-        results.append(evaluate_pair(name, original, stabilized, crop_ratio, args.estimate_scale, args.max_frames, args.black_threshold, args.residual_radius, args.angle_scale, scenario_role, mask_metrics_by_name.get(name)))
+        results.append(
+            evaluate_pair(
+                name,
+                original,
+                stabilized,
+                crop_ratio,
+                args.estimate_scale,
+                args.max_frames,
+                args.black_threshold,
+                args.residual_radius,
+                args.angle_scale,
+                scenario_role,
+                mask_metrics_by_name.get(name),
+                args.warmup_frames,
+            )
+        )
 
     args.output_json.parent.mkdir(parents=True, exist_ok=True)
     args.output_csv.parent.mkdir(parents=True, exist_ok=True)
@@ -663,6 +689,7 @@ def main():
             "black_border_p95_fail_gt": BLACK_BORDER_P95_FAIL,
         },
         "scenario_role": args.scenario_role,
+        "warmup_frames": args.warmup_frames,
         "notes": {
             "stability_ratio_energy": "original motion_energy / stabilized motion_energy; >1 means stabilized video has lower estimated frame-to-frame motion energy.",
             "sr_residual_pose": "original residual_pose_energy / stabilized residual_pose_energy after low-pass intent trajectory removal; >1 means stabilized residual pose energy is lower.",

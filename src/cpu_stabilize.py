@@ -1305,7 +1305,26 @@ def scale_mask(mask: np.ndarray, scale: float) -> np.ndarray:
     return cv2.warpAffine(mask, mat, (w, h), flags=cv2.INTER_NEAREST, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
 
 
-def fixed_center_crop_and_resize(frame: np.ndarray, crop_ratio: float) -> np.ndarray:
+def interpolation_from_name(name: str) -> int:
+    mapping = {
+        "linear": cv2.INTER_LINEAR,
+        "cubic": cv2.INTER_CUBIC,
+        "lanczos": cv2.INTER_LANCZOS4,
+        "area": cv2.INTER_AREA,
+    }
+    if name not in mapping:
+        raise ValueError(f"Unsupported interpolation: {name}")
+    return mapping[name]
+
+
+def apply_unsharp_mask(frame: np.ndarray, strength: float, sigma: float) -> np.ndarray:
+    if strength <= 0:
+        return frame
+    blurred = cv2.GaussianBlur(frame, (0, 0), max(0.1, sigma))
+    return cv2.addWeighted(frame, 1.0 + strength, blurred, -strength, 0)
+
+
+def fixed_center_crop_and_resize(frame: np.ndarray, crop_ratio: float, interpolation: int = cv2.INTER_LINEAR) -> np.ndarray:
     if crop_ratio <= 0 or crop_ratio > 1:
         raise ValueError("crop_ratio must be in (0, 1]")
     if crop_ratio == 1:
@@ -1317,7 +1336,7 @@ def fixed_center_crop_and_resize(frame: np.ndarray, crop_ratio: float) -> np.nda
     x0 = (w - crop_w) // 2
     y0 = (h - crop_h) // 2
     cropped = frame[y0 : y0 + crop_h, x0 : x0 + crop_w]
-    return cv2.resize(cropped, (w, h), interpolation=cv2.INTER_LINEAR)
+    return cv2.resize(cropped, (w, h), interpolation=interpolation)
 
 
 def black_pixel_ratio(frame: np.ndarray, threshold: int = 8) -> float:
@@ -1666,6 +1685,9 @@ def stabilize_video(
     gaussian_stdev: float,
     border_scale: float,
     crop_ratio: float,
+    crop_interpolation: str,
+    sharpen_strength: float,
+    sharpen_sigma: float,
     warp_backend: str,
     estimate_scale: float,
     feature_grid_size: int,
@@ -1999,6 +2021,8 @@ def stabilize_video(
         warp_mats = [mat[:2, :].astype(np.float32) for mat in lp_output_mats]
         transforms_smooth = np.array([affine_3x3_to_transform(mat) for mat in lp_output_mats], dtype=np.float32)
 
+    crop_interp = interpolation_from_name(crop_interpolation)
+
     output_path.parent.mkdir(parents=True, exist_ok=True)
     metrics_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -2015,13 +2039,14 @@ def stabilize_video(
     first_frame = fix_border(frame, border_scale * first_zoom)
     valid_mask_frame = np.full((height, width), 255, dtype=np.uint8)
     first_valid_mask = scale_mask(valid_mask_frame, border_scale * first_zoom)
-    writer.write(fixed_center_crop_and_resize(first_frame, crop_ratio))
+    first_output = fixed_center_crop_and_resize(first_frame, crop_ratio, crop_interp)
+    writer.write(apply_unsharp_mask(first_output, sharpen_strength, sharpen_sigma))
 
     warp_times_ms = []
     black_ratios = []
     invalid_mask_ratios = []
     frames_written = 1
-    black_ratios.append(black_pixel_ratio(fixed_center_crop_and_resize(first_frame, crop_ratio)))
+    black_ratios.append(black_pixel_ratio(fixed_center_crop_and_resize(first_frame, crop_ratio, crop_interp)))
     invalid_mask_ratios.append(invalid_mask_ratio(fixed_center_crop_and_resize(first_valid_mask, crop_ratio)))
     vpi_warper = None if warp_backend == "opencv_cpu" else VPIWarpPerspective(warp_backend)
 
@@ -2050,11 +2075,12 @@ def stabilize_video(
         warped_valid_mask = cv2.warpAffine(valid_mask_frame, mat, (width, height), flags=cv2.INTER_NEAREST, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
         stabilized = fix_border(stabilized, border_scale * float(zoom_curve[i]))
         warped_valid_mask = scale_mask(warped_valid_mask, border_scale * float(zoom_curve[i]))
-        stabilized = fixed_center_crop_and_resize(stabilized, crop_ratio)
+        stabilized = fixed_center_crop_and_resize(stabilized, crop_ratio, crop_interp)
         warped_valid_mask = fixed_center_crop_and_resize(warped_valid_mask, crop_ratio)
+        output_frame = apply_unsharp_mask(stabilized, sharpen_strength, sharpen_sigma)
         t1 = time.perf_counter()
 
-        writer.write(stabilized)
+        writer.write(output_frame)
         warp_times_ms.append((t1 - t0) * 1000.0)
         black_ratios.append(black_pixel_ratio(stabilized))
         invalid_mask_ratios.append(invalid_mask_ratio(warped_valid_mask))
@@ -2174,6 +2200,9 @@ def stabilize_video(
         "gaussian_stdev": gaussian_stdev,
         "border_scale": border_scale,
         "crop_ratio": crop_ratio,
+        "crop_interpolation": crop_interpolation,
+        "sharpen_strength": sharpen_strength,
+        "sharpen_sigma": sharpen_sigma,
         "warp_backend": warp_backend,
         "estimate_scale": estimate_scale,
         "feature_grid_size": feature_grid_size,
@@ -2262,6 +2291,9 @@ def main():
     parser.add_argument("--gaussian-stdev", type=float, default=0.0, help="Gaussian smoothing stdev; <=0 uses radius/3")
     parser.add_argument("--border-scale", type=float, default=1.00, help="Extra scale before final fixed crop")
     parser.add_argument("--crop-ratio", type=float, default=0.80, help="Fixed center crop ratio, then resize back to original size")
+    parser.add_argument("--crop-interpolation", choices=["linear", "cubic", "lanczos", "area"], default="linear", help="Interpolation used when resizing the fixed crop back to output size")
+    parser.add_argument("--sharpen-strength", type=float, default=0.0, help="Optional unsharp-mask strength applied to output frames; 0 disables")
+    parser.add_argument("--sharpen-sigma", type=float, default=1.0, help="Gaussian sigma for optional output unsharp mask")
     parser.add_argument("--estimate-scale", type=float, default=1.0, help="Scale factor for motion estimation; final warp still runs at full resolution")
     parser.add_argument("--feature-grid-size", type=int, default=12, help="Grid size for spatially distributed feature selection; <=1 disables grid selection")
     parser.add_argument("--foreground-reject-threshold", type=float, default=10.0, help="Reject tracked points whose dx/dy deviates from dominant motion by more than this many original-resolution pixels")
@@ -2341,6 +2373,9 @@ def main():
         args.gaussian_stdev,
         args.border_scale,
         args.crop_ratio,
+        args.crop_interpolation,
+        args.sharpen_strength,
+        args.sharpen_sigma,
         args.warp_backend,
         args.estimate_scale,
         args.feature_grid_size,

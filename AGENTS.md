@@ -282,6 +282,8 @@ When a milestone truly needs visual evidence, the agent must explicitly remind t
 - Runtime/profiling proof: keep one screenshot or exported summary from `tegrastats`, Nsight Systems, or terminal benchmark output. Store it under `results/evidence/<YYYYMMDD>_<milestone>/` and record the exact command and file path in the long-term context.
 - Demo/presentation proof: if a video is needed for the final portfolio, remind the user to record a short 10-20 second clip showing original vs stabilized or CPU vs accelerated output, then record its path in the long-term context.
 
+For user review, always copy generated visual evidence such as side-by-side videos, contact sheets, and short demo clips to `C:\Users\Admin\Videos\orin nx` in addition to keeping the reproducible copy under `results/`. Do not leave reviewable evidence only in JSON/CSV or only on Jetson.
+
 Do not commit these visual artifacts by default. `results/` is local evidence storage and is ignored by Git unless the user explicitly chooses a small representative artifact for version control.
 
 ## Safety Gate
