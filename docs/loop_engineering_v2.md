@@ -71,6 +71,37 @@ What is missing is a stronger **Loop Engine** above that runtime:
 - state/update policy;
 - escalation to knowledge base or human only when needed.
 
+## Anti-Retreat Rule
+
+This loop system must not turn a stable checkpoint into the final project goal.
+
+Stable baselines exist for version control, comparison, rollback, and honest
+before/after claims. They do not lower the original project target. A negative
+result is also evidence, but it is not permission to retreat into documentation
+or presentation work while core engineering tracks remain unfinished.
+
+Use this rule after every failed or negative performance result:
+
+| Observation | Correct interpretation | Required next action |
+|---|---|---|
+| VPI backend swap is slower | The chosen placement/dataflow is bad, not VPI as a whole | Classify conversion/sync/readback cost, then test backend support or module scope |
+| Python appsink/appsrc is expensive | Python round trip is bad, not NVMM/NVDEC/NVENC as a whole | Route to non-Python NVMM/CUDA/C++ dataflow contract |
+| Challenge clips fail | Current global-warp model is limited, not the whole project failed | Keep Regular as main gate and open mesh/grid/scene-degrade as future model route |
+| CPU baseline is stable | A checkpoint exists, not the project is finished | Preserve it with Git/evidence, then continue the active core track |
+
+Forbidden behavior:
+
+- downgrade the project goal without user approval;
+- replace unfinished core work with documentation packaging;
+- keep polishing the same stable CPU baseline after its gate is already closed;
+- treat "do not overclaim" as "do not continue exploring".
+
+The active unfinished core tracks are:
+
+1. VPI backend validation and heterogeneous acceleration;
+2. algorithm cost reduction, zero-copy or non-Python pipeline exploration;
+3. hardware decode/encode plus power and perf/watt evaluation.
+
 ## Layer Split
 
 | Layer | Current project owner | Job |
@@ -260,6 +291,9 @@ Stop instead of continuing when:
 | Metric regression | Compare against frozen baseline; change hypothesis before rerun |
 | Visual veto | Mark run failed/diagnostic; do not argue from metrics |
 | Running failure | Treat as challenge/model-boundary unless Regular evidence demands otherwise |
+| Backend swap slower than baseline | Do not stop the acceleration track; classify overhead and move to backend-support, module-level, or dataflow contract |
+| Python dataflow path too costly | Do not stop NVMM/GStreamer work; route away from Python loop toward C++/CUDA/device-side pipeline |
+| Stable baseline accepted | Commit/preserve if appropriate, then continue the next unfinished core track |
 | Weak texture/foreground/parallax | Use knowledge routing before changing algorithm |
 | Device/SSH blocker | Stop EIS loop; run USB SSH recovery path; resume only after connectivity proof |
 | Evaluation ambiguity | Create/extend human review CSV before more tuning |
@@ -299,6 +333,10 @@ separate high-resolution VPI module or GStreamer/NVMM dataflow contract.
 4. Knowledge base use is a recovery action, not default context.
 5. Human visual review remains the authority for jello, local pull, rollback,
    blur, and subjective display decisions.
+6. Negative results must produce a next exploration route while core tracks are
+   unfinished.
+7. Documentation loops may record a checkpoint, but they cannot replace
+   unfinished VPI, dataflow, decode/encode, or power-evaluation work.
 
 ## What V2 Defers
 

@@ -148,6 +148,72 @@ def command_print_loop_profile(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_check_loop_rules(args: argparse.Namespace) -> int:
+    data = load_json(args.loop_profiles)
+    ok = True
+    default_rules = data.get("default_rules", {})
+    negative_policy = default_rules.get("negative_result_policy", {})
+    core_tracks = data.get("active_core_tracks", [])
+    profiles = {profile["id"]: profile for profile in data.get("profiles", [])}
+
+    checks = [
+        (
+            "stable_checkpoint_is_not_terminal_goal",
+            bool(default_rules.get("stable_checkpoint_is_not_terminal_goal", False)),
+        ),
+        (
+            "documentation_loop_cannot_replace_core_progress",
+            bool(default_rules.get("documentation_loop_cannot_replace_core_progress", False)),
+        ),
+        (
+            "negative_result_is_evidence_not_terminal",
+            bool(negative_policy.get("negative_result_is_evidence_not_terminal", False)),
+        ),
+        (
+            "has_active_core_tracks",
+            len(core_tracks) >= 3,
+        ),
+    ]
+    for name, passed in checks:
+        ok = ok and passed
+        print(f"{name}: {'pass' if passed else 'fail'}")
+
+    required_after_negative = set(negative_policy.get("required_after_negative_result", []))
+    required_negative_items = {
+        "preserve_stable_checkpoint",
+        "classify_failure_mode",
+        "name_next_core_exploration_route",
+        "create_or_select_followup_contract",
+    }
+    missing_required = sorted(required_negative_items - required_after_negative)
+    if missing_required:
+        ok = False
+        print(f"negative_policy_missing_required: {', '.join(missing_required)}")
+    else:
+        print("negative_policy_required_items: pass")
+
+    performance_loop = profiles.get("performance_loop", {})
+    performance_recovery = set(performance_loop.get("recovery_actions", []))
+    required_recovery_fragments = [
+        "backend_swap_is_slower",
+        "python_dataflow_is_too_expensive",
+        "operator_speedup_does_not_become_end_to_end_speedup",
+    ]
+    for fragment in required_recovery_fragments:
+        matched = any(fragment in action for action in performance_recovery)
+        ok = ok and matched
+        print(f"performance_recovery_{fragment}: {'pass' if matched else 'fail'}")
+
+    documentation_loop = profiles.get("documentation_loop", {})
+    doc_stop_reasons = set(documentation_loop.get("stop_reasons", []))
+    doc_stop_ok = "would_replace_unfinished_core_track" in doc_stop_reasons
+    ok = ok and doc_stop_ok
+    print(f"documentation_core_replacement_guard: {'pass' if doc_stop_ok else 'fail'}")
+
+    print(f"loop_rule_status: {'pass' if ok else 'fail'}")
+    return 0 if ok else 1
+
+
 def command_list_evaluation_datasets(args: argparse.Namespace) -> int:
     data = load_json(args.evaluation_datasets)
     for dataset in data.get("datasets", []):
@@ -449,6 +515,10 @@ def main() -> int:
     print_loop_profile.add_argument("--loop-profiles", type=Path, default=DEFAULT_LOOP_PROFILES)
     print_loop_profile.add_argument("--profile-id", required=True)
     print_loop_profile.set_defaults(func=command_print_loop_profile)
+
+    check_loop_rules = subparsers.add_parser("check-loop-rules", help="Check Loop Engineering guardrails against conservative retreat after negative results.")
+    check_loop_rules.add_argument("--loop-profiles", type=Path, default=DEFAULT_LOOP_PROFILES)
+    check_loop_rules.set_defaults(func=command_check_loop_rules)
 
     list_eval_datasets = subparsers.add_parser("list-evaluation-datasets", help="List lifecycle evaluation datasets and roles.")
     list_eval_datasets.add_argument("--evaluation-datasets", type=Path, default=DEFAULT_EVALUATION_DATASETS)

@@ -239,7 +239,8 @@ the run as failed or diagnostic.
 
 ## Stop Rules
 
-Stop instead of continuing when:
+Stop the current unsafe or unproductive action instead of blindly repeating it
+when:
 
 - two attempts improve one metric but worsen visual quality or hard gates;
 - a change helps Running while hurting Regular;
@@ -247,6 +248,25 @@ Stop instead of continuing when:
 - required command/config/metrics/video evidence is missing;
 - the next fix requires gyro, mesh, or RS support outside the current pipeline;
 - the agent cannot explain why a change helped and what it costs.
+
+Stopping the current action is not the same as stopping the project track.
+
+If an experiment produces a negative result, preserve the evidence and route the
+next attempt instead of retreating to the stable baseline:
+
+| Negative result | Do not conclude | Required recovery route |
+|---|---|---|
+| VPI backend replacement is slower | VPI acceleration is impossible | Build/check backend support, measure module-level cost, or isolate conversion/readback overhead |
+| Python GStreamer round trip is too costly | GStreamer/NVMM is useless | Move to non-Python NVMM, CUDA, C++, or hardware decode/encode boundary work |
+| Challenge set fails | EIS project is finished or hopeless | Keep Challenge as boundary evidence and continue Regular-performance or next-model exploration |
+| CPU baseline is accepted | Project is done | Commit/preserve the checkpoint, then continue the unfinished core track |
+
+The harness must keep these active core tracks visible until they are explicitly
+completed or the user changes the target:
+
+1. VPI backend validation and heterogeneous acceleration.
+2. Algorithm cost reduction plus zero-copy or non-Python pipeline exploration.
+3. Hardware decode/encode, power modes, perf/watt, and quality/crop trade-off.
 
 ## Knowledge Base Recovery
 
@@ -314,3 +334,12 @@ The next useful work is a scoped performance loop that changes one variable at a
 time: first motion-estimation cost (`estimate_scale` or feature budget), then a
 separate high-resolution VPI module check or a true GStreamer/NVMM dataflow
 probe.
+
+Update - anti-retreat correction:
+
+```text
+The CPU baseline and its Git/evidence checkpoint are not the final goal.
+The next project work should return to the three unfinished core tracks:
+VPI backend validation, non-Python dataflow/zero-copy or pipeline work, and
+NVDEC/NVENC plus power/perf evaluation.
+```

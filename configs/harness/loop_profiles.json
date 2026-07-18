@@ -34,8 +34,53 @@
     "internal_reference_index": ".local_knowledge/internal_reference_index.md",
     "state_update_policy": "record outcome, evidence, blocker, and next action only; do not preserve running logs",
     "external_observation_required": true,
-    "agent_self_report_counts_as_evidence": false
+    "agent_self_report_counts_as_evidence": false,
+    "stable_checkpoint_is_not_terminal_goal": true,
+    "documentation_loop_cannot_replace_core_progress": true,
+    "negative_result_policy": {
+      "negative_result_is_evidence_not_terminal": true,
+      "required_after_negative_result": [
+        "preserve_stable_checkpoint",
+        "classify_failure_mode",
+        "name_next_core_exploration_route",
+        "create_or_select_followup_contract"
+      ],
+      "forbidden_after_negative_result": [
+        "downgrade_project_goal_without_user_approval",
+        "replace_core_progress_with_documentation_packaging",
+        "treat_stable_baseline_as_final_goal"
+      ]
+    }
   },
+  "active_core_tracks": [
+    {
+      "id": "vpi_backend_validation_and_heterogeneous_acceleration",
+      "goal": "Build a backend support table, then replace hot modules such as optical flow, warp, or remap with the best supported VPI or hardware backend and record before-after evidence.",
+      "not_done_until": [
+        "backend_support_table_recorded",
+        "at_least_one_hot_module_replaced_or_ruled_out_with_reason",
+        "same_input_before_after_timing_recorded"
+      ]
+    },
+    {
+      "id": "algorithm_cost_zero_copy_pipeline",
+      "goal": "Reduce algorithm cost and then explore non-Python device-side dataflow such as NvBufSurface, unified memory, staged threading, or CUDA stream overlap.",
+      "not_done_until": [
+        "algorithm_cost_reduction_recorded",
+        "copy_or_readback_boundary_recorded",
+        "non_python_pipeline_route_evaluated_or_blocked_with_reason"
+      ]
+    },
+    {
+      "id": "nvdec_nvenc_power_evaluation",
+      "goal": "Use hardware decode and encode where appropriate, query available power modes, then report perf, watt, and quality/crop trade-offs.",
+      "not_done_until": [
+        "nvpmodel_q_recorded",
+        "nvdec_nvenc_before_after_or_boundary_recorded",
+        "perf_per_watt_table_recorded"
+      ]
+    }
+  ],
   "profiles": [
     {
       "id": "performance_loop",
@@ -43,7 +88,9 @@
       "allowed_change": [
         "runtime_platform",
         "backend",
-        "dataflow"
+        "dataflow",
+        "operator_backend_support",
+        "power_mode"
       ],
       "must_freeze": [
         "input_clip",
@@ -71,6 +118,11 @@
         "output_semantics_differ_from_baseline",
         "manual_visual_veto",
         "jetson_ssh_or_device_blocker"
+      ],
+      "recovery_actions": [
+        "if_backend_swap_is_slower_classify_overhead_and_try_backend_support_or_module_scope",
+        "if_python_dataflow_is_too_expensive_route_to_non_python_nvmm_or_cuda_contract",
+        "if_operator_speedup_does_not_become_end_to_end_speedup_measure_conversion_sync_or_readback_cost"
       ],
       "knowledge_triggers": [
         "VPI backend support unclear",
@@ -105,6 +157,11 @@
         "same_failure_retried_without_new_hypothesis",
         "running_improves_regular_worsens",
         "needs_mesh_gyro_or_rs_outside_current_scope"
+      ],
+      "recovery_actions": [
+        "if_global_warp_boundary_is_hit_do_not_keep_tuning_same_baseline",
+        "route_to_scene_boundary_or_mesh_grid_followup_when_quality_target_requires_new_model",
+        "preserve_quality_safe_baseline_as_checkpoint_not_as_final_project_goal"
       ],
       "knowledge_triggers": [
         "visual veto",
@@ -224,7 +281,12 @@
       "stop_reasons": [
         "would_need_new_measurement",
         "requested_context_path_mismatch",
-        "public_doc_would_copy_internal_content"
+        "public_doc_would_copy_internal_content",
+        "would_replace_unfinished_core_track"
+      ],
+      "recovery_actions": [
+        "if_core_track_is_unfinished_switch_to_frontier_planning_or_performance_loop",
+        "documentation_may_record_checkpoint_but_must_name_next_core_exploration"
       ],
       "knowledge_triggers": [
         "stale_context",
