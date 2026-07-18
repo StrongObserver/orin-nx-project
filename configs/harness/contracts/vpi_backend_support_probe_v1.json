@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "contract_id": "vpi_backend_support_probe_v1",
+  "status": "draft_ready",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Build the Jetson Orin NX backend support entry table for VPI operators, GStreamer hardware codec plugins, and power-mode availability before choosing the next acceleration module.",
+  "active_core_track": "vpi_backend_validation_and_heterogeneous_acceleration",
+  "claim_boundary": {
+    "allowed": [
+      "This probe records backend/API readiness on the current Jetson environment",
+      "This probe identifies candidate modules for later before-after timing"
+    ],
+    "forbidden": [
+      "This probe proves full EIS acceleration",
+      "A failed minimal backend probe means the entire acceleration track should stop",
+      "A plugin/API presence result is a performance speedup"
+    ]
+  },
+  "required_outputs": [
+    "summary.md",
+    "vpi_backend_support.csv",
+    "probe_raw.json"
+  ],
+  "external_observation": [
+    "script_exit_code",
+    "vpi_backend_support_csv_exists",
+    "nvpmodel_q_probe_recorded",
+    "gst_plugin_probe_recorded"
+  ],
+  "commands": [
+    "python3 scripts/probe_jetson_backends.py --out-dir results/vpi_backend_support_probe_<YYYYMMDD>"
+  ],
+  "stop_reasons": [
+    "jetson_ssh_auth_blocker",
+    "python3_missing",
+    "probe_script_runtime_error_after_one_fix"
+  ],
+  "recovery_actions": {
+    "jetson_ssh_auth_blocker": "Ask user for current Jetson password or key setup; do not treat this as a VPI blocker.",
+    "vpi_import_failed": "Record environment gap and check installed JetPack/VPI packages before changing system packages.",
+    "operator_probe_failed": "Use docs/knowledge_base/routing.md public:nvidia_vpi_samples to classify API, format, or backend mismatch."
+  },
+  "evidence_output_directory": "results/vpi_backend_support_probe_<YYYYMMDD>",
+  "reporting_policy": "Summarize core progress in the chat from evidence files; do not create a standalone progress-summary Markdown document unless the user asks."
+}
