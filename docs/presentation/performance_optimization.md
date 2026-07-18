@@ -27,6 +27,8 @@ Both were faster but failed smoothness.
 
 Adding denser grid features made the low-resolution estimate path acceptable:
 
+![Regular05 runtime comparison](assets/regular05_runtime_comparison.svg)
+
 | Config | avg_estimate_ms | avg_warp_ms | total_wall_time_s |
 |---|---:|---:|---:|
 | estimate_scale=0.5, grid16 | 3.022 | 7.897 | 7.565 |

@@ -22,6 +22,8 @@ full pipeline.
 
 High-resolution warp-heavy benchmark:
 
+![VPI resolution scaling](assets/vpi_resolution_scaling.svg)
+
 | Resolution | OpenCV CPU ms | VPI CUDA ms | Speedup |
 |---|---:|---:|---:|
 | 1280x720 | 6.118 | 4.523 | 1.35x |

@@ -47,6 +47,36 @@ The strongest project story is measurement discipline:
 - VPI CUDA was still shown useful for high-resolution warp-heavy modules;
 - GStreamer/NVMM dataflow is scoped as the next latency loop, not overclaimed.
 
+## Three-Minute Version
+
+```text
+This is a Jetson Orin NX video stabilization project. I started from a
+controllable CPU EIS pipeline instead of treating the stabilizer as a black box:
+motion estimation, global motion smoothing, warp, crop, and visual review are
+all explicit.
+
+The first goal was not just to output a video, but to make the result measurable.
+I split the data into a Regular main gate and challenge/diagnostic sets, added
+metrics for residual motion, smoothness, crop, and black border, and preserved
+side-by-side review videos.
+
+The current Regular performance baseline is lp_rigid with dynamic zoom,
+estimate_scale=0.5, and feature_grid_size=16. It passes all five Regular clips
+and was accepted by human review. Compared with the quality-safe baseline on the
+Regular05 clip, estimate time dropped from 8.568 ms to 3.022 ms and total wall
+time dropped from 8.473 s to 7.565 s.
+
+For hardware acceleration, I measured both success and failure. A simple VPI
+backend swap was slower in the small full Python pipeline, but VPI CUDA showed
+1.35x to 2.33x speedup on high-resolution warp-heavy modules. I also verified a
+minimum GStreamer/NVMM decode and conversion path, but I do not claim EIS
+acceleration from it yet.
+
+The main engineering value is that every claim has a boundary: Regular baseline,
+challenge-set limitations, VPI module acceleration, and future NVMM dataflow
+work are kept separate.
+```
+
 ## Evidence
 
 ```text

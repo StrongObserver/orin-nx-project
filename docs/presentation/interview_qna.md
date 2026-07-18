@@ -79,6 +79,30 @@ decode -> NVMM convert -> CPU boundary or encode
 Only after that would I decide whether it is worth integrating into the EIS
 pipeline.
 
+## Q: Why not continue tuning Regular05?
+
+Because the Regular performance baseline already passes the current objective
+gate and was accepted by human review. The remaining tail shake is better treated
+as a global-warp model boundary than as a reason to keep sweeping parameters.
+
+## Q: Why not claim Running is solved?
+
+Running is a challenge set for this project. It is useful for explaining limits
+of pure visual global-warp EIS, not for the headline success metric. Promoting
+Running would require a different algorithm class or degradation policy.
+
+## Q: Why is the VPI result still useful if it did not speed up the full pipeline?
+
+It shows engineering judgment. The full pipeline result prevented a false claim.
+The high-resolution module benchmark still proves that VPI CUDA is useful when
+the warp workload is large enough. The next question is dataflow placement.
+
+## Q: Why keep the quality-safe baseline?
+
+The performance baseline is accepted for Regular-gate speedup. The quality-safe
+baseline remains useful when a future comparison needs the most conservative
+current setting or when a new clip raises visual concerns.
+
 ## Evidence To Mention
 
 ```text

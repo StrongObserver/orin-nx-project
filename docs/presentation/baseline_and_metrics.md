@@ -40,6 +40,27 @@ Use when the project claim is Regular-gate CPU performance.
 | regular_gate04 | 16.304 | 0.760 | 0.757 | C | pass |
 | regular_gate05 | 6.031 | 0.610 | 0.000 | A/B | pass |
 
+## Metric Meaning
+
+```text
+SR_pose:
+  How much residual pose energy is reduced. Higher is better.
+
+residual_improve:
+  How much unwanted residual translation is reduced. Higher is better.
+
+second_top5_improve:
+  High-frequency smoothness non-regression. Negative values mean worse jitter or
+  snapback risk; non-negative values are required for this stage.
+
+black/crop gates:
+  Hard degradation checks. A result with better stability but visible black
+  border or excessive crop is not promoted.
+
+visual review:
+  Final veto for frame jump, rollback, jello, local pull, or unacceptable blur.
+```
+
 ## Visual Boundary
 
 The user accepted all five Regular review videos. The remaining slight tail

@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="360" viewBox="0 0 900 360">
+  <rect width="900" height="360" fill="#ffffff"/>
+  <text x="40" y="38" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="600" fill="#1f2937">Regular05 CPU Runtime Comparison</text>
+  <text x="40" y="66" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="#4b5563">Jetson Orin NX, same input, lower is better</text>
+
+  <line x1="180" y1="295" x2="835" y2="295" stroke="#9ca3af" stroke-width="1"/>
+  <line x1="180" y1="95" x2="180" y2="295" stroke="#9ca3af" stroke-width="1"/>
+
+  <text x="102" y="128" font-family="Segoe UI, Arial, sans-serif" font-size="14" text-anchor="end" fill="#374151">Estimate</text>
+  <text x="102" y="208" font-family="Segoe UI, Arial, sans-serif" font-size="14" text-anchor="end" fill="#374151">Warp</text>
+  <text x="102" y="288" font-family="Segoe UI, Arial, sans-serif" font-size="14" text-anchor="end" fill="#374151">Total wall</text>
+
+  <text x="180" y="316" font-family="Segoe UI, Arial, sans-serif" font-size="12" text-anchor="middle" fill="#6b7280">0</text>
+  <text x="290" y="316" font-family="Segoe UI, Arial, sans-serif" font-size="12" text-anchor="middle" fill="#6b7280">2</text>
+  <text x="400" y="316" font-family="Segoe UI, Arial, sans-serif" font-size="12" text-anchor="middle" fill="#6b7280">4</text>
+  <text x="510" y="316" font-family="Segoe UI, Arial, sans-serif" font-size="12" text-anchor="middle" fill="#6b7280">6</text>
+  <text x="620" y="316" font-family="Segoe UI, Arial, sans-serif" font-size="12" text-anchor="middle" fill="#6b7280">8</text>
+  <text x="730" y="316" font-family="Segoe UI, Arial, sans-serif" font-size="12" text-anchor="middle" fill="#6b7280">10 ms / s</text>
+
+  <rect x="180" y="105" width="471" height="26" fill="#64748b"/>
+  <rect x="180" y="137" width="166" height="26" fill="#16a34a"/>
+  <text x="660" y="124" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#374151">8.568 ms quality-safe</text>
+  <text x="355" y="156" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#374151">3.022 ms performance</text>
+
+  <rect x="180" y="185" width="436" height="26" fill="#64748b"/>
+  <rect x="180" y="217" width="434" height="26" fill="#16a34a"/>
+  <text x="625" y="204" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#374151">7.936 ms</text>
+  <text x="623" y="236" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#374151">7.897 ms</text>
+
+  <rect x="180" y="265" width="466" height="26" fill="#64748b"/>
+  <rect x="180" y="297" width="416" height="26" fill="#16a34a"/>
+  <text x="655" y="284" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#374151">8.473 s</text>
+  <text x="605" y="316" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#374151">7.565 s</text>
+
+  <rect x="610" y="55" width="14" height="14" fill="#64748b"/>
+  <text x="630" y="67" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#374151">quality-safe: est1.0 grid12</text>
+  <rect x="610" y="77" width="14" height="14" fill="#16a34a"/>
+  <text x="630" y="89" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#374151">Regular performance: est0.5 grid16</text>
+
+  <text x="40" y="340" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#4b5563">Result: estimate stage -65%; total wall time -11% on Regular05. Source: Regular performance baseline validation.</text>
+</svg>

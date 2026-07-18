@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="380" viewBox="0 0 900 380">
+  <rect width="900" height="380" fill="#ffffff"/>
+  <text x="40" y="38" font-family="Segoe UI, Arial, sans-serif" font-size="24" font-weight="600" fill="#1f2937">VPI CUDA Warp Module Scaling</text>
+  <text x="40" y="66" font-family="Segoe UI, Arial, sans-serif" font-size="14" fill="#4b5563">Jetson Orin NX, high-resolution warp-heavy benchmark, higher is better</text>
+
+  <line x1="95" y1="305" x2="840" y2="305" stroke="#9ca3af" stroke-width="1"/>
+  <line x1="95" y1="95" x2="95" y2="305" stroke="#9ca3af" stroke-width="1"/>
+
+  <text x="84" y="309" font-family="Segoe UI, Arial, sans-serif" font-size="12" text-anchor="end" fill="#6b7280">1.0x</text>
+  <text x="84" y="241" font-family="Segoe UI, Arial, sans-serif" font-size="12" text-anchor="end" fill="#6b7280">1.5x</text>
+  <text x="84" y="173" font-family="Segoe UI, Arial, sans-serif" font-size="12" text-anchor="end" fill="#6b7280">2.0x</text>
+  <text x="84" y="105" font-family="Segoe UI, Arial, sans-serif" font-size="12" text-anchor="end" fill="#6b7280">2.5x</text>
+
+  <line x1="95" y1="237" x2="840" y2="237" stroke="#e5e7eb" stroke-width="1"/>
+  <line x1="95" y1="169" x2="840" y2="169" stroke="#e5e7eb" stroke-width="1"/>
+  <line x1="95" y1="101" x2="840" y2="101" stroke="#e5e7eb" stroke-width="1"/>
+
+  <rect x="155" y="257" width="95" height="48" fill="#2563eb"/>
+  <rect x="330" y="192" width="95" height="113" fill="#2563eb"/>
+  <rect x="505" y="149" width="95" height="156" fill="#2563eb"/>
+  <rect x="680" y="125" width="95" height="180" fill="#2563eb"/>
+
+  <text x="202" y="247" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" text-anchor="middle" fill="#1f2937">1.35x</text>
+  <text x="377" y="182" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" text-anchor="middle" fill="#1f2937">1.83x</text>
+  <text x="552" y="139" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" text-anchor="middle" fill="#1f2937">2.15x</text>
+  <text x="727" y="115" font-family="Segoe UI, Arial, sans-serif" font-size="14" font-weight="600" text-anchor="middle" fill="#1f2937">2.33x</text>
+
+  <text x="202" y="330" font-family="Segoe UI, Arial, sans-serif" font-size="13" text-anchor="middle" fill="#374151">1280x720</text>
+  <text x="377" y="330" font-family="Segoe UI, Arial, sans-serif" font-size="13" text-anchor="middle" fill="#374151">1920x1080</text>
+  <text x="552" y="330" font-family="Segoe UI, Arial, sans-serif" font-size="13" text-anchor="middle" fill="#374151">2560x1440</text>
+  <text x="727" y="330" font-family="Segoe UI, Arial, sans-serif" font-size="13" text-anchor="middle" fill="#374151">3840x2160</text>
+
+  <text x="40" y="360" font-family="Segoe UI, Arial, sans-serif" font-size="13" fill="#4b5563">Boundary: VPI CUDA helps high-resolution warp-heavy modules, but did not accelerate the small 640x360 full Python EIS pipeline.</text>
+</svg>
