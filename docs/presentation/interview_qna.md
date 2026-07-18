@@ -70,14 +70,20 @@ So the lesson is placement and dataflow matter.
 
 ## Q: What would you do next?
 
-I would measure the GStreamer/NVMM dataflow boundary:
+The next implementation direction is not another baseline tuning loop. I would
+polish the two evidence chains that are already measured:
 
 ```text
-decode -> NVMM convert -> CPU boundary or encode
+VPI high-resolution module demo:
+  acceleration boundary
+
+Challenge-set boundary package:
+  model operating envelope
 ```
 
-Only after that would I decide whether it is worth integrating into the EIS
-pipeline.
+GStreamer/NVMM remains useful as a systems-boundary story, but I would not plug
+the current CPU EIS into a Python appsink/appsrc loop because the measured
+pass-through cost is already about 15.81 ms/frame before EIS computation.
 
 ## Q: Why not continue tuning Regular05?
 
@@ -91,11 +97,30 @@ Running is a challenge set for this project. It is useful for explaining limits
 of pure visual global-warp EIS, not for the headline success metric. Promoting
 Running would require a different algorithm class or degradation policy.
 
+## Q: What did the challenge set prove?
+
+It proved the operating envelope. Regular clips are the in-domain success case.
+Running, QuickRotation, Parallax, and Crowd expose where the global-warp model
+breaks: FOV pressure, fast rotation, foreground/background depth variation, and
+dynamic foreground contamination.
+
 ## Q: Why is the VPI result still useful if it did not speed up the full pipeline?
 
 It shows engineering judgment. The full pipeline result prevented a false claim.
 The high-resolution module benchmark still proves that VPI CUDA is useful when
 the warp workload is large enough. The next question is dataflow placement.
+
+## Q: Why stop Python GStreamer integration?
+
+Because the dataflow boundary is already expensive before EIS is added:
+
+```text
+appsink readback: about 7.93 ms/frame
+appsink -> appsrc -> encode pass-through: about 15.81 ms/frame
+```
+
+That is not a good path for accelerating the current CPU EIS pipeline. If this
+route continues, it should move toward C++/CUDA or device-side processing.
 
 ## Q: Why keep the quality-safe baseline?
 

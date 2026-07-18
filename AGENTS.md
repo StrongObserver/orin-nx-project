@@ -7,8 +7,12 @@ This file is a lightweight dispatcher for future AI agents working on this proje
 1. Project requirement prompt and current intent:
 
 ```text
-C:\Users\Admin\Desktop\orin nx project口播模板.md
+C:\Users\Admin\Desktop\orin nx project\orin nx 项目口播模板.txt
 ```
+
+This `.txt` file is the current authoritative oral-template entrypoint. Do not
+look for or create an `.md` oral-template replacement unless the user explicitly
+changes this rule.
 
 2. High-level project target reference, especially "项目二：Jetson Orin NX 视频稳像（EIS）与异构加速":
 

@@ -15,6 +15,26 @@ shaky video
 -> honest boundary and trade-off summary
 ```
 
+## Current Highlights
+
+```text
+Regular performance baseline:
+  lp_rigid_strength080_dynzoom106 + estimate_scale=0.5 + feature_grid_size=16
+  NUS Regular gate: 5/5 objective pass and human accepted
+
+VPI acceleration boundary:
+  640x360 full Python EIS pipeline is slower with VPI backend swap
+  720p -> 4K warp-heavy module shows 1.35x -> 2.33x VPI CUDA speedup
+
+Challenge model boundary:
+  Running / QuickRotation / Parallax / Crowd expose global-warp FOV, rotation,
+  parallax, and foreground-motion limits
+
+GStreamer/NVMM boundary:
+  Python appsink/appsrc pass-through costs about 15.81 ms/frame before EIS work,
+  so direct Python-in-the-loop EIS integration is not the next acceleration path
+```
+
 ## Current Stage
 
 The accepted custom CPU baseline is frozen as:
@@ -140,6 +160,17 @@ filesrc -> qtdemux -> h264parse -> nvv4l2decoder -> NVMM -> nvvidconv -> BGRx ->
 The 1080p probe reached EOS successfully in about 1.60s. This is only a dataflow
 readiness result, not EIS acceleration.
 
+Python-in-the-loop boundary:
+
+| Path | Result |
+|---|---:|
+| appsink BGRx readback | 7.93 ms/frame |
+| appsink -> appsrc -> encode pass-through | 15.81 ms/frame |
+
+Conclusion: direct Python GStreamer integration is not the next best way to
+accelerate the current CPU EIS pipeline. If this direction resumes, prefer a
+C++/CUDA or device-side dataflow path.
+
 ## Control Plane
 
 Harness and evaluation files:
@@ -193,6 +224,7 @@ results/estimate_scale_quality_perf_20260718/quality_perf_summary.md
 results/regular_gate_est0p5_grid16_validation_20260718/regular_gate_validation_summary.md
 results/vpi_resolution_scaling_benchmark/vpi_module_summary.md
 results/gst_nvmm_probe_20260718_summary.md
+results/gst_appsrc_encode_boundary_20260718/summary.md
 docs/stage_result_regular_performance_baseline_2026-07-18.md
 docs/gstreamer_nvmm_latency_plan_2026-07-18.md
 C:\Users\Admin\Videos\orin nx\review\quality\20260718_regular05_new_method\
