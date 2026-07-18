@@ -1682,6 +1682,7 @@ def stabilize_video(
     input_path: Path,
     output_path: Path,
     metrics_path: Path,
+    matrix_output_path: Path | None,
     smoothing_radius: int,
     smoothing_method: str,
     gaussian_stdev: float,
@@ -2048,6 +2049,7 @@ def stabilize_video(
     writer.write(apply_unsharp_mask(first_output, sharpen_strength, sharpen_sigma))
 
     warp_times_ms = []
+    matrix_rows = []
     black_ratios = []
     invalid_mask_ratios = []
     frames_written = 1
@@ -2071,6 +2073,20 @@ def stabilize_video(
                 ],
                 dtype=np.float32,
             )
+        mat_3x3 = np.eye(3, dtype=np.float32)
+        mat_3x3[:2, :] = mat.astype(np.float32)
+        matrix_rows.append([
+            i + 1,
+            f"{float(mat_3x3[0, 0]):.9f}",
+            f"{float(mat_3x3[0, 1]):.9f}",
+            f"{float(mat_3x3[0, 2]):.9f}",
+            f"{float(mat_3x3[1, 0]):.9f}",
+            f"{float(mat_3x3[1, 1]):.9f}",
+            f"{float(mat_3x3[1, 2]):.9f}",
+            f"{float(mat_3x3[2, 0]):.9f}",
+            f"{float(mat_3x3[2, 1]):.9f}",
+            f"{float(mat_3x3[2, 2]):.9f}",
+        ])
 
         t0 = time.perf_counter()
         if vpi_warper is None:
@@ -2093,6 +2109,13 @@ def stabilize_video(
 
     cap.release()
     writer.release()
+
+    if matrix_output_path is not None:
+        matrix_output_path.parent.mkdir(parents=True, exist_ok=True)
+        with matrix_output_path.open("w", newline="", encoding="utf-8") as f:
+            csv_writer = csv.writer(f)
+            csv_writer.writerow(["frame_index", "m00", "m01", "m02", "m10", "m11", "m12", "m20", "m21", "m22"])
+            csv_writer.writerows(matrix_rows)
 
     with metrics_path.open("w", newline="", encoding="utf-8") as f:
         csv_writer = csv.writer(f)
@@ -2153,6 +2176,7 @@ def stabilize_video(
         "input": str(input_path),
         "output": str(output_path),
         "metrics": str(metrics_path),
+        "matrix_output": "" if matrix_output_path is None else str(matrix_output_path),
         "width": width,
         "height": height,
         "fps": fps,
@@ -2292,6 +2316,7 @@ def main():
     parser.add_argument("--input", required=True, type=Path, help="Input shaky video path")
     parser.add_argument("--output", required=True, type=Path, help="Output stabilized video path")
     parser.add_argument("--metrics", required=True, type=Path, help="Output per-frame CSV metrics path")
+    parser.add_argument("--matrix-output", type=Path, default=None, help="Optional CSV path for final per-frame 3x3 warp matrices")
     parser.add_argument("--smoothing-radius", type=int, default=45, help="Trajectory smoothing radius")
     parser.add_argument("--smoothing-method", choices=["moving_average", "gaussian", "constrained_box", "constrained_gaussian", "constrained_qp", "constrained_qp_l1", "lp_rigid", "lp_affine"], default="gaussian", help="Trajectory smoothing method")
     parser.add_argument("--gaussian-stdev", type=float, default=0.0, help="Gaussian smoothing stdev; <=0 uses radius/3")
@@ -2375,6 +2400,7 @@ def main():
         args.input,
         args.output,
         args.metrics,
+        args.matrix_output,
         args.smoothing_radius,
         args.smoothing_method,
         args.gaussian_stdev,

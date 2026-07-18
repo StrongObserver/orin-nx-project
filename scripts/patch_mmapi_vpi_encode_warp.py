@@ -5,6 +5,63 @@ from pathlib import Path
 
 
 VPI_INSERT = r'''
+struct VpiMatrix3x3
+{
+    float m[3][3];
+};
+
+static bool g_vpi_matrices_loaded = false;
+static std::vector<VpiMatrix3x3> g_vpi_matrices;
+
+static void
+load_vpi_matrices_once()
+{
+    if (g_vpi_matrices_loaded)
+    {
+        return;
+    }
+    g_vpi_matrices_loaded = true;
+    const char *path = getenv("VPI_MATRIX_CSV");
+    if (path == NULL || path[0] == '\0')
+    {
+        return;
+    }
+    std::ifstream file(path);
+    if (!file.is_open())
+    {
+        cerr << "VPI matrix CSV could not be opened: " << path << endl;
+        return;
+    }
+    std::string line;
+    std::getline(file, line); // header
+    while (std::getline(file, line))
+    {
+        std::stringstream ss(line);
+        std::string cell;
+        std::vector<std::string> cells;
+        while (std::getline(ss, cell, ','))
+        {
+            cells.push_back(cell);
+        }
+        if (cells.size() < 10)
+        {
+            continue;
+        }
+        VpiMatrix3x3 mat = {};
+        mat.m[0][0] = std::stof(cells[1]);
+        mat.m[0][1] = std::stof(cells[2]);
+        mat.m[0][2] = std::stof(cells[3]);
+        mat.m[1][0] = std::stof(cells[4]);
+        mat.m[1][1] = std::stof(cells[5]);
+        mat.m[1][2] = std::stof(cells[6]);
+        mat.m[2][0] = std::stof(cells[7]);
+        mat.m[2][1] = std::stof(cells[8]);
+        mat.m[2][2] = std::stof(cells[9]);
+        g_vpi_matrices.push_back(mat);
+    }
+    cerr << "VPI_MATRIX_LOADED path=" << path << " count=" << g_vpi_matrices.size() << endl;
+}
+
 static int
 vpi_warp_egl_image(EGLImageKHR image)
 {
@@ -101,7 +158,34 @@ vpi_warp_egl_image(EGLImageKHR image)
         output_data.buffer.pitch.planes[1].pitchBytes = scratch_uv_pitch;
     }
     VPIStatus status = VPI_SUCCESS;
+    static int frame_count = 0;
+    int current_frame = frame_count + 1;
+    load_vpi_matrices_once();
     VPIPerspectiveTransform xform = {1.0f, 0.002f, 1.0f, -0.002f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f};
+    if (!g_vpi_matrices.empty())
+    {
+        size_t matrix_index = static_cast<size_t>(current_frame - 1);
+        if (matrix_index < g_vpi_matrices.size())
+        {
+            memcpy(xform, g_vpi_matrices[matrix_index].m, sizeof(xform));
+        }
+        else
+        {
+            xform[0][0] = 1.0f;
+            xform[0][1] = 0.0f;
+            xform[0][2] = 0.0f;
+            xform[1][0] = 0.0f;
+            xform[1][1] = 1.0f;
+            xform[1][2] = 0.0f;
+            xform[2][0] = 0.0f;
+            xform[2][1] = 0.0f;
+            xform[2][2] = 1.0f;
+            if (current_frame <= 5 || current_frame % 100 == 0)
+            {
+                cerr << "VPI_MATRIX_FALLBACK_IDENTITY frame=" << current_frame << endl;
+            }
+        }
+    }
 
     status = vpiStreamCreate(VPI_BACKEND_CUDA, &stream);
     if (status != VPI_SUCCESS) goto vpi_fail;
@@ -139,7 +223,6 @@ vpi_warp_egl_image(EGLImageKHR image)
             }
         }
         auto t1 = std::chrono::high_resolution_clock::now();
-        static int frame_count = 0;
         static double total_ms = 0.0;
         double elapsed_ms = std::chrono::duration<double, std::milli>(t1 - t0).count();
         frame_count++;
@@ -182,8 +265,13 @@ def patch_main(path: Path) -> None:
         '#include "video_cuda_enc.h"\n',
         '#include "video_cuda_enc.h"\n'
         "#include <chrono>\n"
+        "#include <cstdlib>\n"
         "#include <cuda.h>\n"
         "#include <cuda_runtime.h>\n"
+        "#include <fstream>\n"
+        "#include <sstream>\n"
+        "#include <string>\n"
+        "#include <vector>\n"
         '#include "cudaEGL.h"\n'
         "#include <vpi/Image.h>\n"
         "#include <vpi/Status.h>\n"

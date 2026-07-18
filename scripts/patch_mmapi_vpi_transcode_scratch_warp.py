@@ -51,8 +51,13 @@ def patch_main(path: Path) -> None:
             '#include "NvUtils.h"\n#include "multivideo_transcode.h"\n',
             '#include "NvUtils.h"\n#include "multivideo_transcode.h"\n'
             "#include <chrono>\n"
+            "#include <cstdlib>\n"
             "#include <cuda.h>\n"
             "#include <cuda_runtime.h>\n"
+            "#include <fstream>\n"
+            "#include <sstream>\n"
+            "#include <string>\n"
+            "#include <vector>\n"
             '#include "cudaEGL.h"\n'
             "#include <vpi/Image.h>\n"
             "#include <vpi/Status.h>\n"
