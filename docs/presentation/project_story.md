@@ -45,7 +45,8 @@ The strongest project story is measurement discipline:
 - Regular performance baseline is measured on Jetson;
 - VPI full-pipeline backend swap was rejected because it was slower;
 - VPI CUDA was still shown useful for high-resolution warp-heavy modules;
-- GStreamer/NVMM dataflow is scoped as the next latency loop, not overclaimed.
+- challenge sets are used to map model boundaries instead of being hidden;
+- GStreamer/NVMM dataflow is scoped as a latency boundary, not overclaimed.
 
 ## Three-Minute Version
 
@@ -68,9 +69,10 @@ time dropped from 8.473 s to 7.565 s.
 
 For hardware acceleration, I measured both success and failure. A simple VPI
 backend swap was slower in the small full Python pipeline, but VPI CUDA showed
-1.35x to 2.33x speedup on high-resolution warp-heavy modules. I also verified a
-minimum GStreamer/NVMM decode and conversion path, but I do not claim EIS
-acceleration from it yet.
+1.35x to 2.33x speedup on high-resolution warp-heavy modules. I also evaluated
+challenge sets to map where the global-warp model fails, and verified a minimum
+GStreamer/NVMM decode and conversion path. I do not claim EIS acceleration from
+GStreamer yet; I use it as a measured dataflow boundary.
 
 The main engineering value is that every claim has a boundary: Regular baseline,
 challenge-set limitations, VPI module acceleration, and future NVMM dataflow
@@ -83,4 +85,6 @@ work are kept separate.
 docs/stage_result_regular_performance_baseline_2026-07-18.md
 docs/project_showcase_summary_2026-07-18.md
 results/regular_gate_est0p5_grid16_validation_20260718/regular_gate_validation_summary.md
+docs/challenge_boundary_report_2026-07-18.md
+results/gst_nvmm_decode_convert_latency_20260718/summary.md
 ```

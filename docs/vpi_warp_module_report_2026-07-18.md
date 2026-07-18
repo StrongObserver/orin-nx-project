@@ -69,12 +69,46 @@ VPI is always faster than OpenCV.
 The 4K module benchmark proves the Regular baseline is accelerated.
 ```
 
+## Correctness Sanity Check
+
+Existing `vpi_warp_benchmark` videos were compared frame by frame:
+
+```text
+OpenCV CPU output: results/vpi_warp_benchmark/warp_opencv_cpu.mp4
+VPI CUDA output:  results/vpi_warp_benchmark/warp_vpi_cuda.mp4
+```
+
+Result:
+
+| Region | Mean abs diff | Avg p95 abs diff | Max abs diff |
+|---|---:|---:|---:|
+| Full frame | 16.817 | 82.326 | 255 |
+| Center crop | 9.153 | 34.481 | 182 |
+
+Interpretation:
+
+```text
+This is a sanity check, not a strict pixel-equivalence proof. The existing
+benchmark compares encoded videos, and the two paths use different border and
+format-conversion behavior: OpenCV uses reflected borders, while the VPI path
+uses NV12/RGB conversion and zero-border behavior. The center region is closer
+than the full frame, which is consistent with border and conversion differences.
+```
+
+Next improvement if this becomes a formal module demo:
+
+```text
+Compare raw frames before video encoding, align border modes where possible, and
+record a threshold based on actual interpolation and format constraints.
+```
+
 ## Evidence
 
 ```text
 results/perf_backend_compare_20260718/backend_compare_summary.md
 results/vpi_resolution_scaling_benchmark/summary.csv
 results/vpi_resolution_scaling_benchmark/vpi_module_summary.md
+results/vpi_highres_warp_module_demo_20260718/vpi_correctness_summary.csv
 ```
 
 ## Next Step

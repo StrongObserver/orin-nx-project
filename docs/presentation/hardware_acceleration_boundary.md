@@ -48,6 +48,21 @@ filesrc -> qtdemux -> h264parse -> nvv4l2decoder -> NVMM -> nvvidconv -> BGRx ->
 
 This proves dataflow readiness, not EIS acceleration.
 
+Measured latency anchors:
+
+| Case | EOS | Wall time |
+|---|---|---:|
+| decode/NVMM/convert/fakesink, avg of 3 | 3/3 | 1.931 s |
+| hardware encode path | 1/1 | 1.299 s |
+| CPU-readable boundary | 1/1 | 1.960 s |
+
+Interpretation:
+
+```text
+The Jetson dataflow path is available and measurable. The next step is an
+appsink/appsrc boundary with frame counting, not immediate EIS integration.
+```
+
 ## Interview Wording
 
 ```text
@@ -63,6 +78,7 @@ before trying to integrate it into EIS.
 ```text
 docs/vpi_warp_module_report_2026-07-18.md
 docs/gstreamer_nvmm_latency_plan_2026-07-18.md
+results/gst_nvmm_decode_convert_latency_20260718/summary.md
 results/perf_backend_compare_20260718/backend_compare_summary.md
 results/vpi_resolution_scaling_benchmark/vpi_module_summary.md
 results/gst_nvmm_probe_20260718_summary.md
