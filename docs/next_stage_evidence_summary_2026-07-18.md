@@ -70,13 +70,15 @@ Measured dataflow anchors:
 | hardware encode path | 1/1 | 1.299 s |
 | CPU-readable boundary | 1/1 | 1.960 s |
 | Python appsink BGRx pull | 240 frames | 1.904 s / 7.93 ms per frame |
+| Python appsink -> appsrc -> encode | 240 frames | 3.793 s / 15.81 ms per frame |
 
 Decision:
 
 ```text
-The Jetson dataflow path is available and measurable. Python appsink readback is
-also measurable. Do not integrate into cpu_stabilize.py yet. The next useful
-step is an appsrc/encode return-path measurement.
+The Jetson dataflow path is available and measurable. Python appsink readback and
+appsrc return are also measurable. The pass-through path already costs about
+15.8 ms/frame before any EIS computation, so direct Python-in-the-loop GStreamer
+integration is not the next best acceleration path.
 ```
 
 ## Next Execution Choice
@@ -97,7 +99,7 @@ implementation risk.
 Secondary next loop:
 
 ```text
-GStreamer appsrc/encode return-path measurement.
+Keep GStreamer/NVMM as a dataflow-boundary story unless future C++/CUDA device-side processing is planned.
 ```
 
 Defer:

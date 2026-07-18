@@ -56,13 +56,16 @@ Measured latency anchors:
 | hardware encode path | 1/1 | 1.299 s |
 | CPU-readable boundary | 1/1 | 1.960 s |
 | Python appsink BGRx pull | 240 frames | 1.904 s / 7.93 ms per frame |
+| Python appsink -> appsrc -> encode | 240 frames | 3.793 s / 15.81 ms per frame |
 
 Interpretation:
 
 ```text
 The Jetson dataflow path is available and measurable. Python appsink readback is
-also measurable at about 7.93 ms/frame for this 1080p probe. The next step is an
-appsrc/encode return path, not immediate EIS integration.
+about 7.93 ms/frame, and the full Python appsink -> appsrc -> encode
+pass-through costs about 15.81 ms/frame before any EIS computation. This is a
+strong boundary signal: direct Python-in-the-loop GStreamer EIS integration is
+not the next best acceleration path.
 ```
 
 ## Interview Wording
@@ -82,6 +85,7 @@ docs/vpi_warp_module_report_2026-07-18.md
 docs/gstreamer_nvmm_latency_plan_2026-07-18.md
 results/gst_nvmm_decode_convert_latency_20260718/summary.md
 results/gst_nvmm_decode_convert_latency_20260718/appsink_summary.csv
+results/gst_appsrc_encode_boundary_20260718/summary.md
 results/perf_backend_compare_20260718/backend_compare_summary.md
 results/vpi_resolution_scaling_benchmark/vpi_module_summary.md
 results/gst_nvmm_probe_20260718_summary.md

@@ -111,10 +111,30 @@ zero-copy integration
 full-pipeline speedup
 ```
 
+Latest boundary result:
+
+```text
+Python appsink BGRx readback:
+  240 frames, 1.904 s, about 7.93 ms/frame
+
+Python appsink -> appsrc -> hardware encode pass-through:
+  240 frames, 3.793 s, about 15.81 ms/frame
+```
+
+Decision:
+
+```text
+Do not integrate the current CPU EIS into a Python appsink/appsrc GStreamer loop.
+The pass-through boundary is already too expensive before EIS computation.
+Keep GStreamer/NVMM as dataflow-boundary evidence unless a future C++/CUDA
+device-side path is planned.
+```
+
 Contract:
 
 ```text
 configs/harness/contracts/gst_nvmm_decode_convert_latency_v1.json
+configs/harness/contracts/gst_appsrc_encode_boundary_v1.json
 ```
 
 ## Deferred Route: Mesh / Grid Warp

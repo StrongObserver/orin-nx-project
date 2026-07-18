@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "contract_id": "gst_appsrc_encode_boundary_v1",
+  "status": "draft_ready",
+  "loop_type": "dataflow_performance_loop",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Measure the Python appsink-to-appsrc return path and hardware encode boundary before any EIS integration.",
+  "input": {
+    "clip": "data/raw/sample_1920x1080_from4k.mp4",
+    "role": "dataflow_probe_only",
+    "claim_boundary": "This measures Python-in-the-loop dataflow overhead only, not EIS quality or EIS acceleration."
+  },
+  "pipeline_under_test": {
+    "decode_side": "filesrc -> qtdemux -> h264parse -> nvv4l2decoder -> nvvidconv -> BGRx -> appsink",
+    "encode_side": "appsrc -> videoconvert -> nvvidconv -> NVMM/NV12 -> nvv4l2h264enc -> h264parse -> qtmux -> filesink",
+    "python_work": "pass-through only; no EIS, no warp, no feature tracking"
+  },
+  "allowed_variables": [
+    "appsrc caps",
+    "encoder bitrate",
+    "frame count limit",
+    "sink output path"
+  ],
+  "frozen_variables": [
+    "do_not_modify_cpu_stabilize",
+    "do_not_change_regular_baseline",
+    "do_not_claim_eis_acceleration",
+    "do_not_claim_zero_copy"
+  ],
+  "hard_validators": [
+    "script_exits_zero",
+    "frames_in_gt_0",
+    "frames_out_gt_0",
+    "output_mp4_exists",
+    "wall_time_logged",
+    "ms_per_frame_logged"
+  ],
+  "external_observation": [
+    "script_exit_code",
+    "frame_count",
+    "output_file",
+    "summary_csv",
+    "summary_md"
+  ],
+  "promotion_thresholds": {
+    "can_continue_to_light_cpu_probe_if": [
+      "pass-through reaches EOS or drains all frames",
+      "output file is readable",
+      "frame count is close to input frame count",
+      "wall time is recorded"
+    ],
+    "cannot_claim": [
+      "EIS full-pipeline acceleration",
+      "quality improvement",
+      "zero-copy integration"
+    ]
+  },
+  "max_attempts": 2,
+  "stop_reasons": [
+    "pass_through_boundary_measured",
+    "caps_negotiation_failed_after_one_fix_attempt",
+    "encoder_path_unstable",
+    "would_require_eis_integration",
+    "would_require_system_package_install"
+  ],
+  "evidence_output_directory": "results/gst_appsrc_encode_boundary_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/performance/<YYYYMMDD>_gst_appsrc_encode_boundary"
+}
