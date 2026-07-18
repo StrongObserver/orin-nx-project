@@ -1,0 +1,263 @@
+{
+  "schema_version": 1,
+  "project": "orin-nx-eis",
+  "purpose": "Lifecycle metric schema for Orin NX EIS evaluation. Metrics are layered so agents can use redundant evidence without mixing hard gates, diagnostic signals, and future calibration work.",
+  "source_principles": [
+    "Objective metrics are proxy signals and must be paired with side-by-side visual review.",
+    "Hard degradation gates protect against unacceptable output even if stability metrics improve.",
+    "General IQA metrics are diagnostic until calibrated against Orin EIS human review.",
+    "Performance metrics support resume claims only when platform_label=jetson and same-input semantics are frozen."
+  ],
+  "layers": [
+    {
+      "id": "hard_degradation_gates",
+      "authority": "hard_gate",
+      "metrics": [
+        {
+          "id": "crop_loss_ratio",
+          "definition": "1 - crop_ratio",
+          "current_threshold": {
+            "pass_lt": 0.10,
+            "hard_fail_gt": 0.15
+          },
+          "implemented_in": "src/evaluate_baseline_v1.py",
+          "used_by": [
+            "quality_loop",
+            "performance_loop"
+          ],
+          "notes": "Crop over 15% violates the current formal boundary."
+        },
+        {
+          "id": "black_border_ratio",
+          "definition": "Near-black connected components touching image boundary; p95 and consecutive frames are used.",
+          "current_threshold": {
+            "mean_pass_lt": 0.001,
+            "p95_hard_fail_gt": 0.01
+          },
+          "implemented_in": "src/evaluate_baseline_v1.py",
+          "used_by": [
+            "quality_loop",
+            "performance_loop"
+          ],
+          "notes": "Continuous or edge-connected black border remains a manual veto even if p95 is low."
+        }
+      ]
+    },
+    {
+      "id": "eis_core_motion_metrics",
+      "authority": "soft_gate_with_manual_review",
+      "metrics": [
+        {
+          "id": "sr_residual_pose",
+          "definition": "original residual_pose_energy / stabilized residual_pose_energy after intent-trajectory removal",
+          "current_threshold": {
+            "pass_gt": 1.2,
+            "fail_lt": 1.0
+          },
+          "implemented_in": "src/evaluate_baseline_v1.py",
+          "used_by": [
+            "quality_loop",
+            "scene_gate_loop"
+          ],
+          "notes": "A stability proxy. It does not override visual veto or scene role."
+        },
+        {
+          "id": "improve_residual_trans_std",
+          "definition": "1 - stabilized residual_trans_std / original residual_trans_std",
+          "current_threshold": {
+            "pass_gte": 0.15,
+            "acceptable_gte": 0.10
+          },
+          "implemented_in": "src/evaluate_baseline_v1.py",
+          "used_by": [
+            "quality_loop"
+          ],
+          "notes": "Residual image-motion improvement proxy."
+        },
+        {
+          "id": "improve_second_diff_top5_mean",
+          "definition": "Improvement of the largest 5% normalized pose second-derivative magnitudes",
+          "current_threshold": {
+            "non_regression_gte": 0.0
+          },
+          "implemented_in": "src/evaluate_baseline_v1.py",
+          "used_by": [
+            "quality_loop",
+            "challenge_gate_reporting"
+          ],
+          "notes": "Smoothness non-regression gate. High-risk challenge clips may report this separately from hard degradation gates."
+        },
+        {
+          "id": "layered_acceptance",
+          "definition": "Production-style reading that separates hard crop/black gates, stability, smoothness, and scenario role",
+          "implemented_in": "src/evaluate_baseline_v1.py",
+          "used_by": [
+            "evaluate_gate_matrix.py",
+            "summarize_gate_report.py"
+          ],
+          "notes": "Primary machine-readable acceptance summary, but still requires visual review."
+        }
+      ]
+    },
+    {
+      "id": "scene_gate_diagnostics",
+      "authority": "diagnostic_and_routing",
+      "metrics": [
+        {
+          "id": "motion_p95",
+          "definition": "95th percentile global affine translation magnitude",
+          "implemented_in": "scripts/scene_gate_diagnostics.py",
+          "notes": "Helps identify high-motion challenge clips."
+        },
+        {
+          "id": "local_global_ratio_p95",
+          "definition": "95th percentile local residual normalized by global motion",
+          "implemented_in": "scripts/scene_gate_diagnostics.py",
+          "notes": "High value suggests local motion, foreground, parallax, or weak global model fit."
+        },
+        {
+          "id": "row_residual_range_p95",
+          "definition": "Row-band residual variation proxy",
+          "implemented_in": "scripts/scene_gate_diagnostics.py",
+          "notes": "Helps flag rolling-shutter-like or spatially variant motion risk."
+        },
+        {
+          "id": "running_band_energy_ratio",
+          "definition": "Energy ratio in 2.5-5Hz vertical motion band",
+          "implemented_in": "scripts/scene_gate_diagnostics.py",
+          "notes": "Helps flag running/high-frequency motion scenes."
+        },
+        {
+          "id": "scene_gate_class",
+          "definition": "normal_candidate, global_model_risk, or challenge_degrade",
+          "implemented_in": "scripts/scene_gate_diagnostics.py",
+          "notes": "Routes clips into main/challenge/diagnostic use. It is not a quality score."
+        }
+      ]
+    },
+    {
+      "id": "visual_quality_diagnostics",
+      "authority": "diagnostic_until_calibrated",
+      "metrics": [
+        {
+          "id": "laplacian_var_mean",
+          "definition": "Mean Laplacian variance over sampled frames",
+          "implemented_in": "scripts/diagnose_artifact_boundaries.py",
+          "notes": "Sharpness proxy; can be fooled by noise and ringing."
+        },
+        {
+          "id": "tenengrad_mean",
+          "definition": "Mean Sobel-gradient energy over sampled frames",
+          "implemented_in": "scripts/diagnose_artifact_boundaries.py",
+          "notes": "Sharpness/edge proxy; diagnostic only."
+        },
+        {
+          "id": "laplacian_ratio_vs_raw",
+          "definition": "Variant Laplacian mean divided by raw Laplacian mean",
+          "implemented_in": "scripts/diagnose_artifact_boundaries.py",
+          "notes": "Used to explain crop/interpolation/sharpen trade-offs, not a hard gate."
+        },
+        {
+          "id": "future_iqa_metrics",
+          "definition": "PSNR, SSIM, MS-SSIM, VIF, FSIM, LPIPS, DISTS, CLIP/DINO-like features, Visual Noise, Ringing",
+          "status": "planned_calibration_only",
+          "notes": "Reference docs support these as IQA diagnostics, but they must be calibrated against Orin EIS human review before becoming gates."
+        }
+      ]
+    },
+    {
+      "id": "affine_artifact_diagnostics",
+      "authority": "diagnostic",
+      "metrics": [
+        {
+          "id": "scale_abs_delta_p95",
+          "definition": "95th percentile absolute scale delta from full affine fit",
+          "implemented_in": "scripts/diagnose_artifact_boundaries.py",
+          "notes": "High values may indicate zoom/breathing/local deformation risk."
+        },
+        {
+          "id": "anisotropy_abs_delta_p95",
+          "definition": "95th percentile singular-value anisotropy delta",
+          "implemented_in": "scripts/diagnose_artifact_boundaries.py",
+          "notes": "Proxy for non-uniform scale/shear-like distortion."
+        },
+        {
+          "id": "shear_proxy_p95",
+          "definition": "95th percentile Frobenius norm of affine Gram matrix deviation",
+          "implemented_in": "scripts/diagnose_artifact_boundaries.py",
+          "notes": "Diagnostic for local pull or shape distortion risk."
+        }
+      ]
+    },
+    {
+      "id": "performance_metrics",
+      "authority": "hard_for_performance_claims",
+      "metrics": [
+        {
+          "id": "avg_estimate_ms",
+          "definition": "Average motion-estimation module latency per frame",
+          "required_for": [
+            "same_input_jetson_timing"
+          ],
+          "notes": "Only counts as resume/project performance evidence with platform_label=jetson."
+        },
+        {
+          "id": "avg_warp_ms",
+          "definition": "Average warp/crop/output module latency per frame",
+          "required_for": [
+            "same_input_jetson_timing"
+          ],
+          "notes": "Must use same input and frozen output semantics."
+        },
+        {
+          "id": "total_wall_time_s",
+          "definition": "End-to-end wall time for the run",
+          "required_for": [
+            "same_input_jetson_timing"
+          ],
+          "notes": "Windows timing is development evidence only."
+        },
+        {
+          "id": "platform_label",
+          "definition": "Evidence package platform label",
+          "required_value_for_real_perf": "jetson",
+          "notes": "windows_simulation is only harness self-test."
+        }
+      ]
+    },
+    {
+      "id": "manual_visual_veto",
+      "authority": "human_gate",
+      "labels": [
+        "frame_shift",
+        "rollback_or_snapback",
+        "jello_or_rolling_shutter_artifact",
+        "local_distortion_or_corner_pull",
+        "continuous_black_border",
+        "unacceptable_blur_or_detail_loss",
+        "over_sharpen_or_ringing",
+        "foreground_or_parallax_failure",
+        "intent_motion_over_suppressed"
+      ],
+      "notes": "Manual veto overrides objective metric pass. Store labels in human_review.csv when evidence is reviewed."
+    }
+  ],
+  "metric_adoption_rules": [
+    {
+      "rule": "No new hard gate without calibration",
+      "detail": "A diagnostic metric must first be compared against human side-by-side review on enough Orin EIS samples."
+    },
+    {
+      "rule": "No headline claim from diagnostic sets",
+      "detail": "Diagnostic and challenge sets explain boundaries; they do not define the main success rate."
+    },
+    {
+      "rule": "No performance claim without platform label",
+      "detail": "Performance numbers must include platform_label=jetson and same-input frozen config."
+    },
+    {
+      "rule": "No metric-only quality claim",
+      "detail": "Every quality claim needs side-by-side review evidence or an explicit manual-review pending status."
+    }
+  ]
+}

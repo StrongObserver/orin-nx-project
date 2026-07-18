@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "contract_id": "regular_performance_baseline_est0p5_grid16",
+  "status": "accepted_baseline",
+  "loop_type": "baseline_record",
+  "loop_profile": "documentation_loop",
+  "autonomy_level": "L2",
+  "required_platform_label": "jetson",
+  "objective": "Record the accepted Regular-gate CPU performance baseline and its claim boundaries.",
+  "baseline_role": "Regular performance baseline",
+  "paired_baseline": {
+    "id": "quality_safe_baseline_est1p0_grid12",
+    "role": "quality-safe baseline",
+    "reason": "Keep the conservative estimate_scale=1.0 baseline available for quality-first claims."
+  },
+  "clip_set_and_roles": {
+    "gate_id": "nus_regular_gate_v1",
+    "role": "main_gate",
+    "validated_clips": [
+      "regular_gate01_regular_10",
+      "regular_gate02_regular_19",
+      "regular_gate03_regular_13",
+      "regular_gate04_regular_8",
+      "regular_gate05_regular_6"
+    ]
+  },
+  "baseline_config": {
+    "smoothing_method": "lp_rigid",
+    "stabilization_strength": 0.80,
+    "crop_ratio": 0.90,
+    "crop_interpolation": "lanczos",
+    "sharpen_strength": 0.25,
+    "sharpen_sigma": 1.0,
+    "lp_trim_ratio": 0.10,
+    "lp_w1": 50,
+    "lp_w2": 10,
+    "lp_w3": 20,
+    "lp_w4": 30,
+    "dynamic_zoom": true,
+    "min_zoom": 1.0,
+    "max_zoom": 1.06,
+    "zoom_rate_limit": 0.003,
+    "zoom_hysteresis": 0.02,
+    "warp_backend": "opencv_cpu",
+    "estimate_scale": 0.50,
+    "feature_grid_size": 16,
+    "fallback_mode": "interpolate",
+    "mask_safety_max_invalid": 0.01
+  },
+  "claims_allowed": [
+    "regular_gate_cpu_performance_baseline",
+    "selected_regular_quality_evidence",
+    "motion_estimation_cost_reduction",
+    "same_input_regular_gate_timing"
+  ],
+  "claims_forbidden": [
+    "product_grade_eis",
+    "running_gate_success",
+    "parallax_or_crowd_success",
+    "vpi_full_pipeline_acceleration",
+    "zero_copy_dataflow",
+    "all_scene_quality_solution"
+  ],
+  "promotion_evidence": {
+    "human_review": "User accepted all five Regular gate side-by-side videos.",
+    "objective_result": "5/5 pass_all_objective_gates under current evaluator.",
+    "summary": "results/regular_gate_est0p5_grid16_validation_20260718/regular_gate_validation_summary.md",
+    "evaluation_csv": "results/regular_gate_est0p5_grid16_validation_20260718/eval/regular_gate_est0p5_grid16_eval.csv",
+    "review_dir": "C:/Users/Admin/Videos/orin nx/review/performance/20260718_regular_gate_est0p5_grid16_validation"
+  },
+  "known_boundaries": [
+    "Regular05 tail still has slight residual shake.",
+    "Global-warp EIS model boundary remains for local/parallax/rolling-shutter-like cases.",
+    "Running and other challenge sets are not promoted by this baseline."
+  ],
+  "next_contracts": [
+    "gst_nvmm_decode_convert_latency_v1"
+  ]
+}

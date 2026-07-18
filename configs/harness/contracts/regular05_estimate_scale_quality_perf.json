@@ -1,0 +1,116 @@
+{
+  "schema_version": 1,
+  "contract_id": "regular05_estimate_scale_quality_perf",
+  "status": "draft_ready",
+  "loop_type": "performance_quality_loop",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Find a quality-preserving motion-estimation cost reduction for the accepted Regular05 CPU baseline.",
+  "clip_set_and_roles": {
+    "gate_id": "regular05_perf_gate",
+    "clip": "results/nus_regular_gate_v1/raw_clips/regular_gate05_regular_6.mp4",
+    "role": "performance_gate"
+  },
+  "baseline_config": {
+    "smoothing_method": "lp_rigid",
+    "stabilization_strength": 0.80,
+    "crop_ratio": 0.90,
+    "crop_interpolation": "lanczos",
+    "sharpen_strength": 0.25,
+    "sharpen_sigma": 1.0,
+    "lp_trim_ratio": 0.10,
+    "lp_w1": 50,
+    "lp_w2": 10,
+    "lp_w3": 20,
+    "lp_w4": 30,
+    "dynamic_zoom": true,
+    "min_zoom": 1.0,
+    "max_zoom": 1.06,
+    "zoom_rate_limit": 0.003,
+    "zoom_hysteresis": 0.02,
+    "warp_backend": "opencv_cpu",
+    "estimate_scale_baseline": 1.0
+  },
+  "candidate_scope": [
+    {
+      "candidate_id": "est0p75_final_smooth",
+      "estimate_scale": 0.75,
+      "allowed_change": "final smoothness limiter only"
+    },
+    {
+      "candidate_id": "est0p5_feature_budget",
+      "estimate_scale": 0.50,
+      "allowed_change": "feature-grid or feature budget only"
+    }
+  ],
+  "frozen_variables": [
+    "input_clip",
+    "output_resolution",
+    "smoothing_method",
+    "stabilization_strength",
+    "crop_ratio",
+    "crop_interpolation",
+    "sharpen_strength",
+    "sharpen_sigma",
+    "lp_trim_ratio",
+    "lp_weights",
+    "dynamic_zoom",
+    "zoom_limits",
+    "warp_backend",
+    "fallback_mode",
+    "mask_safety_max_invalid"
+  ],
+  "hard_validators": [
+    "stabilized_mp4_exists",
+    "metrics_csv_exists",
+    "summary_csv_exists",
+    "comparison_mp4_exists",
+    "review_copy_exists",
+    "quality_eval_csv_exists",
+    "summary_has_avg_estimate_ms",
+    "summary_has_avg_warp_ms",
+    "summary_has_total_wall_time_s",
+    "mask_safety_rollback_frames_equals_0",
+    "black_border_p95_pass"
+  ],
+  "promotion_thresholds": {
+    "avg_estimate_ms_must_improve_vs_baseline": true,
+    "total_wall_time_s_must_improve_vs_baseline": true,
+    "improve_second_diff_top5_mean_gte": 0.0,
+    "objective_grade_not_in": [
+      "D"
+    ],
+    "layered_acceptance_required": "pass_all_objective_gates",
+    "manual_visual_veto": "passed_for_regular05_est0p5_grid16; required_again_before_broader_regular_promotion"
+  },
+  "external_observation": [
+    "command_exit_code",
+    "summary_csv",
+    "metrics_csv",
+    "quality_eval_csv",
+    "comparison_mp4",
+    "review_copy",
+    "platform_label"
+  ],
+  "max_attempts": 2,
+  "state_update_policy": "Record only final outcome, candidate table, evidence paths, blocker, and next action.",
+  "human_gate": [
+    "regular05 est0p5_grid16 side-by-side accepted by user",
+    "manual visual veto still required before broader Regular gate promotion"
+  ],
+  "stop_reasons": [
+    "candidate_promoted",
+    "both_candidates_fail_smoothness",
+    "quality_regression_despite_speedup",
+    "missing_required_evidence_after_one_fix_attempt",
+    "jetson_ssh_or_runtime_blocker"
+  ],
+  "recovery_path": {
+    "smoothness_failure": "Do not continue blind estimate_scale sweeps; inspect whether the failure comes from motion-estimation jitter or final correction constraints.",
+    "runtime_dependency_blocker": "Inspect the existing Jetson environment first; do not rebuild broadly.",
+    "visual_veto": "Mark the candidate failed even if metrics pass."
+  },
+  "evidence_output_directory": "results/estimate_scale_quality_perf_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/performance/<YYYYMMDD>_estimate_scale_quality_perf"
+}

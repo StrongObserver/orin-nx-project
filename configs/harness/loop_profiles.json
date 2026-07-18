@@ -1,0 +1,262 @@
+{
+  "schema_version": 1,
+  "project": "orin-nx-eis",
+  "purpose": "Loop Engineering V2 profiles. These profiles sit above the harness gates and define how an agent may iterate, stop, recover, and use external knowledge.",
+  "autonomy_levels": [
+    {
+      "id": "L0",
+      "name": "manual_only",
+      "description": "Read and propose only. Use for strategic direction, ambiguous scope forks, or high-risk decisions."
+    },
+    {
+      "id": "L1",
+      "name": "read_only_triage",
+      "description": "Read files, metrics, documents, and evidence. No code or environment changes."
+    },
+    {
+      "id": "L2",
+      "name": "assisted_single_action",
+      "description": "Perform one scoped edit or command, then verify immediately."
+    },
+    {
+      "id": "L3",
+      "name": "contracted_loop",
+      "description": "Run up to the declared max attempts inside a Done Contract with frozen variables and validators."
+    },
+    {
+      "id": "L4",
+      "name": "semi_autonomous_pipeline",
+      "description": "Scheduled or event-driven multi-step loop. Not recommended for the current Orin NX EIS project stage."
+    }
+  ],
+  "default_rules": {
+    "knowledge_base_entry": "docs/knowledge_base/routing.md",
+    "internal_reference_index": ".local_knowledge/internal_reference_index.md",
+    "state_update_policy": "record outcome, evidence, blocker, and next action only; do not preserve running logs",
+    "external_observation_required": true,
+    "agent_self_report_counts_as_evidence": false
+  },
+  "profiles": [
+    {
+      "id": "performance_loop",
+      "recommended_autonomy": "L3",
+      "allowed_change": [
+        "runtime_platform",
+        "backend",
+        "dataflow"
+      ],
+      "must_freeze": [
+        "input_clip",
+        "output_resolution",
+        "crop_ratio",
+        "crop_interpolation",
+        "sharpen_strength",
+        "lp_weights",
+        "scene_gate_policy",
+        "quality_evaluation"
+      ],
+      "external_observation": [
+        "command_exit_code",
+        "summary_csv_has_avg_estimate_ms",
+        "summary_csv_has_avg_warp_ms",
+        "summary_csv_has_total_wall_time_s",
+        "comparison_mp4_exists",
+        "review_copy_exists",
+        "platform_label"
+      ],
+      "max_attempts": 2,
+      "stop_reasons": [
+        "successful_evidence_package",
+        "missing_required_metric_after_one_fix_attempt",
+        "output_semantics_differ_from_baseline",
+        "manual_visual_veto",
+        "jetson_ssh_or_device_blocker"
+      ],
+      "knowledge_triggers": [
+        "VPI backend support unclear",
+        "GStreamer NVMM dataflow unclear",
+        "operator speedup does not produce end-to-end speedup"
+      ]
+    },
+    {
+      "id": "quality_loop",
+      "recommended_autonomy": "L2",
+      "allowed_change": [
+        "one_algorithm_or_config_variable"
+      ],
+      "must_freeze": [
+        "input_clips",
+        "gate_roles",
+        "crop_ratio_unless_testing_crop",
+        "scene_gate_policy_unless_testing_scene_gate",
+        "estimate_scale",
+        "output_resolution"
+      ],
+      "external_observation": [
+        "metrics_csv",
+        "summary_csv",
+        "side_by_side_mp4",
+        "manual_visual_veto"
+      ],
+      "max_attempts": 2,
+      "stop_reasons": [
+        "hard_gate_failure",
+        "metric_improves_but_visual_quality_worsens",
+        "same_failure_retried_without_new_hypothesis",
+        "running_improves_regular_worsens",
+        "needs_mesh_gyro_or_rs_outside_current_scope"
+      ],
+      "knowledge_triggers": [
+        "visual veto",
+        "metric and visual conflict",
+        "foreground parallax weak texture or jello failure"
+      ]
+    },
+    {
+      "id": "scene_gate_loop",
+      "recommended_autonomy": "L2",
+      "allowed_change": [
+        "scene_thresholds",
+        "scene_role_assignment",
+        "scene_gate_policy"
+      ],
+      "must_freeze": [
+        "stabilization_config",
+        "input_clips",
+        "quality_metrics"
+      ],
+      "external_observation": [
+        "scene_gate_csv",
+        "class_counts",
+        "audit_contact_sheet_or_side_by_side",
+        "roles_csv_if_changed"
+      ],
+      "max_attempts": 2,
+      "stop_reasons": [
+        "role_confusion_between_regular_and_running",
+        "scene_policy_hurts_main_gate",
+        "manual_review_disagrees_with_scene_role"
+      ],
+      "knowledge_triggers": [
+        "Running treated as main success target",
+        "high_motion scene forced through global affine"
+      ]
+    },
+    {
+      "id": "evaluation_loop",
+      "recommended_autonomy": "L2",
+      "allowed_change": [
+        "metric_schema",
+        "report_schema",
+        "human_review_schema"
+      ],
+      "must_freeze": [
+        "algorithm_output",
+        "input_clips",
+        "gate_roles"
+      ],
+      "external_observation": [
+        "evaluator_output",
+        "human_review_compatibility",
+        "evaluation_dataset_registry_status",
+        "metric_schema_layer_declared",
+        "no_new_quality_claim"
+      ],
+      "max_attempts": 1,
+      "stop_reasons": [
+        "metric_contradicts_visual_review",
+        "new_metric_lacks_calibration",
+        "reporting_change_creates_new_unmeasured_claim"
+      ],
+      "knowledge_triggers": [
+        "proxy metric overrules obvious visual artifact",
+        "need human review vocabulary"
+      ]
+    },
+    {
+      "id": "knowledge_recovery_loop",
+      "recommended_autonomy": "L1",
+      "allowed_change": [
+        "none_to_algorithm_or_environment"
+      ],
+      "must_freeze": [
+        "source_code",
+        "experiment_outputs",
+        "gate_roles"
+      ],
+      "external_observation": [
+        "source_summary",
+        "one_concrete_recovery_idea",
+        "one_risk",
+        "one_verifier"
+      ],
+      "max_attempts": 1,
+      "stop_reasons": [
+        "more_than_two_sources_needed",
+        "reference_requires_unavailable_internal_access",
+        "no_actionable_recovery_found"
+      ],
+      "knowledge_triggers": [
+        "repeated_failed_action",
+        "new_technical_domain",
+        "material_blocker"
+      ]
+    },
+    {
+      "id": "documentation_loop",
+      "recommended_autonomy": "L2",
+      "allowed_change": [
+        "wording",
+        "routing",
+        "evidence_packaging"
+      ],
+      "must_freeze": [
+        "measured_numbers",
+        "algorithm_outputs",
+        "claim_boundaries"
+      ],
+      "external_observation": [
+        "links_to_existing_evidence",
+        "no_invented_metrics",
+        "git_diff_scope"
+      ],
+      "max_attempts": 1,
+      "stop_reasons": [
+        "would_need_new_measurement",
+        "requested_context_path_mismatch",
+        "public_doc_would_copy_internal_content"
+      ],
+      "knowledge_triggers": [
+        "stale_context",
+        "misleading_claim",
+        "missing_routing_rule"
+      ]
+    },
+    {
+      "id": "device_recovery_loop",
+      "recommended_autonomy": "L2",
+      "allowed_change": [
+        "usb_ssh_or_runtime_recovery_step"
+      ],
+      "must_freeze": [
+        "algorithm_config",
+        "project_evidence_claims"
+      ],
+      "external_observation": [
+        "connectivity_check",
+        "runtime_command_check",
+        "exact_error_or_recovery_result"
+      ],
+      "max_attempts": 1,
+      "stop_reasons": [
+        "requires_user_device_side_action",
+        "requires_system_package_or_global_env_change",
+        "ssh_recovery_failed"
+      ],
+      "knowledge_triggers": [
+        "USB SSH unstable",
+        "Jetson runtime dependency unclear"
+      ]
+    }
+  ]
+}

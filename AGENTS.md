@@ -24,6 +24,44 @@ C:\Users\Admin\Nutstore\1\Typora_save\自己的项目\jetson orin nx project_AI�
 
 Before editing the long-term context document, read its "文档维护原则" section first and follow its permission rules.
 
+4. Harness gate and Done Contract control plane:
+
+```text
+C:\Users\Admin\Desktop\orin nx project\docs\harness_engineering_v1.md
+C:\Users\Admin\Desktop\orin nx project\docs\loop_engineering_v2.md
+C:\Users\Admin\Desktop\orin nx project\docs\evaluation_system_v1.md
+C:\Users\Admin\Desktop\orin nx project\configs\harness\gates.json
+C:\Users\Admin\Desktop\orin nx project\configs\harness\loop_profiles.json
+C:\Users\Admin\Desktop\orin nx project\configs\harness\evaluation_datasets.json
+C:\Users\Admin\Desktop\orin nx project\configs\harness\metric_schema.json
+C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\jetson_regular05_perf.json
+```
+
+Harness V1 is the runtime and evidence control plane. Loop Engineering V2 is the decision layer above it: choose a loop profile, freeze variables, name external observations, and stop/recover instead of blind retry. Evaluation System V1 is the lifecycle dataset and metric contract; use it before adding or changing quality metrics.
+
+5. External knowledge-base routing, used only when a real blocker appears:
+
+```text
+C:\Users\Admin\Desktop\orin nx project\docs\knowledge_base\README.md
+C:\Users\Admin\Desktop\orin nx project\docs\knowledge_base\routing.md
+C:\Users\Admin\Desktop\orin nx project\docs\knowledge_base\harness_integration.md
+```
+
+Internal/company Typora references are routed through this local-only, Git-ignored index:
+
+```text
+C:\Users\Admin\Desktop\orin nx project\.local_knowledge\internal_reference_index.md
+```
+
+Do not copy internal original text, images, private links, or screenshots into public GitHub outputs.
+
+Before running a new EIS experiment, check the Harness boundary first with:
+
+```powershell
+py -3.12 scripts\harness_runner.py doctor
+py -3.12 scripts\harness_runner.py check-claim --gate-id nus_running_gate_v1 --claim main_gate_success_rate
+```
+
 Use the reference as strategic guidance, not as a rigid contract. It is already July, so prioritize demonstrable results over trying to finish every advanced idea.
 
 ## Project Purpose
@@ -87,7 +125,7 @@ Jetson: keep rndis0 and l4tbr0 down
 Detailed setup notes:
 
 ```text
-C:\Users\Admin\Nutstore\1\Typora_save\字节_嵌入式camera实习\公司笔记本使用ssh连接orin nx.md
+Private local USB-SSH setup note listed in the long-term context
 C:\Users\Admin\Nutstore\1\Typora_save\自己的项目\jetson orin nx project_AI上下文.md
 ```
 
@@ -111,9 +149,12 @@ Do not commit raw videos by default. Record the source URL and keep raw data und
 C:\Users\Admin\Desktop\orin nx project\results\vidstab_baseline\ostrich_vidstab_compare.mp4
 C:\Users\Admin\Desktop\orin nx project\results\estimate_scale_sweep_1080p\stabilized_opencv_cpu_est0p33.mp4
 C:\Users\Admin\Desktop\orin nx project\results\estimate_scale_sweep_1080p\compare_est0p33_side_by_side.mp4
+C:\Users\Admin\Videos\orin nx\review\quality\20260718_regular05_new_method\20260718_nus_regular_gate_v1_regular_gate05_regular_6_jetson_lp_rigid_strength080_dynzoom106_compare.mp4
 ```
 
-`ostrich_vidstab_compare.mp4` is the current mature external stabilization evidence. `compare_est0p33_side_by_side.mp4` was generated as a 1080p check clip, but the source is mostly smooth ocean footage and is **not a valid stabilization-quality dataset**; use it only for performance / no-regression sanity, not for proving EIS quality. Do not package the naive VPI CUDA full-pipeline integration as an acceleration result unless a same-input end-to-end speedup is actually measured.
+`ostrich_vidstab_compare.mp4` is the current mature external stabilization evidence. The current accepted custom CPU baseline review clip is the `lp_rigid_strength080_dynzoom106` Regular05 video above; it is a practical stage baseline, not a claim that global-warp EIS solves all local/parallax cases. `compare_est0p33_side_by_side.mp4` was generated as a 1080p check clip, but the source is mostly smooth ocean footage and is **not a valid stabilization-quality dataset**; use it only for performance / no-regression sanity, not for proving EIS quality. Do not package the naive VPI CUDA full-pipeline integration as an acceleration result unless a same-input end-to-end speedup is actually measured.
+
+Current Harness boundary: `nus_regular_gate_v1` is the main quality gate, `nus_running_gate_v1` is a challenge/failure-boundary gate, and `regular05_perf_gate` is only for same-input Jetson performance evidence. Windows `209901xx` harness self-test evidence is not project progress and must not be cited as Jetson performance.
 
 ## Environment Setup Policy
 
@@ -167,7 +208,11 @@ Current reference roles:
 - OpenCV `videostab`: reference for classic visual stabilization flow, motion estimation, and smoothing abstractions.
 - CUVISTA: reference for stronger stabilization quality ideas such as trajectory smoothing, dynamic zoom, outlier rejection, background fill, CLI output, and profiling-style artifacts.
 - NVIDIA VPI / Jetson multimedia / GStreamer samples: preferred references for hardware acceleration, VIC/CUDA/PVA/OFA backend usage, NVMM, NVDEC, and NVENC.
-- Internal references, if accessible through the user/company network: `影级防抖CIS技术方案` for EIS metrics, `Dora-G2 相机基础效果及算法生效验收 SOP` for pass/fail gates, `头戴设备防抖浅析` for brightness x motion scene matrix, and `lab-cv/video-stab` for C++ traditional stabilization. Treat these as internal L2/L4 references: do not copy their content into public GitHub outputs, and verify access/permission before cloning or quoting details.
+- Internal references, if accessible through the user/company network: use them
+  only as private guidance for EIS metrics, pass/fail gates, scene matrices, and
+  traditional stabilization design. Treat these as internal L2/L4 references: do
+  not copy their content, private paths, screenshots, or links into public GitHub
+  outputs, and verify access/permission before cloning or quoting details.
 
 ## Internal-AI Escalation Workflow
 
@@ -182,7 +227,11 @@ Workflow:
 3. Ask for specific return artifacts: document links, repo paths, sample names, key commands, API usage, known pitfalls, and minimal reproducible snippets.
 4. After the user pastes the answer back, inspect only the relevant material and adapt the useful parts into this project.
 
-Known access caveat: this local agent environment has seen HTTP 403 when cloning `https://code.byted.org/lab-cv/video-stab.git` and `https://code.byted.org/em/eistep_visualize.git`. If code-level inspection is needed, ask the user/internal AI for either access guidance or a focused export of the key files: entry point, motion estimation, trajectory smoothing, warp/crop, metrics scripts, README/build commands.
+Known access caveat: this local agent environment may not be able to clone
+company-internal repositories directly. If code-level inspection is needed, ask
+the user/internal AI for either access guidance or a focused export of the key
+files: entry point, motion estimation, trajectory smoothing, warp/crop, metrics
+scripts, README/build commands.
 
 Prompt template:
 
@@ -282,7 +331,7 @@ When a milestone truly needs visual evidence, the agent must explicitly remind t
 - Runtime/profiling proof: keep one screenshot or exported summary from `tegrastats`, Nsight Systems, or terminal benchmark output. Store it under `results/evidence/<YYYYMMDD>_<milestone>/` and record the exact command and file path in the long-term context.
 - Demo/presentation proof: if a video is needed for the final portfolio, remind the user to record a short 10-20 second clip showing original vs stabilized or CPU vs accelerated output, then record its path in the long-term context.
 
-For user review, always copy generated visual evidence such as side-by-side videos, contact sheets, and short demo clips to `C:\Users\Admin\Videos\orin nx` in addition to keeping the reproducible copy under `results/`. Do not leave reviewable evidence only in JSON/CSV or only on Jetson.
+For user review, always copy generated visual evidence such as side-by-side videos, contact sheets, and short demo clips to `C:\Users\Admin\Videos\orin nx` in addition to keeping the reproducible copy under `results/`. New review copies must use the categorized tree `C:\Users\Admin\Videos\orin nx\review\<category>\<YYYYMMDD>_<loop_or_gate>\` and filenames shaped as `<YYYYMMDD>_<gate_id>_<clip_stem>_<platform>_<config_slug>_<asset_kind>.mp4`; do not put new bare duplicate-looking names directly under the review root. Do not leave reviewable evidence only in JSON/CSV or only on Jetson.
 
 Do not commit these visual artifacts by default. `results/` is local evidence storage and is ignored by Git unless the user explicitly chooses a small representative artifact for version control.
 

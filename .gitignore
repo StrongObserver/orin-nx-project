@@ -6,6 +6,7 @@ out/
 # Runtime outputs
 results/
 logs/
+.local_knowledge/
 
 # Raw input data and large media
 data/raw/

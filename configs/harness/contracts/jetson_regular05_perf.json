@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "contract_id": "jetson_regular05_perf",
+  "status": "draft_ready",
+  "loop_type": "performance_loop",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Produce Jetson same-input runtime evidence for the current Regular stage evidence clip.",
+  "clip_set_and_roles": {
+    "gate_id": "regular05_perf_gate",
+    "clip": "results/nus_regular_gate_v1/raw_clips/regular_gate05_regular_6.mp4",
+    "role": "performance_gate"
+  },
+  "baseline_config": {
+    "smoothing_method": "lp_rigid",
+    "stabilization_strength": 0.80,
+    "crop_ratio": 0.90,
+    "crop_interpolation": "lanczos",
+    "sharpen_strength": 0.25,
+    "sharpen_sigma": 1.0,
+    "lp_trim_ratio": 0.10,
+    "lp_w1": 50,
+    "lp_w2": 10,
+    "lp_w3": 20,
+    "lp_w4": 30,
+    "scene_gate_policy": "weak",
+    "scene_gate_weak_strength": 0.75,
+    "dynamic_zoom": true,
+    "min_zoom": 1.0,
+    "max_zoom": 1.06,
+    "zoom_rate_limit": 0.003,
+    "zoom_hysteresis": 0.02,
+    "warp_backend": "opencv_cpu",
+    "estimate_scale": 1.0
+  },
+  "one_variable_allowed_to_change": "runtime_platform",
+  "frozen_variables": [
+    "input_clip",
+    "output_resolution",
+    "smoothing_method",
+    "stabilization_strength",
+    "crop_ratio",
+    "crop_interpolation",
+    "sharpen_strength",
+    "sharpen_sigma",
+    "lp_trim_ratio",
+    "lp_weights",
+    "scene_gate_policy",
+    "dynamic_zoom",
+    "zoom_limits",
+    "warp_backend",
+    "estimate_scale"
+  ],
+  "hard_validators": [
+    "stabilized_mp4_exists",
+    "metrics_csv_exists",
+    "summary_csv_exists",
+    "summary_has_avg_estimate_ms",
+    "summary_has_avg_warp_ms",
+    "summary_has_total_wall_time_s",
+    "comparison_mp4_exists",
+    "review_copy_exists"
+  ],
+  "external_observation": [
+    "command_exit_code",
+    "summary_csv_has_avg_estimate_ms",
+    "summary_csv_has_avg_warp_ms",
+    "summary_csv_has_total_wall_time_s",
+    "comparison_mp4_exists",
+    "review_copy_exists",
+    "platform_label"
+  ],
+  "soft_validators": [
+    "side_by_side_has_no_obvious_visual_regression",
+    "no_new_black_border",
+    "no_frame_jump_or_rollback",
+    "blur_is_not_worse_than_stage_evidence_to_manual_eye"
+  ],
+  "manual_veto_items": [
+    "frame_shift",
+    "rollback_or_snapback",
+    "jello_or_rolling_shutter_artifact",
+    "local_distortion_or_corner_pull",
+    "continuous_black_border",
+    "unacceptable_blur_or_detail_loss"
+  ],
+  "max_attempts": 2,
+  "knowledge_base_refs": [
+    "public:nvidia_vpi_samples",
+    "public:jetson_accelerated_gstreamer",
+    "public:jetson_multimedia_api"
+  ],
+  "state_update_policy": "Record final outcome, evidence paths, blocker, and next action only; do not preserve running logs.",
+  "human_gate": [
+    "manual visual veto",
+    "device-side command if SSH is blocked",
+    "approval before system/global environment changes"
+  ],
+  "stop_reasons": [
+    "successful_evidence_package",
+    "jetson_ssh_or_device_blocker",
+    "missing_required_metric_after_one_fix_attempt",
+    "output_semantics_differ_from_baseline",
+    "manual_visual_veto"
+  ],
+  "recovery_path": {
+    "ssh_blocker": "Stop the EIS loop, run the USB SSH recovery SOP, then resume.",
+    "runtime_dependency_blocker": "Inspect the existing Jetson environment first; do not rebuild broadly.",
+    "missing_metric": "Preserve logs, fix the smallest concrete issue once, then rerun.",
+    "visual_veto": "Mark the evidence package failed; do not argue from objective metrics."
+  },
+  "evidence_output_directory": "results/evidence/<YYYYMMDD>_jetson_regular05_perf",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/performance/<YYYYMMDD>_jetson_regular05_perf"
+}

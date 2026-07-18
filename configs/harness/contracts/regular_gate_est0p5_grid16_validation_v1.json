@@ -1,0 +1,105 @@
+{
+  "schema_version": 1,
+  "contract_id": "regular_gate_est0p5_grid16_validation_v1",
+  "status": "draft_ready",
+  "loop_type": "quality_perf_validation_loop",
+  "loop_profile": "quality_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Validate the human-accepted est0p5_grid16 performance candidate across the broader NUS Regular gate before global promotion.",
+  "clip_set_and_roles": {
+    "gate_id": "nus_regular_gate_v1",
+    "raw_dir": "results/nus_regular_gate_v1/raw_clips",
+    "pattern": "regular_gate*.mp4",
+    "role": "main_gate",
+    "expected_clips": [
+      "regular_gate01_regular_10",
+      "regular_gate02_regular_19",
+      "regular_gate03_regular_13",
+      "regular_gate04_regular_8",
+      "regular_gate05_regular_6"
+    ]
+  },
+  "candidate_config": {
+    "smoothing_method": "lp_rigid",
+    "stabilization_strength": 0.80,
+    "crop_ratio": 0.90,
+    "crop_interpolation": "lanczos",
+    "sharpen_strength": 0.25,
+    "sharpen_sigma": 1.0,
+    "lp_trim_ratio": 0.10,
+    "lp_w1": 50,
+    "lp_w2": 10,
+    "lp_w3": 20,
+    "lp_w4": 30,
+    "dynamic_zoom": true,
+    "min_zoom": 1.0,
+    "max_zoom": 1.06,
+    "zoom_rate_limit": 0.003,
+    "zoom_hysteresis": 0.02,
+    "warp_backend": "opencv_cpu",
+    "estimate_scale": 0.50,
+    "feature_grid_size": 16,
+    "fallback_mode": "interpolate",
+    "mask_safety_max_invalid": 0.01
+  },
+  "frozen_variables": [
+    "candidate_config",
+    "input_clip_set",
+    "output_resolution",
+    "gate_roles",
+    "quality_metric_schema",
+    "review_copy_policy"
+  ],
+  "allowed_change": [
+    "none; validation only"
+  ],
+  "hard_validators": [
+    "all_expected_clips_processed",
+    "per_clip_metrics_csv_exists",
+    "per_clip_summary_csv_exists",
+    "per_clip_comparison_mp4_exists",
+    "evaluation_csv_exists",
+    "review_copies_exist",
+    "platform_label_is_jetson"
+  ],
+  "promotion_thresholds": {
+    "required_for_global_promotion": [
+      "regular_gate05 remains accepted",
+      "no clip has hard black-border failure",
+      "no clip has mask-safety rollback regression that creates visible veto",
+      "manual review has no veto on selected presentation clips"
+    ],
+    "recommended_metric_goal": [
+      "majority pass_all_objective_gates or acceptable-by-role",
+      "no broad smoothness regression relative to est1p0 baseline"
+    ]
+  },
+  "external_observation": [
+    "batch_command_exit_code",
+    "summary_csvs",
+    "quality_eval_csv",
+    "side_by_side_mp4s",
+    "review_copy_paths",
+    "manual_visual_review"
+  ],
+  "max_attempts": 1,
+  "state_update_policy": "Record gate-level result table, accepted/rejected promotion decision, evidence paths, and next action only.",
+  "human_gate": [
+    "manual visual review before promoting est0p5_grid16 beyond selected-clip candidate status"
+  ],
+  "stop_reasons": [
+    "validation_completed",
+    "missing_expected_clip",
+    "runtime_failure",
+    "quality_veto",
+    "would_require_tuning_instead_of_validation"
+  ],
+  "recovery_path": {
+    "runtime_failure": "Inspect the exact command and environment; retry once only if the fix is mechanical.",
+    "quality_veto": "Do not tune inside this validation contract. Stop and decide whether to keep est0p5_grid16 as selected-clip candidate only.",
+    "missing_expected_clip": "Run harness doctor and dataset checks before rerunning."
+  },
+  "evidence_output_directory": "results/regular_gate_est0p5_grid16_validation_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/performance/<YYYYMMDD>_regular_gate_est0p5_grid16_validation"
+}

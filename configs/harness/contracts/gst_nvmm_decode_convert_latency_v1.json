@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "contract_id": "gst_nvmm_decode_convert_latency_v1",
+  "status": "draft_ready",
+  "loop_type": "dataflow_performance_loop",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Measure a minimum Jetson GStreamer/NVMM decode and conversion path before attempting EIS pipeline integration.",
+  "input": {
+    "clip": "data/raw/sample_1920x1080_from4k.mp4",
+    "role": "dataflow_probe_only",
+    "claim_boundary": "This clip and pipeline prove dataflow readiness and latency only, not EIS quality or stabilization performance."
+  },
+  "pipeline_under_test": {
+    "name": "decode_nvmm_convert_fakesink",
+    "gst_pipeline": "filesrc location=data/raw/sample_1920x1080_from4k.mp4 ! qtdemux ! h264parse ! nvv4l2decoder ! video/x-raw(memory:NVMM),format=NV12 ! nvvidconv ! video/x-raw,format=BGRx ! fakesink sync=false",
+    "required_plugins": [
+      "nvv4l2decoder",
+      "nvvidconv"
+    ]
+  },
+  "allowed_variables": [
+    "sink_type",
+    "caps_after_decoder",
+    "caps_after_nvvidconv",
+    "input_resolution",
+    "repeat_count"
+  ],
+  "frozen_variables": [
+    "do_not_modify_cpu_stabilize",
+    "do_not_change_regular05_quality_baseline",
+    "do_not_claim_eis_acceleration",
+    "do_not_install_system_packages_without_approval"
+  ],
+  "hard_validators": [
+    "gst_launch_exits_zero",
+    "pipeline_reaches_eos",
+    "runtime_logged",
+    "plugin_availability_logged",
+    "summary_md_exists"
+  ],
+  "external_observation": [
+    "gst_launch_exit_code",
+    "gst_output_contains_eos",
+    "execution_time",
+    "gst_inspect_output",
+    "summary_markdown"
+  ],
+  "promotion_thresholds": {
+    "can_promote_to_next_contract_if": [
+      "pipeline reaches EOS reliably",
+      "runtime is recorded for at least one input",
+      "the CPU/NVMM boundary is stated explicitly"
+    ],
+    "cannot_claim": [
+      "EIS full-pipeline acceleration",
+      "quality improvement",
+      "zero-copy integration"
+    ]
+  },
+  "max_attempts": 2,
+  "state_update_policy": "Record exact pipeline, plugin availability, runtime, blocker, and next dataflow question only.",
+  "stop_reasons": [
+    "minimum_pipeline_passed",
+    "required_plugin_missing",
+    "caps_negotiation_failed_after_one_fix_attempt",
+    "would_require_system_install_or_global_env_change",
+    "would_require_eis_pipeline_refactor"
+  ],
+  "recovery_path": {
+    "required_plugin_missing": "Use docs/knowledge_base/routing.md and public Jetson GStreamer references before changing the environment.",
+    "caps_negotiation_failed": "Reduce caps to a simpler NVMM decode-to-fakesink path, then add conversion back one step at a time.",
+    "needs_eis_integration": "Stop and create a new contract; do not combine probe and integration in one loop."
+  },
+  "evidence_output_directory": "results/gst_nvmm_decode_convert_latency_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/performance/<YYYYMMDD>_gst_nvmm_decode_convert_latency"
+}

@@ -1,0 +1,115 @@
+{
+  "schema_version": 1,
+  "project": "orin-nx-eis",
+  "purpose": "Stable gate definitions for the Orin NX EIS harness. These roles prevent smoke, quality, challenge, and performance evidence from being mixed.",
+  "evaluation_dataset_registry": "configs/harness/evaluation_datasets.json",
+  "metric_schema": "configs/harness/metric_schema.json",
+  "datasets": [
+    {
+      "id": "smoke_ostrich",
+      "role": "smoke",
+      "description": "Fast script and baseline sanity check only. Not a final EIS quality gate.",
+      "raw_dir": "data/raw",
+      "pattern": "ostrich_shaky.mp4",
+      "claims_allowed": [
+        "script_runs",
+        "external_baseline_sanity"
+      ],
+      "claims_forbidden": [
+        "final_quality",
+        "full_scene_coverage"
+      ]
+    },
+    {
+      "id": "nus_regular_gate_v1",
+      "role": "main_gate",
+      "description": "Primary public and reproducible quality gate for the current pure-visual global-affine pipeline.",
+      "raw_dir": "results/nus_regular_gate_v1/raw_clips",
+      "pattern": "regular_gate*.mp4",
+      "manifest": "results/nus_regular_gate_v1/nus_gate_manifest.csv",
+      "scene_gate_csv": "results/diagnostics/scene_gate_regular_v1.csv",
+      "expected_clips": [
+        "regular_gate01_regular_10",
+        "regular_gate02_regular_19",
+        "regular_gate03_regular_13",
+        "regular_gate04_regular_8",
+        "regular_gate05_regular_6"
+      ],
+      "claims_allowed": [
+        "selected_regular_quality",
+        "stage_visual_evidence",
+        "same_input_quality_regression"
+      ],
+      "claims_forbidden": [
+        "product_grade_eis",
+        "running_or_extreme_motion_success"
+      ]
+    },
+    {
+      "id": "nus_running_gate_v1",
+      "role": "challenge_gate",
+      "description": "High-frequency running challenge and failure-boundary set. Use to expose global-affine limits, not as the main success metric.",
+      "raw_dir": "results/nus_running_gate_v1/raw_clips",
+      "pattern": "gate*.mp4",
+      "manifest": "results/nus_running_gate_v1/nus_gate_manifest.csv",
+      "scene_gate_csv": "results/diagnostics/scene_gate_running_v1.csv",
+      "expected_clips": [
+        "gate01_running_16",
+        "gate02_running_4",
+        "gate03_running_17",
+        "gate04_running_15",
+        "gate05_running_18"
+      ],
+      "claims_allowed": [
+        "failure_boundary",
+        "scene_gate_degrade_behavior",
+        "model_limit_explanation"
+      ],
+      "claims_forbidden": [
+        "main_gate_success_rate",
+        "full_running_stabilization"
+      ]
+    },
+    {
+      "id": "regular05_perf_gate",
+      "role": "performance_gate",
+      "description": "Same-input performance evidence clip for Jetson verification of the current stage configuration.",
+      "raw_clip": "results/nus_regular_gate_v1/raw_clips/regular_gate05_regular_6.mp4",
+      "source_gate": "nus_regular_gate_v1",
+      "claims_allowed": [
+        "same_input_jetson_timing",
+        "module_latency",
+        "fps_after_real_run"
+      ],
+      "claims_forbidden": [
+        "full_dataset_performance",
+        "quality_generalization"
+      ]
+    }
+  ],
+  "acceptance_thresholds": {
+    "crop_loss_hard_fail_gt": 0.15,
+    "black_border_p95_hard_fail_gt": 0.01,
+    "sr_residual_pose_pass_gt": 1.2,
+    "residual_trans_std_improve_pass_gte": 0.15,
+    "second_diff_top5_improve_pass_gte": 0.0
+  },
+  "manual_veto_items": [
+    "frame_shift",
+    "rollback_or_snapback",
+    "jello_or_rolling_shutter_artifact",
+    "local_distortion_or_corner_pull",
+    "continuous_black_border",
+    "unacceptable_blur_or_detail_loss"
+  ],
+  "evidence_policy": {
+    "project_evidence_root": "results/evidence",
+    "review_copy_root": "C:/Users/Admin/Videos/orin nx",
+    "do_not_commit_by_default": [
+      "results",
+      "data/raw",
+      "large_videos",
+      "device_logs_with_secrets"
+    ]
+  }
+}

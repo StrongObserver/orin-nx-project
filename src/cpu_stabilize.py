@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import argparse
 import csv
 import math
@@ -1743,6 +1745,7 @@ def stabilize_video(
     intent_proximity_radius: int,
     intent_proximity_stdev: float,
     stabilization_strength: float,
+    motion_model: str,
     lp_anchor_first: bool,
     lp_warp_inverse: bool,
     lp_w1: float,
@@ -1825,6 +1828,8 @@ def stabilize_video(
         raise RuntimeError("Input video has too few frames")
 
     transforms = np.array(transforms, dtype=np.float32)
+    if motion_model == "translation":
+        transforms[:, 2] = 0.0
     valid_mask_np = np.array(valid_mask, dtype=bool)
 
     confidence_valid_mask, confidence_repair_frames, confidence_repair_new_invalid = confidence_repair_valid_mask(
@@ -2261,6 +2266,7 @@ def stabilize_video(
         "intent_proximity_avg_gap": intent_proximity_avg_gap,
         "intent_proximity_max_gap": intent_proximity_max_gap,
         "stabilization_strength": strength,
+        "motion_model": motion_model,
         "lp_anchor_first": lp_anchor_first,
         "lp_warp_inverse": lp_warp_inverse,
         "lp_w1": lp_w1,
@@ -2348,6 +2354,7 @@ def main():
     parser.add_argument("--intent-proximity-radius", type=int, default=30, help="Gaussian radius for low-pass intent trajectory; <=0 reuses smoothing-radius")
     parser.add_argument("--intent-proximity-stdev", type=float, default=0.0, help="Gaussian stdev for low-pass intent; <=0 uses radius/3")
     parser.add_argument("--stabilization-strength", type=float, default=1.0, help="Blend final stabilization toward identity in [0,1]; lower values reduce over-correction")
+    parser.add_argument("--motion-model", choices=["affine", "translation"], default="affine", help="Motion model before smoothing; translation zeros rotation to avoid corner-pull from global rotation/shear")
     parser.add_argument("--lp-anchor-first", action="store_true", help="Anchor the first LP stabilization matrix to identity to remove gauge freedom")
     parser.add_argument("--lp-warp-inverse", action="store_true", help="Use inverse LP matrices for final warp; diagnostic for motion convention checks")
     parser.add_argument("--lp-w1", type=float, default=1.0, help="LP smoother weight for first-order stabilization-motion difference")
@@ -2431,6 +2438,7 @@ def main():
         args.intent_proximity_radius,
         args.intent_proximity_stdev,
         args.stabilization_strength,
+        args.motion_model,
         args.lp_anchor_first,
         args.lp_warp_inverse,
         args.lp_w1,

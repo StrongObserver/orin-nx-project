@@ -1,0 +1,328 @@
+{
+  "schema_version": 1,
+  "project": "orin-nx-eis",
+  "purpose": "Lifecycle dataset registry for Orin NX EIS evaluation. This registry separates main quality evidence, challenge/failure-boundary evidence, diagnostic intent/foreground evidence, performance evidence, and future metric-calibration data.",
+  "storage_policy": {
+    "large_media_roots": [
+      "data/raw",
+      "data/sources",
+      "results"
+    ],
+    "do_not_commit_large_media_by_default": true,
+    "review_copy_root": "C:/Users/Admin/Videos/orin nx",
+    "source_archives_root": "data/sources/NUS_raw_zips",
+    "source_extracted_root": "data/sources/NUS_extracted"
+  },
+  "principles": [
+    "Main quality claims come from core regression sets, not challenge sets.",
+    "Challenge sets expose model boundaries and degradation behavior.",
+    "Diagnostic sets answer why a method failed; they do not define headline pass rate.",
+    "Metric-calibration datasets validate metrics, not EIS quality directly.",
+    "Datasets may be redundant, but claim boundaries must remain separate."
+  ],
+  "datasets": [
+    {
+      "id": "nus_regular_gate_v1",
+      "family": "NUS/SIGGRAPH2013",
+      "category": "Regular",
+      "role": "main_gate",
+      "status": "active_prepared",
+      "priority": "P0",
+      "source_url": "http://liushuaicheng.org/SIGGRAPH2013/data/Regular.zip",
+      "source_archive": "data/sources/NUS_raw_zips/Regular.zip",
+      "source_extracted_dir": "data/sources/NUS_extracted/Regular",
+      "prepared_dir": "results/nus_regular_gate_v1",
+      "raw_dir": "results/nus_regular_gate_v1/raw_clips",
+      "stable_reference_dir": "results/nus_regular_gate_v1/stable_reference",
+      "manifest": "results/nus_regular_gate_v1/nus_gate_manifest.csv",
+      "metadata": "results/nus_regular_gate_v1/nus_gate_metadata.csv",
+      "expected_prepared_clips": [
+        "regular_gate01_regular_10",
+        "regular_gate02_regular_19",
+        "regular_gate03_regular_13",
+        "regular_gate04_regular_8",
+        "regular_gate05_regular_6"
+      ],
+      "claim_allowed": [
+        "selected_regular_quality",
+        "stage_visual_evidence",
+        "same_input_quality_regression"
+      ],
+      "claim_forbidden": [
+        "product_grade_eis",
+        "running_or_extreme_motion_success"
+      ],
+      "notes": "Primary current main gate for pure-visual global-affine stage evidence."
+    },
+    {
+      "id": "nus_running_gate_v1",
+      "family": "NUS/SIGGRAPH2013",
+      "category": "Running",
+      "role": "challenge_gate",
+      "status": "active_prepared",
+      "priority": "P0",
+      "source_url": "http://liushuaicheng.org/SIGGRAPH2013/data/Running.zip",
+      "source_archive": "data/sources/NUS_raw_zips/Running.zip",
+      "source_extracted_dir": "data/sources/NUS_extracted/Running",
+      "prepared_dir": "results/nus_running_gate_v1",
+      "raw_dir": "results/nus_running_gate_v1/raw_clips",
+      "stable_reference_dir": "results/nus_running_gate_v1/stable_reference",
+      "manifest": "results/nus_running_gate_v1/nus_gate_manifest.csv",
+      "metadata": "results/nus_running_gate_v1/nus_gate_metadata.csv",
+      "expected_prepared_clips": [
+        "gate01_running_16",
+        "gate02_running_4",
+        "gate03_running_17",
+        "gate04_running_15",
+        "gate05_running_18"
+      ],
+      "claim_allowed": [
+        "failure_boundary",
+        "scene_gate_degrade_behavior",
+        "model_limit_explanation"
+      ],
+      "claim_forbidden": [
+        "main_gate_success_rate",
+        "full_running_stabilization"
+      ],
+      "notes": "High-frequency motion boundary; do not optimize as the main pass-rate target while Regular is the main gate."
+    },
+    {
+      "id": "nus_quickrotation_challenge_v1",
+      "family": "NUS/SIGGRAPH2013",
+      "category": "QuickRotation",
+      "role": "challenge_gate",
+      "status": "active_prepared",
+      "priority": "P1",
+      "source_url": "http://liushuaicheng.org/SIGGRAPH2013/data/QuickRotation.zip",
+      "source_archive": "data/sources/NUS_raw_zips/QuickRotation.zip",
+      "source_extracted_dir": "data/sources/NUS_extracted/QuickRotation",
+      "prepared_dir": "results/nus_quickrotation_challenge_v1_curated",
+      "raw_dir": "results/nus_quickrotation_challenge_v1_curated/raw_clips",
+      "stable_reference_dir": "results/nus_quickrotation_challenge_v1_curated/stable_reference",
+      "manifest": "results/nus_quickrotation_challenge_v1_curated/nus_gate_manifest.csv",
+      "metadata": "results/nus_quickrotation_challenge_v1_curated/nus_gate_metadata.csv",
+      "expected_prepared_clips": [
+        "quickrot01_quickrotation_3",
+        "quickrot02_quickrotation_11",
+        "quickrot03_quickrotation_12",
+        "quickrot04_quickrotation_13",
+        "quickrot05_quickrotation_14",
+        "quickrot06_quickrotation_15",
+        "quickrot07_quickrotation_16",
+        "quickrot08_quickrotation_19",
+        "quickrot09_quickrotation_20",
+        "quickrot10_quickrotation_22",
+        "quickrot11_quickrotation_26"
+      ],
+      "prepare_command": "py -3.12 scripts/prepare_nus_gate_set.py --category QuickRotation --indices 3,11-16,19,20,22,26 --role challenge --name-prefix quickrot --out-dir results/nus_quickrotation_challenge_v1_curated --review-dir \"C:/Users/Admin/Videos/orin nx/nus_quickrotation_challenge_v1_curated\"",
+      "claim_allowed": [
+        "fast_rotation_boundary",
+        "scene_gate_degrade_behavior",
+        "model_limit_explanation"
+      ],
+      "claim_forbidden": [
+        "main_gate_success_rate",
+        "regular_quality_generalization"
+      ],
+      "notes": "Covers fast camera rotation and sudden orientation change."
+    },
+    {
+      "id": "nus_zooming_diagnostic_v1",
+      "family": "NUS/SIGGRAPH2013",
+      "category": "Zooming",
+      "role": "diagnostic",
+      "status": "active_prepared",
+      "priority": "P1",
+      "source_url": "http://liushuaicheng.org/SIGGRAPH2013/data/Zooming.zip",
+      "source_archive": "data/sources/NUS_raw_zips/Zooming.zip",
+      "source_extracted_dir": "data/sources/NUS_extracted/Zooming",
+      "prepared_dir": "results/nus_zooming_diagnostic_v1_curated",
+      "raw_dir": "results/nus_zooming_diagnostic_v1_curated/raw_clips",
+      "stable_reference_dir": "results/nus_zooming_diagnostic_v1_curated/stable_reference",
+      "manifest": "results/nus_zooming_diagnostic_v1_curated/nus_gate_manifest.csv",
+      "metadata": "results/nus_zooming_diagnostic_v1_curated/nus_gate_metadata.csv",
+      "expected_prepared_clips": [
+        "zoom01_zooming_0",
+        "zoom02_zooming_1",
+        "zoom03_zooming_2",
+        "zoom04_zooming_4",
+        "zoom05_zooming_5",
+        "zoom06_zooming_7",
+        "zoom07_zooming_8",
+        "zoom08_zooming_10",
+        "zoom09_zooming_11",
+        "zoom10_zooming_12",
+        "zoom11_zooming_13",
+        "zoom12_zooming_14",
+        "zoom13_zooming_15",
+        "zoom14_zooming_16",
+        "zoom15_zooming_17",
+        "zoom16_zooming_18",
+        "zoom17_zooming_19",
+        "zoom18_zooming_20",
+        "zoom19_zooming_21",
+        "zoom20_zooming_22",
+        "zoom21_zooming_23",
+        "zoom22_zooming_24",
+        "zoom23_zooming_25",
+        "zoom24_zooming_26",
+        "zoom25_zooming_29"
+      ],
+      "prepare_command": "py -3.12 scripts/prepare_nus_gate_set.py --category Zooming --indices 0-2,4,5,7,8,10-26,29 --role diagnostic --name-prefix zoom --out-dir results/nus_zooming_diagnostic_v1_curated --review-dir \"C:/Users/Admin/Videos/orin nx/nus_zooming_diagnostic_v1_curated\"",
+      "claim_allowed": [
+        "intent_motion_diagnostic",
+        "zoom_scene_boundary",
+        "scene_gate_policy_review"
+      ],
+      "claim_forbidden": [
+        "main_gate_success_rate",
+        "quality_generalization"
+      ],
+      "notes": "Intentional zoom should not be blindly treated as shake. Useful for panning/intent-preservation evaluation."
+    },
+    {
+      "id": "nus_parallax_challenge_v1",
+      "family": "NUS/SIGGRAPH2013",
+      "category": "Parallax",
+      "role": "challenge_gate",
+      "status": "active_prepared",
+      "priority": "P1",
+      "source_url": "http://liushuaicheng.org/SIGGRAPH2013/data/Parallax.zip",
+      "source_archive": "data/sources/NUS_raw_zips/Parallax.zip",
+      "source_extracted_dir": "data/sources/NUS_extracted/Parallax",
+      "prepared_dir": "results/nus_parallax_challenge_v1_curated",
+      "raw_dir": "results/nus_parallax_challenge_v1_curated/raw_clips",
+      "stable_reference_dir": "results/nus_parallax_challenge_v1_curated/stable_reference",
+      "manifest": "results/nus_parallax_challenge_v1_curated/nus_gate_manifest.csv",
+      "metadata": "results/nus_parallax_challenge_v1_curated/nus_gate_metadata.csv",
+      "expected_prepared_clips": [
+        "parallax01_parallax_0",
+        "parallax02_parallax_1",
+        "parallax03_parallax_5",
+        "parallax04_parallax_7",
+        "parallax05_parallax_8",
+        "parallax06_parallax_9",
+        "parallax07_parallax_10",
+        "parallax08_parallax_11",
+        "parallax09_parallax_12",
+        "parallax10_parallax_13",
+        "parallax11_parallax_14",
+        "parallax12_parallax_15",
+        "parallax13_parallax_16",
+        "parallax14_parallax_17"
+      ],
+      "prepare_command": "py -3.12 scripts/prepare_nus_gate_set.py --category Parallax --indices 0,1,5,7-17 --role challenge --name-prefix parallax --out-dir results/nus_parallax_challenge_v1_curated --review-dir \"C:/Users/Admin/Videos/orin nx/nus_parallax_challenge_v1_curated\"",
+      "download_notes": "Official zip is local and extracted. Range chunk download was needed because normal long downloads stalled.",
+      "claim_allowed": [
+        "parallax_boundary",
+        "global_affine_model_limit",
+        "mesh_or_local_motion_motivation"
+      ],
+      "claim_forbidden": [
+        "main_gate_success_rate",
+        "global_affine_success_generalization"
+      ],
+      "notes": "Required lifecycle boundary for foreground/background depth variation and local motion."
+    },
+    {
+      "id": "nus_crowd_diagnostic_v1",
+      "family": "NUS/SIGGRAPH2013",
+      "category": "Crowd",
+      "role": "diagnostic",
+      "status": "active_prepared",
+      "priority": "P1",
+      "source_url": "http://liushuaicheng.org/SIGGRAPH2013/data/Crowd.zip",
+      "source_archive": "data/sources/NUS_raw_zips/Crowd.zip",
+      "source_extracted_dir": "data/sources/NUS_extracted/Crowd",
+      "prepared_dir": "results/nus_crowd_diagnostic_v1_curated",
+      "raw_dir": "results/nus_crowd_diagnostic_v1_curated/raw_clips",
+      "stable_reference_dir": "results/nus_crowd_diagnostic_v1_curated/stable_reference",
+      "manifest": "results/nus_crowd_diagnostic_v1_curated/nus_gate_manifest.csv",
+      "metadata": "results/nus_crowd_diagnostic_v1_curated/nus_gate_metadata.csv",
+      "expected_prepared_clips": [
+        "crowd01_crowd_0",
+        "crowd02_crowd_1",
+        "crowd03_crowd_2",
+        "crowd04_crowd_3",
+        "crowd05_crowd_4",
+        "crowd06_crowd_5",
+        "crowd07_crowd_6",
+        "crowd08_crowd_7",
+        "crowd09_crowd_8",
+        "crowd10_crowd_9",
+        "crowd11_crowd_10",
+        "crowd12_crowd_11",
+        "crowd13_crowd_12",
+        "crowd14_crowd_13",
+        "crowd15_crowd_14",
+        "crowd16_crowd_15",
+        "crowd17_crowd_16",
+        "crowd18_crowd_17",
+        "crowd19_crowd_18",
+        "crowd20_crowd_19",
+        "crowd21_crowd_20",
+        "crowd22_crowd_22"
+      ],
+      "prepare_command": "py -3.12 scripts/prepare_nus_gate_set.py --category Crowd --indices 0-20,22 --role diagnostic --name-prefix crowd --out-dir results/nus_crowd_diagnostic_v1_curated --review-dir \"C:/Users/Admin/Videos/orin nx/nus_crowd_diagnostic_v1_curated\"",
+      "claim_allowed": [
+        "foreground_motion_diagnostic",
+        "motion_estimation_confidence_review",
+        "scene_gate_policy_review"
+      ],
+      "claim_forbidden": [
+        "main_gate_success_rate",
+        "quality_generalization"
+      ],
+      "notes": "Required lifecycle diagnostic set for foreground/crowd motion and feature contamination."
+    },
+    {
+      "id": "regular05_perf_gate",
+      "family": "NUS/SIGGRAPH2013",
+      "category": "Regular",
+      "role": "performance_gate",
+      "status": "active_prepared",
+      "priority": "P0",
+      "raw_clip": "results/nus_regular_gate_v1/raw_clips/regular_gate05_regular_6.mp4",
+      "source_gate": "nus_regular_gate_v1",
+      "claim_allowed": [
+        "same_input_jetson_timing",
+        "module_latency",
+        "fps_after_real_run"
+      ],
+      "claim_forbidden": [
+        "full_dataset_performance",
+        "quality_generalization"
+      ],
+      "notes": "The only current performance gate. Same-input quality semantics must remain frozen."
+    },
+    {
+      "id": "iqa_public_calibration_pool",
+      "family": "IQA/VQA public datasets",
+      "role": "metric_calibration",
+      "status": "planned_reference_only",
+      "priority": "P2",
+      "candidate_sources": [
+        {
+          "name": "LIVE/TID/CSIQ/IVC/Toyama",
+          "source_type": "image IQA",
+          "use": "Metric sanity and subjective-correlation background, not EIS quality gate."
+        },
+        {
+          "name": "LIVE-VQC / KoNViD-1k / YouTube-UGC",
+          "source_type": "video quality assessment",
+          "use": "Future calibration for blur/noise/artifact diagnostics after enough EIS human-review labels exist."
+        }
+      ],
+      "claim_allowed": [
+        "metric_calibration",
+        "diagnostic_metric_selection"
+      ],
+      "claim_forbidden": [
+        "eis_quality_gate",
+        "stabilization_success_rate"
+      ],
+      "notes": "Do not download or wire into hard gates until a concrete metric-calibration loop is defined."
+    }
+  ]
+}
