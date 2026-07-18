@@ -243,6 +243,7 @@ The next useful performance work should choose one scoped path:
 
 ```text
 1. keep the dual-baseline wording in future reports and commits;
-2. turn the high-resolution VPI module result into a cleaner module-level report or demo;
-3. run `gst_nvmm_decode_convert_latency_v1`, measuring decode/convert/encode boundaries before EIS integration.
+2. polish the Challenge boundary package as the model operating-envelope evidence;
+3. polish the VPI high-resolution module report as the hardware acceleration boundary;
+4. keep GStreamer/NVMM as dataflow-boundary evidence; do not integrate the current CPU EIS through a Python appsink/appsrc loop.
 ```
