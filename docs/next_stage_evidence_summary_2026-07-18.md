@@ -69,13 +69,14 @@ Measured dataflow anchors:
 | decode/NVMM/convert/fakesink, avg of 3 | 3/3 | 1.931 s |
 | hardware encode path | 1/1 | 1.299 s |
 | CPU-readable boundary | 1/1 | 1.960 s |
+| Python appsink BGRx pull | 240 frames | 1.904 s / 7.93 ms per frame |
 
 Decision:
 
 ```text
-The Jetson dataflow path is available and measurable. Do not integrate into
-cpu_stabilize.py yet. The next useful step would be an appsink/appsrc boundary
-with frame counting.
+The Jetson dataflow path is available and measurable. Python appsink readback is
+also measurable. Do not integrate into cpu_stabilize.py yet. The next useful
+step is an appsrc/encode return-path measurement.
 ```
 
 ## Next Execution Choice
@@ -96,7 +97,7 @@ implementation risk.
 Secondary next loop:
 
 ```text
-GStreamer appsink/appsrc boundary measurement.
+GStreamer appsrc/encode return-path measurement.
 ```
 
 Defer:
