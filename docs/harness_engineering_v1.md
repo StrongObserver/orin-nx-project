@@ -330,11 +330,6 @@ backend comparison shows that `vpi_cpu`, `vpi_cuda`, and `vpi_vic` are all slowe
 than `opencv_cpu` for the current 640x360 Python full-pipeline path. Do not claim
 VPI full-pipeline acceleration from that result.
 
-The next useful work is a scoped performance loop that changes one variable at a
-time: first motion-estimation cost (`estimate_scale` or feature budget), then a
-separate high-resolution VPI module check or a true GStreamer/NVMM dataflow
-probe.
-
 Update - anti-retreat correction:
 
 ```text
@@ -342,4 +337,18 @@ The CPU baseline and its Git/evidence checkpoint are not the final goal.
 The next project work should return to the three unfinished core tracks:
 VPI backend validation, non-Python dataflow/zero-copy or pipeline work, and
 NVDEC/NVENC plus power/perf evaluation.
+```
+
+Update - device-side path:
+
+```text
+The current acceleration frontier is no longer Python appsink/appsrc or a simple
+VPI backend swap. MMAPI experiments have validated a device-side path:
+
+H264 input -> decode/NvBufSurface -> scratch pitch-linear NV12_ER -> VPI CUDA
+warp -> block-linear NV12 -> NVENC.
+
+The current useful loop is to validate same-source inverse-matrix device output
+against CPU stabilized output and then decide whether it is a stage demo or
+needs more matrix/crop/zoom alignment work.
 ```

@@ -16,6 +16,12 @@ This map points to local evidence. Most evidence files are ignored by Git.
 | GStreamer readiness probe | `results/gst_nvmm_probe_20260718_summary.md` | Minimum decode/NVMM/convert/fakesink readiness | ignored |
 | GStreamer latency boundary | `results/gst_nvmm_decode_convert_latency_20260718/summary.md` | fakesink, hardware encode, CPU-readable, appsink latency anchors | ignored |
 | GStreamer appsrc boundary | `results/gst_appsrc_encode_boundary_20260718/summary.md` | appsink -> appsrc -> encode pass-through boundary | ignored |
+| MMAPI backend probe | `results/vpi_backend_support_probe_20260718/summary.md` | Jetson VPI/GStreamer/nvpmodel backend readiness probe | ignored |
+| VPI optical-flow probe | `results/vpi_optical_flow_probe_20260718/summary.md` | Dense flow and PyrLK backend support boundary | ignored |
+| CUDA-memory VPI warp experiment | `results/vpi_cuda_mem_warp_20260718/warp_4k_1000.log` | C++ CUDA pitch-linear memory -> VPI CUDA warp timing without Python readback | ignored |
+| MMAPI scratch-buffer transcode warp | `results/mmapi_vpi_transcode_warp_20260719/run_scratch_transform.log` | block-linear NV12 main path -> scratch -> VPI CUDA warp -> NVENC path | ignored |
+| Same-source inverse-matrix device warp | `results/same_source_matrix_20260719/device_matrix_inverse.log` | offline CPU matrix -> inverse matrix -> MMAPI/VPI/NVENC device-side warp | ignored |
+| Same-source device review video | `C:\Users\Admin\Videos\orin nx\review\performance\20260719_same_source_matrix_device_warp\20260719_same_source_matrix_device_warp_raw_cpu_device_compare.mp4` | raw / CPU stabilized / device inverse-matrix comparison | outside repo |
 | Presentation guide | `docs/presentation/README.md` | Reading order for interview-style docs | tracked |
 | One-page summary | `docs/presentation/one_page_summary.md` | Fast project overview | tracked |
 

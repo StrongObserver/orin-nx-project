@@ -33,6 +33,12 @@ Challenge model boundary:
 GStreamer/NVMM boundary:
   Python appsink/appsrc pass-through costs about 15.81 ms/frame before EIS work,
   so direct Python-in-the-loop EIS integration is not the next acceleration path
+
+Device-side MMAPI/VPI/NVENC path:
+  C++ Jetson Multimedia API experiments now run decode -> NvBufSurface scratch
+  -> VPI CUDA warp -> block-linear NV12 -> NVENC. Same-source inverse matrix
+  drive is validated as an offline-matrix device-side warp/encode path, not a
+  real-time full EIS pipeline yet.
 ```
 
 ## Current Stage
@@ -239,11 +245,15 @@ C:\Users\Admin\Videos\orin nx\review\performance\20260718_regular_gate_est0p5_gr
 
 Do not continue blind global affine/rigid parameter sweeps on `regular05`.
 
-The next useful performance work should choose one scoped path:
+The current device-side acceleration path should stay scoped:
 
 ```text
-1. keep the dual-baseline wording in future reports and commits;
-2. polish the Challenge boundary package as the model operating-envelope evidence;
-3. polish the VPI high-resolution module report as the hardware acceleration boundary;
-4. keep GStreamer/NVMM as dataflow-boundary evidence; do not integrate the current CPU EIS through a Python appsink/appsrc loop.
+1. keep CPU quality-safe and Regular performance baselines distinct;
+2. keep Challenge sets as model-boundary evidence, not headline pass rates;
+3. keep high-resolution VPI warp/remap as module-level acceleration evidence;
+4. use MMAPI/NvBufSurface scratch-buffer device-side flow for the next
+   acceleration path;
+5. next validate same-source inverse-matrix device output against CPU stabilized
+   output with frame-diff and visual review before claiming a stage demo;
+6. do not return to Python appsink/appsrc EIS integration.
 ```
