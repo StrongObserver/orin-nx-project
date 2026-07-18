@@ -54,6 +54,26 @@ def patch_main(path: Path) -> None:
                     break;
                 }
             }
+            static bool printed_surface_info = false;
+            if (!printed_surface_info)
+            {
+                cerr << "VPI_SURFACE_INFO width=" << nvbuf_surf->surfaceList[0].width
+                     << " height=" << nvbuf_surf->surfaceList[0].height
+                     << " pitch=" << nvbuf_surf->surfaceList[0].pitch
+                     << " layout=" << nvbuf_surf->surfaceList[0].layout
+                     << " colorFormat=" << nvbuf_surf->surfaceList[0].colorFormat
+                     << " num_planes=" << nvbuf_surf->surfaceList[0].planeParams.num_planes
+                     << " p0_pitch=" << nvbuf_surf->surfaceList[0].planeParams.pitch[0]
+                     << " p0_offset=" << nvbuf_surf->surfaceList[0].planeParams.offset[0]
+                     << " p0_width=" << nvbuf_surf->surfaceList[0].planeParams.width[0]
+                     << " p0_height=" << nvbuf_surf->surfaceList[0].planeParams.height[0]
+                     << " p1_pitch=" << nvbuf_surf->surfaceList[0].planeParams.pitch[1]
+                     << " p1_offset=" << nvbuf_surf->surfaceList[0].planeParams.offset[1]
+                     << " p1_width=" << nvbuf_surf->surfaceList[0].planeParams.width[1]
+                     << " p1_height=" << nvbuf_surf->surfaceList[0].planeParams.height[1]
+                     << endl;
+                printed_surface_info = true;
+            }
             ret = vpi_warp_egl_image(nvbuf_surf->surfaceList[0].mappedAddr.eglImage);
             if (ret < 0)
             {

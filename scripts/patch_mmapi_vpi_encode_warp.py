@@ -31,21 +31,75 @@ vpi_warp_egl_image(EGLImageKHR image)
         cuGraphicsUnregisterResource(resource);
         return -1;
     }
+    static bool printed_egl_info = false;
+    if (!printed_egl_info)
+    {
+        cerr << "VPI_EGL_INFO width=" << eglFrame.width
+             << " height=" << eglFrame.height
+             << " pitch=" << eglFrame.pitch
+             << " planeCount=" << eglFrame.planeCount
+             << " numChannels=" << eglFrame.numChannels
+             << " frameType=" << eglFrame.frameType
+             << " eglColorFormat=" << eglFrame.eglColorFormat
+             << " cuFormat=" << eglFrame.cuFormat << endl;
+        printed_egl_info = true;
+    }
 
     VPIImageData input_data;
     memset(&input_data, 0, sizeof(input_data));
     input_data.bufferType = VPI_IMAGE_BUFFER_CUDA_PITCH_LINEAR;
-    input_data.buffer.pitch.format = VPI_IMAGE_FORMAT_Y8_ER;
-    input_data.buffer.pitch.numPlanes = 1;
+    bool is_nv12_semiplanar = (eglFrame.planeCount == 2 &&
+                               (eglFrame.eglColorFormat == CU_EGL_COLOR_FORMAT_YUV420_SEMIPLANAR ||
+                                eglFrame.eglColorFormat == CU_EGL_COLOR_FORMAT_YUV420_SEMIPLANAR_ER ||
+                                eglFrame.eglColorFormat == CU_EGL_COLOR_FORMAT_YUV420_SEMIPLANAR_709));
+    input_data.buffer.pitch.format = is_nv12_semiplanar ? VPI_IMAGE_FORMAT_NV12_ER : VPI_IMAGE_FORMAT_Y8_ER;
+    input_data.buffer.pitch.numPlanes = is_nv12_semiplanar ? 2 : 1;
     input_data.buffer.pitch.planes[0].data = (void *)eglFrame.frame.pPitch[0];
     input_data.buffer.pitch.planes[0].width = eglFrame.width;
     input_data.buffer.pitch.planes[0].height = eglFrame.height;
     input_data.buffer.pitch.planes[0].pitchBytes = eglFrame.pitch;
+    if (is_nv12_semiplanar)
+    {
+        input_data.buffer.pitch.planes[1].data = (void *)eglFrame.frame.pPitch[1];
+        input_data.buffer.pitch.planes[1].width = eglFrame.width / 2;
+        input_data.buffer.pitch.planes[1].height = eglFrame.height / 2;
+        input_data.buffer.pitch.planes[1].pitchBytes = eglFrame.pitch;
+    }
+
+    unsigned char *scratch_dev = NULL;
+    unsigned char *scratch_uv_dev = NULL;
+    size_t scratch_pitch = 0;
+    cudaError_t cuda_status = cudaMallocPitch((void **)&scratch_dev, &scratch_pitch, eglFrame.width, eglFrame.height);
+    if (cuda_status != cudaSuccess)
+    {
+        cerr << "cudaMallocPitch scratch failed: " << cudaGetErrorString(cuda_status) << endl;
+        cuGraphicsUnregisterResource(resource);
+        return -1;
+    }
+    size_t scratch_uv_pitch = 0;
+    if (is_nv12_semiplanar)
+    {
+        cuda_status = cudaMallocPitch((void **)&scratch_uv_dev, &scratch_uv_pitch, eglFrame.width, eglFrame.height / 2);
+        if (cuda_status != cudaSuccess)
+        {
+            cerr << "cudaMallocPitch scratch UV failed: " << cudaGetErrorString(cuda_status) << endl;
+            cudaFree(scratch_dev);
+            cuGraphicsUnregisterResource(resource);
+            return -1;
+        }
+    }
 
     VPIImage input = NULL;
     VPIImage output = NULL;
     VPIStream stream = NULL;
     VPIImageData output_data = input_data;
+    output_data.buffer.pitch.planes[0].data = scratch_dev;
+    output_data.buffer.pitch.planes[0].pitchBytes = scratch_pitch;
+    if (is_nv12_semiplanar)
+    {
+        output_data.buffer.pitch.planes[1].data = scratch_uv_dev;
+        output_data.buffer.pitch.planes[1].pitchBytes = scratch_uv_pitch;
+    }
     VPIStatus status = VPI_SUCCESS;
     VPIPerspectiveTransform xform = {1.0f, 0.002f, 1.0f, -0.002f, 1.0f, -1.0f, 0.0f, 0.0f, 1.0f};
 
@@ -63,6 +117,27 @@ vpi_warp_egl_image(EGLImageKHR image)
         if (status != VPI_SUCCESS) goto vpi_fail;
         status = vpiStreamSync(stream);
         if (status != VPI_SUCCESS) goto vpi_fail;
+        cuda_status = cudaMemcpy2D((void *)eglFrame.frame.pPitch[0], eglFrame.pitch,
+                                   scratch_dev, scratch_pitch,
+                                   eglFrame.width, eglFrame.height,
+                                   cudaMemcpyDeviceToDevice);
+        if (cuda_status != cudaSuccess)
+        {
+            cerr << "cudaMemcpy2D scratch back failed: " << cudaGetErrorString(cuda_status) << endl;
+            goto vpi_fail;
+        }
+        if (is_nv12_semiplanar)
+        {
+            cuda_status = cudaMemcpy2D((void *)eglFrame.frame.pPitch[1], eglFrame.pitch,
+                                       scratch_uv_dev, scratch_uv_pitch,
+                                       eglFrame.width, eglFrame.height / 2,
+                                       cudaMemcpyDeviceToDevice);
+            if (cuda_status != cudaSuccess)
+            {
+                cerr << "cudaMemcpy2D scratch UV back failed: " << cudaGetErrorString(cuda_status) << endl;
+                goto vpi_fail;
+            }
+        }
         auto t1 = std::chrono::high_resolution_clock::now();
         static int frame_count = 0;
         static double total_ms = 0.0;
@@ -79,6 +154,8 @@ vpi_warp_egl_image(EGLImageKHR image)
     vpiImageDestroy(output);
     vpiImageDestroy(input);
     vpiStreamDestroy(stream);
+    if (scratch_uv_dev) cudaFree(scratch_uv_dev);
+    cudaFree(scratch_dev);
     cuGraphicsUnregisterResource(resource);
     return 0;
 
@@ -89,6 +166,8 @@ vpi_fail:
     if (output) vpiImageDestroy(output);
     if (input) vpiImageDestroy(input);
     if (stream) vpiStreamDestroy(stream);
+    if (scratch_uv_dev) cudaFree(scratch_uv_dev);
+    if (scratch_dev) cudaFree(scratch_dev);
     cuGraphicsUnregisterResource(resource);
     return -1;
 }
