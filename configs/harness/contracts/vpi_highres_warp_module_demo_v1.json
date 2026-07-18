@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "contract_id": "vpi_highres_warp_module_demo_v1",
+  "status": "draft_ready",
+  "loop_type": "module_performance_demo",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Turn the existing VPI high-resolution warp benchmark into a reproducible module-level demo with correctness and crossover evidence.",
+  "claim_boundary": {
+    "allowed": [
+      "VPI CUDA accelerates high-resolution warp-heavy module workload",
+      "VPI backend swap is not a full-pipeline acceleration result for the current 640x360 Python EIS pipeline"
+    ],
+    "forbidden": [
+      "VPI accelerates the full EIS pipeline",
+      "VPI is always faster than OpenCV",
+      "high-resolution module speedup proves Regular EIS baseline acceleration"
+    ]
+  },
+  "inputs": {
+    "resolutions": [
+      "640x360",
+      "1280x720",
+      "1920x1080",
+      "2560x1440",
+      "3840x2160"
+    ],
+    "source_videos": [
+      "data/raw/sample_1280x720_from4k.mp4",
+      "data/raw/sample_1920x1080_from4k.mp4",
+      "data/raw/sample_2560x1440_from4k.mp4",
+      "data/raw/sample_3840x2160.mp4"
+    ],
+    "existing_evidence": [
+      "results/vpi_resolution_scaling_benchmark/summary.csv",
+      "results/perf_backend_compare_20260718/backend_compare_summary.md"
+    ]
+  },
+  "required_outputs": [
+    "speedup_table",
+    "crossover_or_threshold_statement",
+    "correctness_check_summary",
+    "presentation_chart",
+    "module_report"
+  ],
+  "correctness_checks": [
+    "compare OpenCV CPU and VPI CUDA output under the same transform",
+    "state interpolation and border mode differences",
+    "record mean absolute difference or other simple image difference metric",
+    "do not promote speed-only result if output mismatch is unexplained"
+  ],
+  "frozen_variables": [
+    "Regular CPU baseline",
+    "Challenge gate roles",
+    "EIS quality claims"
+  ],
+  "max_attempts": 2,
+  "stop_reasons": [
+    "existing evidence sufficient for report without rerun",
+    "correctness mismatch unexplained",
+    "would require full EIS pipeline rewrite",
+    "Jetson runtime blocker"
+  ],
+  "evidence_output_directory": "results/vpi_highres_warp_module_demo_<YYYYMMDD>",
+  "report_path": "docs/vpi_warp_module_report_2026-07-18.md"
+}

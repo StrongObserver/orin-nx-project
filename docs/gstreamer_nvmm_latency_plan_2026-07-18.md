@@ -69,7 +69,45 @@ wall time
 
 Pass condition: all runs reach EOS.
 
-### P3.2 Add File Output Boundary
+### P3.2 Pure Hardware Decode / Convert / Encode Boundary
+
+Run a no-CPU-processing path to establish the upper bound for hardware dataflow:
+
+```text
+filesrc -> qtdemux -> h264parse -> nvv4l2decoder -> nvvidconv -> nvv4l2h264enc -> qtmux -> filesink
+```
+
+Record:
+
+```text
+exit code
+EOS reached
+wall time
+output file exists
+input frames / output duration if available
+```
+
+Purpose: measure the hardware path before introducing CPU readback.
+
+### P3.3 CPU Readback Boundary
+
+Run a path that explicitly leaves NVMM/system hardware flow:
+
+```text
+nvv4l2decoder -> NVMM -> nvvidconv -> video/x-raw,format=BGRx -> CPU-readable sink
+```
+
+Record:
+
+```text
+wall time
+average frame time if a callback or frame counter is available
+whether caps negotiation forced a copy
+```
+
+Purpose: decide whether CPU readback dominates before EIS integration.
+
+### P3.4 File Output Boundary
 
 Replace `fakesink` with an encoded or raw file output path only if the minimal
 probe is stable.
@@ -77,18 +115,6 @@ probe is stable.
 Purpose: measure whether output/encoding dominates.
 
 Pass condition: output file exists and command reaches EOS.
-
-### P3.3 Add CPU Boundary Probe
-
-Measure the point where NVMM leaves the hardware path:
-
-```text
-NVMM -> nvvidconv -> video/x-raw,format=BGRx -> appsink or CPU-readable sink
-```
-
-Purpose: decide whether CPU readback is still the main integration cost.
-
-Pass condition: command runs and the CPU boundary is explicitly identified.
 
 ## Expected Outputs
 

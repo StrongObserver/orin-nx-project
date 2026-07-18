@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "contract_id": "challenge_boundary_package_v1",
+  "status": "draft_ready",
+  "loop_type": "boundary_evaluation_loop",
+  "loop_profile": "evaluation_loop",
+  "autonomy_level": "L3",
+  "objective": "Build a challenge-set boundary package that explains where the current global-warp EIS model applies and where it breaks.",
+  "baseline_under_test": {
+    "id": "regular_performance_baseline_est0p5_grid16",
+    "config": "lp_rigid_strength080_dynzoom106 + estimate_scale=0.5 + feature_grid_size=16",
+    "role": "Regular performance baseline"
+  },
+  "challenge_sets": [
+    {
+      "id": "nus_running_gate_v1",
+      "role": "challenge_gate",
+      "expected_failure_mode": "high-frequency large motion and crop/smoothness conflict"
+    },
+    {
+      "id": "nus_quickrotation_challenge_v1",
+      "role": "challenge_gate",
+      "expected_failure_mode": "fast rotation and rolling-shutter-like risk"
+    },
+    {
+      "id": "nus_parallax_challenge_v1",
+      "role": "challenge_gate",
+      "expected_failure_mode": "single global transform cannot represent foreground/background motion"
+    },
+    {
+      "id": "nus_crowd_diagnostic_v1",
+      "role": "diagnostic",
+      "expected_failure_mode": "foreground or crowd motion contaminates global estimation"
+    }
+  ],
+  "allowed_claims": [
+    "model_boundary_explanation",
+    "operating_envelope",
+    "challenge_failure_attribution",
+    "future_work_scope"
+  ],
+  "forbidden_claims": [
+    "challenge_set_success_rate_as_main_metric",
+    "running_gate_solved",
+    "parallax_or_crowd_solved",
+    "product_grade_eis"
+  ],
+  "required_outputs": [
+    "class_summary_table",
+    "selected_side_by_side_videos",
+    "per_category_pass_boundary_fail_labels",
+    "one_sentence_failure_attribution_per_category",
+    "presentation_ready_boundary_summary"
+  ],
+  "validators": [
+    "Regular main gate remains the success anchor",
+    "challenge sets are not merged into headline pass rate",
+    "review videos copied to C:/Users/Admin/Videos/orin nx/review/challenge or diagnostic",
+    "metrics and visual observations are both recorded"
+  ],
+  "max_attempts": 1,
+  "stop_reasons": [
+    "requires_algorithm_tuning",
+    "missing_challenge_dataset",
+    "manual_review_needed",
+    "boundary_labels_unclear"
+  ],
+  "evidence_output_directory": "results/challenge_boundary_package_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/challenge/<YYYYMMDD>_challenge_boundary_package"
+}
