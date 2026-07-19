@@ -142,18 +142,17 @@ H264 input -> MMAPI decode / NvBufSurface -> pitch-linear NV12_ER scratch
 -> VPI CUDA warp -> block-linear NV12 -> NVENC
 ```
 
-Same-source testing found the correct matrix direction for this path:
+Outdoor-car smoke testing found a matrix direction that worked for the dataflow
+smoke path:
 
 | Matrix direction | Sampled black-border behavior | Decision |
 |---|---:|---|
 | forward CPU matrix | about 30% black area | reject |
 | inverse CPU matrix | about 2.8-2.9% black area | current default |
 
-Current boundary: this is an offline CPU-matrix-driven device warp/encode
-milestone. It is not yet real-time full EIS and not CPU-output equivalence.
-A 120-frame local panel comparison between CPU stabilized and device inverse
-outputs showed `mean_abs_center_avg=37.033757`, so the remaining parity gap must
-be treated explicitly.
+Boundary: this outdoor-car result is an offline CPU-matrix-driven device
+warp/encode smoke milestone. It is not real-time full EIS, not CPU-output
+equivalence, and not the current Regular05 EIS-quality convention.
 
 Follow-up Jetson A/B:
 
@@ -165,12 +164,16 @@ Follow-up Jetson A/B:
 | 120-row post-geometry + first-frame identity | 30.241568 | current best device candidate |
 | Catmull-Rom interpolation | 30.902334 | slower and worse |
 
-Conclusion: composing CPU dynamic zoom and crop geometry into the device matrix
-is the right direction. Keeping the prepended first frame as identity gives a
-small additional improvement. Catmull-Rom interpolation is not worth adopting.
-An identity transcode baseline already has `mean_abs_center_avg=25.664099`
-against source, so raw pixel diff has a high codec/colorspace floor and does not
-map cleanly to geometric parity alone.
+Regular05 replay later showed the EIS-quality convention must be
+`source_to_dest`:
+
+| Regular05 convention | black p95 | CPU-vs-device mean_abs_center_avg | Decision |
+|---|---:|---:|---|
+| inverse | 0.281428602 | 35.618840 | reject |
+| source_to_dest | 0.000972005 | 4.512432 | current fixed replay |
+
+Conclusion: use outdoor-car only as dataflow smoke. Use Regular05
+`source_to_dest` for EIS-quality device replay and future handoff work.
 
 ## How To Explain The Trade-Off
 
@@ -181,8 +184,8 @@ optimization boundaries:
 - VPI is slower in the current small full pipeline;
 - VPI is faster for high-resolution warp-heavy modules;
 - GStreamer/NVMM is available for a future real dataflow optimization loop.
-- MMAPI/VPI/NVENC device-side warp is now validated as a stage boundary, with a
-  known CPU-output parity gap.
+- MMAPI/VPI/NVENC device-side warp is now validated as a stage boundary.
+- Regular05 source_to_dest replay is the current EIS-quality device checkpoint.
 
 This is stronger than claiming one fake speedup. It shows measurement discipline:
 the project separates algorithm quality, module acceleration, and data movement.
@@ -197,11 +200,11 @@ results/estimate_scale_quality_perf_20260718/quality_perf_summary.md
 results/regular_gate_est0p5_grid16_validation_20260718/regular_gate_validation_summary.md
 results/vpi_resolution_scaling_benchmark/vpi_module_summary.md
 results/gst_nvmm_probe_20260718_summary.md
-results/same_source_matrix_20260719/device_matrix_inverse.log
-results/device_matrix_warp_demo_20260719/triptych_cpu_vs_device/summary.md
+results/regular05_device_replay_20260719/direct_video_diff_cpu_vs_device_forward/correctness_summary.csv
 docs/stage_result_regular_performance_baseline_2026-07-18.md
 docs/gstreamer_nvmm_latency_plan_2026-07-18.md
 docs/device_matrix_warp_demo_2026-07-19.md
+docs/layered_artifact_diagnosis_2026-07-19.md
 ```
 
 Review videos:
@@ -213,7 +216,7 @@ C:\Users\Admin\Videos\orin nx\review\performance\20260718_backend_compare\
 C:\Users\Admin\Videos\orin nx\review\performance\20260718_estimate_scale_regular05\
 C:\Users\Admin\Videos\orin nx\review\performance\20260718_estimate_scale_quality_perf\
 C:\Users\Admin\Videos\orin nx\review\performance\20260718_regular_gate_est0p5_grid16_validation\
-C:\Users\Admin\Videos\orin nx\review\performance\20260719_same_source_matrix_device_warp\
+C:\Users\Admin\Videos\orin nx\review\performance\20260719_regular05_device_replay\
 ```
 
 ## Next Best Step
@@ -222,12 +225,10 @@ The next most valuable loop is not another global LP parameter sweep.
 
 Use one of these scoped directions:
 
-1. Keep `post_geometry_identity_first` as the current device-side warp/encode
-   stage candidate.
-2. Continue parity work only if the next scoped change isolates a border
-   workaround or colorspace/encoding difference.
-3. Do not move to real-time online motion estimation until the parity boundary is
-   closed.
+1. Use Regular05 `source_to_dest` as the current device-side replay convention.
+2. Start future handoff/live-producer work from
+   `regular05_hybrid_matrix_handoff_v1`.
+3. Do not use outdoor-car inverse/post_geometry results as EIS-quality progress.
 
 Active next contracts:
 

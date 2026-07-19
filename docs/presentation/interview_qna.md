@@ -75,8 +75,8 @@ current frontier is the device-side MMAPI/VPI/NVENC path:
 
 ```text
 Step 1:
-  keep post-geometry with first-frame identity as the current best device-side
-  matrix candidate.
+  use Regular05 source_to_dest as the current EIS-quality device replay
+  convention.
 
 Step 2:
   treat raw pixel diff carefully because identity transcode already creates a
@@ -142,7 +142,8 @@ H264 input
 
 The current version uses offline CPU-generated matrices. Forward matrices caused
 large black borders, while inverse matrices produced normal sampled black-border
-sanity, so inverse matrix is the current device-side direction.
+sanity on the outdoor-car smoke source. That result is now historical dataflow
+evidence, not the Regular05 EIS-quality convention.
 
 I then tested two 120-row matrix candidates. Only composing CPU zoom/crop
 geometry into the matrix improved parity:
@@ -156,8 +157,22 @@ Catmull-Rom interpolation:             30.902334
 ```
 
 Catmull-Rom was slower and worse than linear, so the current best device
-candidate remains linear interpolation plus post-geometry with first-frame
-identity.
+candidate for outdoor-car smoke remains linear interpolation plus post-geometry
+with first-frame identity.
+
+For Regular05 EIS-quality replay, the convention changed:
+
+```text
+inverse convention:
+  black_border_p95 = 0.281428602
+  CPU-vs-device mean_abs_center_avg = 35.618840
+
+source_to_dest convention:
+  black_border_p95 = 0.000972005
+  CPU-vs-device mean_abs_center_avg = 4.512432
+```
+
+So Regular05 work must use source_to_dest.
 
 ## Q: Is the device-side result a real-time EIS pipeline?
 

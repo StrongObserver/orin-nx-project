@@ -81,11 +81,11 @@ H264 input -> MMAPI decode / NvBufSurface
 -> NVENC
 ```
 
-Important result:
+Historical outdoor-car result:
 
 ```text
-Forward CPU matrices caused excessive black border on the device path.
-Inverse matrices are the current device-side default.
+On the outdoor-car smoke source, inverse/post-geometry matrices validated the
+MMAPI/VPI/NVENC dataflow shape. This is not the current EIS-quality convention.
 ```
 
 Current boundary:
@@ -117,11 +117,21 @@ Catmull-Rom interpolation:
   VPI warp avg at frame 100 = 2.980040 ms
 ```
 
-The post-geometry identity-first matrix is the current best device candidate.
-It improves parity by composing CPU dynamic zoom and crop geometry into the
-matrix while keeping the first frame stable. Catmull-Rom interpolation is not
-worth adopting because it is slower and worse than linear. The result still does
-not justify a CPU-equivalence or real-time EIS claim.
+For EIS-quality replay on Regular05, the current convention is `source_to_dest`.
+It fixed the large black-border issue:
+
+```text
+Regular05 inverse convention:
+  black_border_p95 = 0.281428602
+  CPU-vs-device mean_abs_center_avg = 35.618840
+
+Regular05 source_to_dest convention:
+  black_border_p95 = 0.000972005
+  CPU-vs-device mean_abs_center_avg = 4.512432
+```
+
+Catmull-Rom interpolation remains rejected because it was slower and worse than
+linear on the outdoor-car smoke test.
 
 ## Interview Wording
 
@@ -130,9 +140,11 @@ I measured both where hardware acceleration fails and where it starts to help.
 In the small Python EIS pipeline, VPI was slower because conversion and
 synchronization dominated. In a high-resolution warp module, VPI CUDA scaled well
 and reached 2.33x at 4K. I then moved away from Python appsink/appsrc and
-validated a C++ MMAPI/VPI/NVENC device-side warp path. The current version uses
-offline CPU-generated inverse matrices, so the honest claim is device-side
-warp/encode readiness, not full real-time EIS.
+validated a C++ MMAPI/VPI/NVENC device-side warp path. The outdoor-car tests
+were dataflow smoke. On the real Regular05 EIS clip, source_to_dest matrix
+convention fixed the device replay black-border problem. The honest claim is
+device-side warp/encode readiness plus Regular05 replay correctness, not full
+real-time EIS.
 ```
 
 ## Evidence
