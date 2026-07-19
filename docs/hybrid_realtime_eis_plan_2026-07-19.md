@@ -138,6 +138,12 @@ Suggested contract id:
 hybrid_realtime_matrix_handoff_v1
 ```
 
+Machine-readable draft:
+
+```text
+configs/harness/contracts/hybrid_realtime_matrix_handoff_v1.json
+```
+
 Allowed claims:
 
 ```text

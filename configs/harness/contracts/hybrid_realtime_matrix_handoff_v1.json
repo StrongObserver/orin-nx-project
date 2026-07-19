@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "contract_id": "hybrid_realtime_matrix_handoff_v1",
+  "status": "draft_ready",
+  "loop_type": "hybrid_realtime_prototype",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Prototype the smallest online matrix-handoff step from CPU motion estimation toward the accepted MMAPI/VPI/NVENC device-side warp and encode path.",
+  "accepted_stage_dependency": {
+    "contract_id": "device_matrix_warp_demo_v1",
+    "candidate": "post_geometry_identity_first",
+    "device_matrix_csv": "results/device_matrix_warp_demo_20260719/device_matrices_inverse_post_geometry_identity_first.csv",
+    "claim_boundary": "Accepted only as offline device-side warp/encode stage demo; not full real-time EIS."
+  },
+  "claim_boundary": {
+    "allowed": [
+      "hybrid online matrix handoff prototype",
+      "MMAPI/VPI/NVENC device-side warp remains active",
+      "frame-index alignment and matrix handoff timing are measured",
+      "quality no-regression is checked against accepted CPU/device evidence"
+    ],
+    "forbidden": [
+      "zero-copy full chain",
+      "VPI optical-flow acceleration",
+      "product-grade real-time EIS",
+      "all-scene EIS quality",
+      "CPU-output pixel equivalence"
+    ]
+  },
+  "input_scope": {
+    "source_clip": "results/same_source_matrix_20260719/source_120f.h264",
+    "reference_cpu_output": "results/same_source_matrix_20260719/cpu_stabilized_120f.mp4",
+    "accepted_device_output": "results/device_matrix_warp_demo_20260719/remote_outputs/device_post_geometry_identity_first_120f.h264",
+    "initial_matrix_source": "results/device_matrix_warp_demo_20260719/device_matrices_inverse_post_geometry_identity_first.csv"
+  },
+  "first_implementation_slice": [
+    "Use the accepted 120-row post_geometry_identity_first matrix CSV as the control stream.",
+    "Build a mock online handoff that provides the same matrices with frame-index timestamps.",
+    "Verify the handoff output matches the CSV replay path within expected encoding variance.",
+    "Only after that, replace mock matrices with live CPU-estimated matrices."
+  ],
+  "frozen_variables": [
+    "source clip",
+    "output resolution",
+    "accepted device matrix convention: post_geometry_identity_first",
+    "VPI interpolation: linear",
+    "border mode: VPI_BORDER_ZERO",
+    "CPU baseline and accepted device-stage evidence"
+  ],
+  "external_observation": [
+    "frame_index_alignment_log",
+    "matrix_handoff_latency_log",
+    "vpi_warp_timing_log",
+    "end_to_end_wall_time",
+    "output_video_nonempty",
+    "side_by_side_review_video",
+    "direct_video_diff_summary"
+  ],
+  "success_criteria": [
+    "120 frames processed",
+    "no matrix fallback",
+    "output non-empty and readable",
+    "frame-index alignment log has no gaps",
+    "VPI warp avg remains near the current 1.44 ms/frame order",
+    "quality does not regress relative to accepted post_geometry_identity_first stage output"
+  ],
+  "stop_reasons": [
+    "matrix_frame_mismatch_after_one_fix_attempt",
+    "output_empty_or_unreadable",
+    "hybrid_path_slower_than_offline_path_with_no_new_insight",
+    "visual_review_worse_than_accepted_stage_output",
+    "implementation_requires_broad_cxx_rewrite_before_small_verifier_exists"
+  ],
+  "recovery_actions": {
+    "matrix_frame_mismatch_after_one_fix_attempt": "Stop and inspect frame-index ownership before changing algorithm or VPI code.",
+    "output_empty_or_unreadable": "Check MMAPI command shape and avoid --stats on the current matrix transcode path.",
+    "broad_cxx_rewrite_needed": "Return to design review; do not rewrite the MMAPI sample without a smaller verifier."
+  },
+  "evidence_output_directory": "results/hybrid_realtime_matrix_handoff_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/performance/<YYYYMMDD>_hybrid_realtime_matrix_handoff",
+  "report_path": "docs/hybrid_realtime_matrix_handoff_<YYYY-MM-DD>.md"
+}

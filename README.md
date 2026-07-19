@@ -240,6 +240,7 @@ configs/harness/contracts/regular05_estimate_scale_quality_perf.json
 configs/harness/contracts/regular_gate_est0p5_grid16_validation_v1.json
 configs/harness/contracts/gst_nvmm_decode_convert_latency_v1.json
 configs/harness/contracts/device_matrix_warp_demo_v1.json
+configs/harness/contracts/hybrid_realtime_matrix_handoff_v1.json
 configs/harness/evaluation_datasets.json
 configs/harness/metric_schema.json
 docs/harness_engineering_v1.md
