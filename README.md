@@ -38,7 +38,9 @@ Device-side MMAPI/VPI/NVENC path:
   C++ Jetson Multimedia API experiments now run decode -> NvBufSurface scratch
   -> VPI CUDA warp -> block-linear NV12 -> NVENC. Same-source inverse matrix
   drive is validated as an offline-matrix device-side warp/encode path, not a
-  real-time full EIS pipeline yet.
+  real-time full EIS pipeline yet. The latest panel-diff check also shows it is
+  not yet a close CPU-output reproduction because CPU crop/zoom/sharpen parity
+  is not implemented on the device path.
 ```
 
 ## Current Stage
@@ -177,6 +179,55 @@ Conclusion: direct Python GStreamer integration is not the next best way to
 accelerate the current CPU EIS pipeline. If this direction resumes, prefer a
 C++/CUDA or device-side dataflow path.
 
+### Device-Side Matrix Warp Boundary
+
+The current non-Python device-side path uses Jetson Multimedia API and VPI CUDA:
+
+```text
+H264 input -> decode/NvBufSurface -> pitch-linear NV12_ER scratch
+-> VPI CUDA warp -> block-linear NV12 -> NVENC
+```
+
+Same-source matrix tests showed that the forward CPU matrix creates excessive
+black border on the device path, while the inverse matrix gives normal sampled
+black-border sanity:
+
+| Output | Black ratio | Decision |
+|---|---:|---|
+| device forward matrix | about 0.303 | reject |
+| device inverse matrix | about 0.028 to 0.029 | current default |
+
+The device path is still a scoped stage boundary. A local 120-frame panel
+comparison between CPU stabilized and device inverse output has
+`mean_abs_center_avg=37.033757` and `p95_abs_center_avg=138.416667`, so the
+project must not claim CPU-output equivalence. The main known gap is that the
+device path currently uses linear VPI warp with zero border and does not
+reproduce CPU post-processing such as dynamic zoom, fixed crop/resize, Lanczos
+interpolation, and sharpen.
+
+The next device-side A/B test was run with generated 120-row matrix candidates:
+
+```text
+device_matrices_inverse_aligned_identity_first.csv
+device_matrices_inverse_with_post_geometry.csv
+```
+
+Result:
+
+| Candidate | mean_abs_center_avg vs CPU | p95_abs_center_avg vs CPU | Decision |
+|---|---:|---:|---|
+| old inverse | 44.739667 | 156.975000 | valid path, poor parity |
+| aligned identity first | 46.884302 | 159.958333 | worse |
+| post geometry | 30.688605 | 116.958333 | strong improvement |
+| post geometry, identity first | 30.241568 | 115.866667 | current best device candidate |
+| post geometry, identity first, Catmull-Rom | 30.902334 | 117.875000 | slower and worse |
+
+The post-geometry matrix shows that composing CPU dynamic zoom + crop geometry
+into the device matrix is the right direction. An identity transcode baseline
+already has `mean_abs_center_avg=25.664099` versus source, so raw pixel diff has
+a high codec/colorspace floor. The best device output still does not reach
+CPU-output equivalence, so real-time motion estimation remains premature.
+
 ## Control Plane
 
 Harness and evaluation files:
@@ -188,6 +239,7 @@ configs/harness/contracts/regular_performance_baseline_est0p5_grid16.json
 configs/harness/contracts/regular05_estimate_scale_quality_perf.json
 configs/harness/contracts/regular_gate_est0p5_grid16_validation_v1.json
 configs/harness/contracts/gst_nvmm_decode_convert_latency_v1.json
+configs/harness/contracts/device_matrix_warp_demo_v1.json
 configs/harness/evaluation_datasets.json
 configs/harness/metric_schema.json
 docs/harness_engineering_v1.md
@@ -231,7 +283,10 @@ results/regular_gate_est0p5_grid16_validation_20260718/regular_gate_validation_s
 results/vpi_resolution_scaling_benchmark/vpi_module_summary.md
 results/gst_nvmm_probe_20260718_summary.md
 results/gst_appsrc_encode_boundary_20260718/summary.md
+results/same_source_matrix_20260719/device_matrix_inverse.log
+results/device_matrix_warp_demo_20260719/triptych_cpu_vs_device/summary.md
 docs/stage_result_regular_performance_baseline_2026-07-18.md
+docs/device_matrix_warp_demo_2026-07-19.md
 docs/gstreamer_nvmm_latency_plan_2026-07-18.md
 C:\Users\Admin\Videos\orin nx\review\quality\20260718_regular05_new_method\
 C:\Users\Admin\Videos\orin nx\review\performance\20260718_jetson_regular05_perf\
@@ -253,7 +308,8 @@ The current device-side acceleration path should stay scoped:
 3. keep high-resolution VPI warp/remap as module-level acceleration evidence;
 4. use MMAPI/NvBufSurface scratch-buffer device-side flow for the next
    acceleration path;
-5. next validate same-source inverse-matrix device output against CPU stabilized
-   output with frame-diff and visual review before claiming a stage demo;
+5. keep same-source inverse-matrix device output as a warp/encode boundary until
+   CPU post-processing parity or a direct raw-video diff supports a stronger
+   claim;
 6. do not return to Python appsink/appsrc EIS integration.
 ```

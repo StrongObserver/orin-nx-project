@@ -351,4 +351,14 @@ warp -> block-linear NV12 -> NVENC.
 The current useful loop is to validate same-source inverse-matrix device output
 against CPU stabilized output and then decide whether it is a stage demo or
 needs more matrix/crop/zoom alignment work.
+
+2026-07-19 boundary update:
+
+```text
+Same-source inverse-matrix output has normal sampled black-border sanity, so the
+device-side warp/encode path is valid as a stage boundary. A 120-frame local
+panel comparison still shows a large CPU-vs-device parity gap, so the result is
+not CPU-output equivalence. Use configs/harness/contracts/device_matrix_warp_demo_v1.json
+and docs/device_matrix_warp_demo_2026-07-19.md for this claim boundary.
+```
 ```

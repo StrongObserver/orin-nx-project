@@ -1,0 +1,108 @@
+{
+  "schema_version": 1,
+  "contract_id": "device_matrix_warp_demo_v1",
+  "status": "boundary_validated_needs_alignment",
+  "loop_type": "device_side_warp_demo",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Validate the offline CPU-matrix-driven MMAPI/VPI/NVENC device-side warp path and define its claim boundary before using it as a stage demo.",
+  "active_core_track": "non_python_device_side_dataflow",
+  "pipeline_under_test": {
+    "input": "/home/nvidia/orin-nx-project/_mmapi_work/jetson_multimedia_api/data/Video/sample_outdoor_car_1080p_10fps.h264",
+    "cpu_matrix_source": "/home/nvidia/orin-nx-project/results/same_source_matrix_20260719/matrices.csv",
+    "device_matrix_source": "/home/nvidia/orin-nx-project/results/same_source_matrix_20260719/matrices_inverse.csv",
+    "device_output": "/home/nvidia/orin-nx-project/results/same_source_matrix_20260719/device_matrix_inverse_120f.h264",
+    "review_video": "C:/Users/Admin/Videos/orin nx/review/performance/20260719_same_source_matrix_device_warp/20260719_same_source_matrix_device_warp_raw_cpu_device_compare.mp4"
+  },
+  "claim_boundary": {
+    "allowed": [
+      "MMAPI/NvBufSurface scratch-buffer path can run VPI CUDA warp before NVENC",
+      "inverse matrix is the current correct direction for this device-side VPI path",
+      "offline matrix-driven device warp and encode path is validated as a stage boundary",
+      "device-side VPI warp timing is approximately 1.25 to 1.42 ms per 1080p frame in the recorded run"
+    ],
+    "forbidden": [
+      "real-time full EIS pipeline",
+      "CPU stabilized output is pixel-equivalent to device output",
+      "CPU crop, dynamic zoom, Lanczos resize, and sharpen are fully reproduced on device",
+      "zero-copy full EIS integration",
+      "VPI full stabilizer acceleration"
+    ]
+  },
+  "validated_observations": {
+    "forward_matrix_result": "forward matrix produced about 30% black area in the sampled sanity frames and is not the default direction",
+    "inverse_matrix_result": "inverse matrix sampled sanity frames have black_ratio around 0.028 to 0.029 and normal mean/std",
+    "triptych_cpu_vs_device": "local review-video panel comparison over 120 frames shows mean_abs_center_avg=37.033757 and p95_abs_center_avg=138.416667, so this is not CPU-output equivalence",
+    "panel_video_cpu_vs_device": "local panel-video comparison over 120 frames shows mean_abs_center_avg=39.751371 and p95_abs_center_avg=143.175417",
+    "frame_timeline_gap": "cpu_stabilize.py exports 119 matrices for a 120-frame output; the device path currently needs a 120-row matrix CSV with an explicit first-frame row",
+    "jetson_ab_result": "aligned_identity_first loaded 120 rows but worsened CPU/device diff; post_geometry_identity_first is current best with mean_abs_center_avg vs CPU = 30.241568",
+    "codec_color_floor": "identity transcode already has mean_abs_center_avg=25.664099 vs source, so raw pixel diff has a high codec/colorspace floor",
+    "vpi_border_interp_boundary": "VPI PerspectiveWarp only accepts VPI_BORDER_ZERO; Catmull-Rom interpolation was tested and rejected because it was slower and worse than linear",
+    "run_quirk": "do not use --stats for the current multivideo_transcode matrix path; it printed success but produced 0-byte output in this session",
+    "reason_for_gap": "device path currently uses VPI_BORDER_ZERO and linear interpolation and does not reproduce CPU post-processing such as dynamic zoom, fixed crop/resize, Lanczos interpolation, or sharpen"
+  },
+  "required_outputs": [
+    "device run log",
+    "sanity frame statistics",
+    "raw/cpu/device review video",
+    "triptych panel frame-diff summary",
+    "inverse matrix generation command",
+    "stage report with allowed and forbidden claims",
+    "reproduction command chain"
+  ],
+  "frozen_variables": [
+    "Regular CPU baseline",
+    "Regular and Challenge gate roles",
+    "Python appsink/appsrc is not the active path",
+    "forward matrix is not the default device direction"
+  ],
+  "next_alignment_tasks": [
+    "pull or preserve raw CPU/device output videos locally when Jetson auth is available",
+    "compare raw CPU stabilized video and device output directly instead of through encoded triptych panels",
+    "use device_matrices_inverse_post_geometry_identity_first.csv as the current best device-side candidate",
+    "investigate remaining parity gap by isolating border workaround and colorspace/encoding differences",
+    "do not continue Catmull-Rom interpolation; measured slower and worse",
+    "decide whether to implement device-side crop/zoom/sharpen parity or keep the result as a warp/encode demo only"
+  ],
+  "reproducibility_helpers": [
+    "scripts/invert_matrix_csv.py",
+    "scripts/prepare_device_matrix_csv.py",
+    "scripts/extract_review_panel.py",
+    "scripts/summarize_vpi_warp_log.py",
+    "scripts/make_video_grid.py",
+    "scripts/extract_video_frames.py",
+    "scripts/make_frame_attribution_sheet.py",
+    "scripts/patch_mmapi_vpi_interp.py",
+    "scripts/patch_mmapi_vpi_transcode_scratch_warp.py",
+    "scripts/compare_triptych_regions.py"
+  ],
+  "external_observation": [
+    "device_matrix_inverse.log",
+    "frame_sanity_inverse.csv",
+    "triptych_cpu_vs_device/summary.csv",
+    "panel_video_diff_cpu_vs_device/correctness_summary.csv",
+    "timing_inverse_profile/summary.csv",
+    "timing_post_geometry/summary.csv",
+    "timing_post_geometry_identity_first/summary.csv",
+    "direct_video_diff_cpu_vs_post_geometry/correctness_summary.csv",
+    "direct_video_diff_cpu_vs_post_geometry_identity_first/correctness_summary.csv",
+    "jetson_diff_source_vs_identity_transcode/correctness_summary.csv",
+    "review_copy_exists"
+  ],
+  "max_attempts": 2,
+  "stop_reasons": [
+    "jetson_ssh_auth_blocker",
+    "cpu_device_diff_too_large_for_equivalence_claim",
+    "would_require_real_time_motion_estimation",
+    "would_require_unplanned_system_package_install"
+  ],
+  "recovery_actions": {
+    "jetson_ssh_auth_blocker": "Use existing local logs and review video for boundary documentation, then ask user for Jetson password/key only if direct raw-video comparison is required.",
+    "cpu_device_diff_too_large_for_equivalence_claim": "Do not promote to CPU-equivalent demo. Either add device post-processing parity or keep it as a device-side warp/encode boundary result.",
+    "matrix_direction_unclear": "Use forward-vs-inverse black-ratio sanity first; do not default to forward matrix."
+  },
+  "evidence_output_directory": "results/device_matrix_warp_demo_20260719",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/performance/20260719_same_source_matrix_device_warp",
+  "report_path": "docs/device_matrix_warp_demo_2026-07-19.md"
+}

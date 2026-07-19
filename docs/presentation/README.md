@@ -13,8 +13,8 @@ Read these files in order for a short interview-style walkthrough:
      performance baseline.
 
 4. `hardware_acceleration_boundary.md`
-   - VPI module acceleration, full-pipeline negative result, and GStreamer/NVMM
-     dataflow boundary.
+   - VPI module acceleration, full-pipeline negative result, GStreamer/NVMM
+     dataflow boundary, and the current MMAPI/VPI/NVENC device-side warp path.
 
 5. `challenge_boundary.md`
    - Operating envelope: where Regular succeeds and where challenge sets expose

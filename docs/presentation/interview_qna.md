@@ -70,20 +70,25 @@ So the lesson is placement and dataflow matter.
 
 ## Q: What would you do next?
 
-The next implementation direction is not another baseline tuning loop. I would
-polish the two evidence chains that are already measured:
+The next implementation direction is not another baseline tuning loop. The
+current frontier is the device-side MMAPI/VPI/NVENC path:
 
 ```text
-VPI high-resolution module demo:
-  acceleration boundary
+Step 1:
+  keep post-geometry with first-frame identity as the current best device-side
+  matrix candidate.
 
-Challenge-set boundary package:
-  model operating envelope
+Step 2:
+  treat raw pixel diff carefully because identity transcode already creates a
+  large codec/colorspace baseline.
+
+Step 3:
+  only continue parity work if the next change has a clear target, such as a
+  border workaround or colorspace/encoding baseline.
 ```
 
-GStreamer/NVMM remains useful as a systems-boundary story, but I would not plug
-the current CPU EIS into a Python appsink/appsrc loop because the measured
-pass-through cost is already about 15.81 ms/frame before EIS computation.
+I would not move to real-time online motion estimation until that decision is
+closed.
 
 ## Q: Why not continue tuning Regular05?
 
@@ -122,6 +127,58 @@ appsink -> appsrc -> encode pass-through: about 15.81 ms/frame
 That is not a good path for accelerating the current CPU EIS pipeline. If this
 route continues, it should move toward C++/CUDA or device-side processing.
 
+## Q: What did the MMAPI/VPI/NVENC device-side work prove?
+
+It proved a non-Python device-side warp and encode path:
+
+```text
+H264 input
+-> MMAPI decode / NvBufSurface
+-> pitch-linear NV12_ER scratch
+-> VPI CUDA warp
+-> block-linear NV12
+-> NVENC
+```
+
+The current version uses offline CPU-generated matrices. Forward matrices caused
+large black borders, while inverse matrices produced normal sampled black-border
+sanity, so inverse matrix is the current device-side direction.
+
+I then tested two 120-row matrix candidates. Only composing CPU zoom/crop
+geometry into the matrix improved parity:
+
+```text
+old inverse mean_abs_center_avg vs CPU: 44.739667
+aligned identity-first:                46.884302
+post geometry:                         30.688605
+post geometry + first-frame identity:  30.241568
+Catmull-Rom interpolation:             30.902334
+```
+
+Catmull-Rom was slower and worse than linear, so the current best device
+candidate remains linear interpolation plus post-geometry with first-frame
+identity.
+
+## Q: Is the device-side result a real-time EIS pipeline?
+
+No. It is an offline matrix-driven device warp/encode milestone. Motion
+estimation is not running online inside the MMAPI path yet, and the device path
+does not yet reproduce CPU post-processing such as crop, dynamic zoom, Lanczos
+resize, and sharpen.
+
+## Q: Is the device output equivalent to the CPU stabilized output?
+
+Not yet. A 120-frame local panel comparison of the review video showed:
+
+```text
+CPU stabilized vs device inverse:
+  mean_abs_center_avg = 37.033757
+  p95_abs_center_avg  = 138.416667
+```
+
+That is enough to reject a CPU-equivalence claim. The correct claim is that the
+device-side warp/encode path works and has a known parity gap.
+
 ## Q: Why keep the quality-safe baseline?
 
 The performance baseline is accepted for Regular-gate speedup. The quality-safe
@@ -134,5 +191,6 @@ current setting or when a new clip raises visual concerns.
 docs/stage_result_regular_performance_baseline_2026-07-18.md
 docs/vpi_warp_module_report_2026-07-18.md
 docs/gstreamer_nvmm_latency_plan_2026-07-18.md
+docs/device_matrix_warp_demo_2026-07-19.md
 results/regular_gate_est0p5_grid16_validation_20260718/regular_gate_validation_summary.md
 ```

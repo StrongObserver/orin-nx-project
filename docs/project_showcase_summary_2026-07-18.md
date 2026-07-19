@@ -132,6 +132,46 @@ filesrc -> qtdemux -> h264parse -> nvv4l2decoder -> NVMM -> nvvidconv -> BGRx ->
 
 This proves dataflow readiness only. It does not prove EIS acceleration yet.
 
+### Device-Side MMAPI / VPI / NVENC Boundary
+
+The next non-Python path has been advanced from readiness probing to a scoped
+device-side warp/encode run:
+
+```text
+H264 input -> MMAPI decode / NvBufSurface -> pitch-linear NV12_ER scratch
+-> VPI CUDA warp -> block-linear NV12 -> NVENC
+```
+
+Same-source testing found the correct matrix direction for this path:
+
+| Matrix direction | Sampled black-border behavior | Decision |
+|---|---:|---|
+| forward CPU matrix | about 30% black area | reject |
+| inverse CPU matrix | about 2.8-2.9% black area | current default |
+
+Current boundary: this is an offline CPU-matrix-driven device warp/encode
+milestone. It is not yet real-time full EIS and not CPU-output equivalence.
+A 120-frame local panel comparison between CPU stabilized and device inverse
+outputs showed `mean_abs_center_avg=37.033757`, so the remaining parity gap must
+be treated explicitly.
+
+Follow-up Jetson A/B:
+
+| Candidate | mean_abs_center_avg vs CPU | Decision |
+|---|---:|---|
+| old inverse | 44.739667 | valid path, poor parity |
+| 120-row aligned identity-first | 46.884302 | worse |
+| 120-row post-geometry | 30.688605 | strong improvement |
+| 120-row post-geometry + first-frame identity | 30.241568 | current best device candidate |
+| Catmull-Rom interpolation | 30.902334 | slower and worse |
+
+Conclusion: composing CPU dynamic zoom and crop geometry into the device matrix
+is the right direction. Keeping the prepended first frame as identity gives a
+small additional improvement. Catmull-Rom interpolation is not worth adopting.
+An identity transcode baseline already has `mean_abs_center_avg=25.664099`
+against source, so raw pixel diff has a high codec/colorspace floor and does not
+map cleanly to geometric parity alone.
+
 ## How To Explain The Trade-Off
 
 The project currently has a credible CPU EIS baseline and several measured
@@ -141,6 +181,8 @@ optimization boundaries:
 - VPI is slower in the current small full pipeline;
 - VPI is faster for high-resolution warp-heavy modules;
 - GStreamer/NVMM is available for a future real dataflow optimization loop.
+- MMAPI/VPI/NVENC device-side warp is now validated as a stage boundary, with a
+  known CPU-output parity gap.
 
 This is stronger than claiming one fake speedup. It shows measurement discipline:
 the project separates algorithm quality, module acceleration, and data movement.
@@ -155,8 +197,11 @@ results/estimate_scale_quality_perf_20260718/quality_perf_summary.md
 results/regular_gate_est0p5_grid16_validation_20260718/regular_gate_validation_summary.md
 results/vpi_resolution_scaling_benchmark/vpi_module_summary.md
 results/gst_nvmm_probe_20260718_summary.md
+results/same_source_matrix_20260719/device_matrix_inverse.log
+results/device_matrix_warp_demo_20260719/triptych_cpu_vs_device/summary.md
 docs/stage_result_regular_performance_baseline_2026-07-18.md
 docs/gstreamer_nvmm_latency_plan_2026-07-18.md
+docs/device_matrix_warp_demo_2026-07-19.md
 ```
 
 Review videos:
@@ -168,6 +213,7 @@ C:\Users\Admin\Videos\orin nx\review\performance\20260718_backend_compare\
 C:\Users\Admin\Videos\orin nx\review\performance\20260718_estimate_scale_regular05\
 C:\Users\Admin\Videos\orin nx\review\performance\20260718_estimate_scale_quality_perf\
 C:\Users\Admin\Videos\orin nx\review\performance\20260718_regular_gate_est0p5_grid16_validation\
+C:\Users\Admin\Videos\orin nx\review\performance\20260719_same_source_matrix_device_warp\
 ```
 
 ## Next Best Step
@@ -176,10 +222,12 @@ The next most valuable loop is not another global LP parameter sweep.
 
 Use one of these scoped directions:
 
-1. Use the dual-baseline wording consistently in future reports and commits.
-2. Build a clearer high-resolution VPI module demo/report.
-3. Create a GStreamer/NVMM dataflow latency contract before attempting EIS
-   integration.
+1. Keep `post_geometry_identity_first` as the current device-side warp/encode
+   stage candidate.
+2. Continue parity work only if the next scoped change isolates a border
+   workaround or colorspace/encoding difference.
+3. Do not move to real-time online motion estimation until the parity boundary is
+   closed.
 
 Active next contracts:
 
@@ -188,4 +236,5 @@ configs/harness/contracts/regular_performance_baseline_est0p5_grid16.json
 configs/harness/contracts/regular05_estimate_scale_quality_perf.json
 configs/harness/contracts/regular_gate_est0p5_grid16_validation_v1.json
 configs/harness/contracts/gst_nvmm_decode_convert_latency_v1.json
+configs/harness/contracts/device_matrix_warp_demo_v1.json
 ```

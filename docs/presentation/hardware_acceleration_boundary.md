@@ -68,14 +68,71 @@ strong boundary signal: direct Python-in-the-loop GStreamer EIS integration is
 not the next best acceleration path.
 ```
 
+## Device-Side MMAPI / VPI / NVENC Path
+
+The next non-Python path has now been validated as a scoped device-side warp and
+encode boundary:
+
+```text
+H264 input -> MMAPI decode / NvBufSurface
+-> pitch-linear NV12_ER scratch
+-> VPI CUDA warp
+-> block-linear NV12
+-> NVENC
+```
+
+Important result:
+
+```text
+Forward CPU matrices caused excessive black border on the device path.
+Inverse matrices are the current device-side default.
+```
+
+Current boundary:
+
+```text
+This is an offline CPU-matrix-driven device warp/encode demo. It is not yet a
+real-time full EIS pipeline, and it is not pixel-equivalent to the CPU stabilized
+output because CPU crop, dynamic zoom, Lanczos resize, and sharpen are not yet
+reproduced on the device path.
+```
+
+Device matrix A/B result:
+
+```text
+old inverse:
+  mean_abs_center_avg vs CPU = 44.739667
+
+120-row aligned identity-first:
+  mean_abs_center_avg vs CPU = 46.884302
+
+120-row post-geometry:
+  mean_abs_center_avg vs CPU = 30.688605
+
+120-row post-geometry with first-frame identity:
+  mean_abs_center_avg vs CPU = 30.241568
+
+Catmull-Rom interpolation:
+  mean_abs_center_avg vs CPU = 30.902334
+  VPI warp avg at frame 100 = 2.980040 ms
+```
+
+The post-geometry identity-first matrix is the current best device candidate.
+It improves parity by composing CPU dynamic zoom and crop geometry into the
+matrix while keeping the first frame stable. Catmull-Rom interpolation is not
+worth adopting because it is slower and worse than linear. The result still does
+not justify a CPU-equivalence or real-time EIS claim.
+
 ## Interview Wording
 
 ```text
 I measured both where hardware acceleration fails and where it starts to help.
 In the small Python EIS pipeline, VPI was slower because conversion and
 synchronization dominated. In a high-resolution warp module, VPI CUDA scaled well
-and reached 2.33x at 4K. The next step is measuring a real NVMM dataflow boundary
-before trying to integrate it into EIS.
+and reached 2.33x at 4K. I then moved away from Python appsink/appsrc and
+validated a C++ MMAPI/VPI/NVENC device-side warp path. The current version uses
+offline CPU-generated inverse matrices, so the honest claim is device-side
+warp/encode readiness, not full real-time EIS.
 ```
 
 ## Evidence
@@ -83,10 +140,12 @@ before trying to integrate it into EIS.
 ```text
 docs/vpi_warp_module_report_2026-07-18.md
 docs/gstreamer_nvmm_latency_plan_2026-07-18.md
+docs/device_matrix_warp_demo_2026-07-19.md
 results/gst_nvmm_decode_convert_latency_20260718/summary.md
 results/gst_nvmm_decode_convert_latency_20260718/appsink_summary.csv
 results/gst_appsrc_encode_boundary_20260718/summary.md
 results/perf_backend_compare_20260718/backend_compare_summary.md
 results/vpi_resolution_scaling_benchmark/vpi_module_summary.md
 results/gst_nvmm_probe_20260718_summary.md
+results/device_matrix_warp_demo_20260719/triptych_cpu_vs_device/summary.md
 ```
