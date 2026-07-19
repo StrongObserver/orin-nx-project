@@ -25,6 +25,8 @@ This map points to local evidence. Most evidence files are ignored by Git.
 | Same-source device review video, standardized name | `C:\Users\Admin\Videos\orin nx\review\performance\20260719_same_source_matrix_device_warp\20260719_device_matrix_warp_demo_sample_outdoor_car_jetson_inverse_matrix_raw_cpu_device_compare.mp4` | Same review asset with explicit demo/clip/platform/config naming | outside repo |
 | Device matrix warp contract | `configs/harness/contracts/device_matrix_warp_demo_v1.json` | Claim boundary for offline matrix-driven MMAPI/VPI/NVENC warp demo | tracked |
 | Device matrix warp report | `docs/device_matrix_warp_demo_2026-07-19.md` | Stage decision and reproduction chain for device-side matrix warp | tracked |
+| Device stage demo handoff | `docs/device_stage_demo_handoff_2026-07-19.md` | Accepted stage demo boundary, best review assets, and claim wording | tracked |
+| Hybrid real-time EIS plan | `docs/hybrid_realtime_eis_plan_2026-07-19.md` | Minimal CPU-online-estimation to MMAPI/VPI/NVENC matrix-handoff plan | tracked |
 | Device matrix panel diff | `results/device_matrix_warp_demo_20260719/triptych_cpu_vs_device/summary.md` | 120-frame CPU panel vs device panel diff from review video; shows this is not CPU-output equivalence | ignored |
 | Device matrix extracted-panel videos | `results/device_matrix_warp_demo_20260719/panels/` | Local fallback raw/cpu/device panel videos extracted from the review MP4 | ignored |
 | Device matrix panel-video diff | `results/device_matrix_warp_demo_20260719/panel_video_diff_cpu_vs_device/correctness_summary.csv` | Standard two-video diff over extracted CPU/device panels | ignored |

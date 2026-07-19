@@ -16,11 +16,18 @@ Read these files in order for a short interview-style walkthrough:
    - VPI module acceleration, full-pipeline negative result, GStreamer/NVMM
      dataflow boundary, and the current MMAPI/VPI/NVENC device-side warp path.
 
-5. `challenge_boundary.md`
+5. `../device_stage_demo_handoff_2026-07-19.md`
+   - Accepted device-side stage demo, review assets, result table, and claim
+     boundaries.
+
+6. `../hybrid_realtime_eis_plan_2026-07-19.md`
+   - Next-stage hybrid real-time matrix-handoff plan.
+
+7. `challenge_boundary.md`
    - Operating envelope: where Regular succeeds and where challenge sets expose
      model limits.
 
-6. `interview_qna.md`
+8. `interview_qna.md`
    - Concise answers to likely interview questions.
 
 Do not present local `results/` videos or CSV files as repository artifacts.
