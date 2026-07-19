@@ -336,4 +336,11 @@ FIFO stream matrix handoff validated:
   frame_index_mismatch_count = 0
   VPI warp avg at frame 100 = 1.485500 ms
   mock_vs_stream mean_abs_center_avg = 2.427583
+
+first live CPU matrix producer boundary:
+  fallback_count = 0
+  frame_index_mismatch_count = 0
+  producer estimate avg ~= 18 ms/frame
+  CPU-vs-output mean_abs_center_avg = 42.764717 to 43.405001
+  decision: handoff works, estimator/correction convention is the next blocker
 ```

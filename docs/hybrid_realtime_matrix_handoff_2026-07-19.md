@@ -150,23 +150,64 @@ CPU-output pixel equivalence
 
 ## Next Step
 
-The next step is to replace the mock matrix provider with a live CPU-estimated
-matrix provider on the same 120-frame source clip.
+The next step was tested: replacing the CSV producer with a live CPU-estimated
+matrix producer on the same 120-frame source clip.
 
-Keep the first live version small:
+## Live CPU Producer Result
+
+Two first-pass live producers were tested:
 
 ```text
-CPU estimator may remain separate or minimally integrated.
-The output must still log frame index, matrix index, fallback, handoff latency,
-VPI warp timing, and total run status.
+cumulative_raw:
+  cumulative raw motion matrix from per-frame CPU GFTT/LK/RANSAC estimates
+
+window_correction:
+  short-window trajectory smoothing and correction matrix
 ```
 
-Stop if:
+Both use the same FIFO stream consumer and MMAPI/VPI/NVENC path.
+
+| Candidate | fallback count | frame-index mismatch | producer estimate avg | VPI warp avg at frame 100 | CPU-vs-output mean_abs_center_avg | Decision |
+|---|---:|---:|---:|---:|---:|---|
+| CSV stream provider | 0 | 0 | n/a | 1.485500 ms | 30.744841 | accepted handoff baseline |
+| live cumulative raw | 0 | 0 | 18.374103 ms | 1.796820 ms | 42.764717 | live path works, quality weak |
+| live window correction | 0 | 0 | 18.093807 ms | 1.714890 ms | 43.405001 | no improvement, reject |
+
+Producer quality was not blocked by feature tracking:
 
 ```text
-frame index drifts;
-fallback appears;
-output is empty or unreadable;
-quality is clearly worse than post_geometry_identity_first;
-the change requires a broad C++ rewrite before a small verifier exists.
+fallback_count = 0
+avg_inlier_ratio ~= 0.9594
+min_tracked >= 495
+```
+
+Interpretation:
+
+```text
+The live CPU producer can feed matrices through FIFO with correct frame index
+and no fallback, but the first estimator/correction convention is not yet
+compatible with the accepted offline matrix quality. The next problem is EIS
+estimator convention and causal smoothing, not MMAPI handoff.
+```
+
+Review copy:
+
+```text
+C:\Users\Admin\Videos\orin nx\review\performance\20260719_hybrid_realtime_matrix_handoff\20260719_hybrid_realtime_matrix_handoff_sample_outdoor_car_jetson_live_cpu_provider_grid_compare.mp4
+```
+
+## Updated Next Step
+
+Do not continue handoff work blindly. The handoff path is validated.
+
+Next route:
+
+```text
+1. Audit the live producer's matrix convention against cpu_stabilize.py exported
+   matrices on the same source.
+2. Compare per-frame live matrices against the accepted offline
+   post_geometry_identity_first matrices.
+3. Fix estimator/correction convention before adding more pipeline complexity.
+4. Only after live matrices approach accepted offline matrices should the project
+   move to lower-copy frame access or VPI optical flow.
 ```

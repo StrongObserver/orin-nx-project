@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract_id": "hybrid_realtime_matrix_handoff_v1",
-  "status": "stream_handoff_validated",
+  "status": "live_provider_boundary_found",
   "loop_type": "hybrid_realtime_prototype",
   "loop_profile": "performance_loop",
   "autonomy_level": "L3",
@@ -85,6 +85,26 @@
     "mock_vs_stream_mean_abs_center_avg": 2.427583,
     "accepted_device_vs_stream_mean_abs_center_avg": 6.247061,
     "cpu_vs_stream_mean_abs_center_avg": 30.744841,
+    "report": "docs/hybrid_realtime_matrix_handoff_2026-07-19.md"
+  },
+  "validated_live_provider_boundary": {
+    "cumulative_raw": {
+      "frames_processed": 120,
+      "fallback_count": 0,
+      "frame_index_mismatch_count": 0,
+      "producer_estimate_ms_avg": 18.374103,
+      "vpi_warp_avg_ms_at_frame_100": 1.79682,
+      "cpu_vs_output_mean_abs_center_avg": 42.764717
+    },
+    "window_correction": {
+      "frames_processed": 120,
+      "fallback_count": 0,
+      "frame_index_mismatch_count": 0,
+      "producer_estimate_ms_avg": 18.093807,
+      "vpi_warp_avg_ms_at_frame_100": 1.71489,
+      "cpu_vs_output_mean_abs_center_avg": 43.405001
+    },
+    "decision": "FIFO handoff works with live CPU matrices, but first-pass estimator/correction convention is too weak; audit against accepted offline matrices before further pipeline work.",
     "report": "docs/hybrid_realtime_matrix_handoff_2026-07-19.md"
   },
   "stop_reasons": [
