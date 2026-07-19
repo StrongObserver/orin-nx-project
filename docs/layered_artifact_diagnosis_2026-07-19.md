@@ -76,10 +76,38 @@ C:\Users\Admin\Videos\orin nx\review\performance\20260719_regular05_device_repla
 Interpretation:
 
 ```text
-Regular05 is the correct type of source for EIS quality review. Pixel diff is
-still not a final quality judge because codec/color and crop/warp differences
-are large, but this review video is the right artifact for deciding whether the
-device replay is visually acceptable.
+Regular05 is the correct type of source for EIS quality review. The first
+Regular05 device replay exposed a severe matrix-convention problem: the inverse
+matrix convention used for outdoor-car produced large black borders on the real
+EIS clip.
+```
+
+## Regular05 Matrix Direction Fix
+
+The Regular05 device replay was rerun with `source_to_dest` matrix convention
+instead of inverse convention:
+
+```text
+results/regular05_device_replay_20260719/remote_outputs/device_regular05_postgeom_idfirst_forward.h264
+```
+
+| Output | black p95 | black max | CPU-vs-device mean_abs_center_avg | VPI warp avg at frame 100 | Decision |
+|---|---:|---:|---:|---:|---|
+| inverse convention | 0.281428602 | 0.282070312 | 35.618840 | 0.552255 ms | reject |
+| source_to_dest convention | 0.000972005 | 0.006250000 | 4.512432 | 0.615782 ms | current fixed replay |
+
+Review copy:
+
+```text
+C:\Users\Admin\Videos\orin nx\review\performance\20260719_regular05_device_replay\20260719_regular05_device_replay_regular_gate05_regular_6_jetson_source_cpu_bad_fixed_grid.mp4
+```
+
+Interpretation:
+
+```text
+The Regular05 black-border issue was caused primarily by using the wrong matrix
+direction for VPI PerspectiveWarp on this device replay path. For the real EIS
+Regular05 replay, source_to_dest convention is the correct current convention.
 ```
 
 ## Current Boundary
@@ -95,6 +123,7 @@ sample_outdoor_car:
 regular_gate05_regular_6:
   real EIS quality review
   device replay visual check
+  current device replay convention: source_to_dest
 ```
 
 Do not use `sample_outdoor_car` as a stabilization-quality claim.

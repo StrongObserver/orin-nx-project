@@ -353,4 +353,12 @@ sample_outdoor_car_1080p_10fps:
 
 regular_gate05_regular_6:
   correct source type for EIS quality review and device replay visual check.
+  device replay uses source_to_dest matrix convention.
 ```
+
+Regular05 device replay fix:
+
+| Convention | black p95 | CPU-vs-device mean_abs_center_avg | Decision |
+|---|---:|---:|---|
+| inverse | 0.281428602 | 35.618840 | reject |
+| source_to_dest | 0.000972005 | 4.512432 | current fixed replay |
