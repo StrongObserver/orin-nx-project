@@ -63,7 +63,7 @@ def row_to_matrix(row: dict[str, str]) -> np.ndarray:
 
 
 def matrix_to_cells(mat: np.ndarray) -> dict[str, str]:
-    return {field: f"{float(value):.9f}" for field, value in zip(MATRIX_FIELDS, mat.reshape(-1), strict=True)}
+    return {field: f"{float(value):.9f}" for field, value in zip(MATRIX_FIELDS, mat.reshape(-1))}
 
 
 def read_metrics_zoom(path: Path | None) -> dict[int, float]:

@@ -26,11 +26,15 @@ Read these files in order for a short interview-style walkthrough:
 7. `../hybrid_realtime_matrix_handoff_2026-07-19.md`
    - First mock online matrix-handoff result and verifier summary.
 
-8. `challenge_boundary.md`
+8. `../layered_artifact_diagnosis_2026-07-19.md`
+   - Why outdoor-car is dataflow smoke only, and how Regular05 should be used
+     for EIS quality review.
+
+9. `challenge_boundary.md`
    - Operating envelope: where Regular succeeds and where challenge sets expose
      model limits.
 
-9. `interview_qna.md`
+10. `interview_qna.md`
    - Concise answers to likely interview questions.
 
 Do not present local `results/` videos or CSV files as repository artifacts.

@@ -344,3 +344,13 @@ first live CPU matrix producer boundary:
   CPU-vs-output mean_abs_center_avg = 42.764717 to 43.405001
   decision: handoff works, estimator/correction convention is the next blocker
 ```
+
+Artifact-diagnosis boundary:
+
+```text
+sample_outdoor_car_1080p_10fps:
+  dataflow / matrix handoff smoke only, not EIS quality evidence.
+
+regular_gate05_regular_6:
+  correct source type for EIS quality review and device replay visual check.
+```
