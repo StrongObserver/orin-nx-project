@@ -330,4 +330,10 @@ mock online matrix handoff validated:
   frame_index_mismatch_count = 0
   matrix handoff avg = 1.376 us
   VPI warp avg at frame 100 = 1.461560 ms
+
+FIFO stream matrix handoff validated:
+  fallback_count = 0
+  frame_index_mismatch_count = 0
+  VPI warp avg at frame 100 = 1.485500 ms
+  mock_vs_stream mean_abs_center_avg = 2.427583
 ```

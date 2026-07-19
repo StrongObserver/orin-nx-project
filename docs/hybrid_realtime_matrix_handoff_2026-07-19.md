@@ -42,6 +42,8 @@ MATRIX_HANDOFF frame=<frame> matrix_index=<index> fallback=<0|1> elapsed_us=<tim
 
 ## Result
 
+### Mock Provider
+
 | Metric | Value | Decision |
 |---|---:|---|
 | frames processed | 120 | pass |
@@ -64,6 +66,42 @@ The output differs slightly from the accepted device output because the MMAPI
 sample re-encoded a new output stream. The CPU-vs-mock diff remains close to the
 accepted `post_geometry_identity_first` device result.
 
+### FIFO Stream Provider
+
+A second implementation used a real producer/consumer path:
+
+```text
+Python matrix producer -> FIFO -> MMAPI/VPI/NVENC consumer
+```
+
+The producer streamed the accepted 120-row
+`post_geometry_identity_first` matrix CSV into a FIFO. The MMAPI sample consumed
+one matrix row per decoded frame.
+
+| Metric | Value | Decision |
+|---|---:|---|
+| frames processed | 120 | pass |
+| streamed matrix rows | 120 | pass |
+| fallback count | 0 | pass |
+| frame-index mismatch count | 0 | pass |
+| VPI warp avg at frame 100 | 1.485500 ms | pass |
+| mock vs stream mean_abs_center_avg | 2.427583 | close |
+| accepted device vs stream mean_abs_center_avg | 6.247061 | acceptable encoding variance |
+| CPU vs stream mean_abs_center_avg | 30.744841 | close to accepted candidate |
+
+The first `MATRIX_HANDOFF` sample includes FIFO startup wait
+(`747435 us`). After startup, sampled handoff reads are tens of microseconds.
+This is expected for the current process launch order and should not be treated
+as steady-state per-frame latency.
+
+Interpretation:
+
+```text
+The real producer/consumer matrix stream shape works. The current stream
+provider still uses precomputed accepted matrices, so it is a live handoff
+prototype, not live CPU motion estimation.
+```
+
 ## Evidence
 
 ```text
@@ -73,12 +111,19 @@ results/hybrid_realtime_matrix_handoff_20260719/handoff_summary/summary.csv
 results/hybrid_realtime_matrix_handoff_20260719/timing_mock_handoff/summary.csv
 results/hybrid_realtime_matrix_handoff_20260719/direct_video_diff_accepted_vs_mock/correctness_summary.csv
 results/hybrid_realtime_matrix_handoff_20260719/direct_video_diff_cpu_vs_mock/correctness_summary.csv
+results/hybrid_realtime_matrix_handoff_20260719/remote_outputs/stream_handoff_postgeom_idfirst.log
+results/hybrid_realtime_matrix_handoff_20260719/remote_outputs/stream_handoff_postgeom_idfirst_120f.h264
+results/hybrid_realtime_matrix_handoff_20260719/handoff_summary_stream/summary.csv
+results/hybrid_realtime_matrix_handoff_20260719/timing_stream_handoff/summary.csv
+results/hybrid_realtime_matrix_handoff_20260719/direct_video_diff_mock_vs_stream/correctness_summary.csv
+results/hybrid_realtime_matrix_handoff_20260719/direct_video_diff_cpu_vs_stream/correctness_summary.csv
 ```
 
 Review copy:
 
 ```text
 C:\Users\Admin\Videos\orin nx\review\performance\20260719_hybrid_realtime_matrix_handoff\20260719_hybrid_realtime_matrix_handoff_sample_outdoor_car_jetson_mock_handoff_grid_compare.mp4
+C:\Users\Admin\Videos\orin nx\review\performance\20260719_hybrid_realtime_matrix_handoff\20260719_hybrid_realtime_matrix_handoff_sample_outdoor_car_jetson_stream_handoff_grid_compare.mp4
 ```
 
 ## Claim Boundary
@@ -87,6 +132,7 @@ Allowed:
 
 ```text
 hybrid matrix handoff shape validated
+producer/consumer FIFO matrix stream validated
 frame-index alignment measured
 matrix handoff overhead measured
 MMAPI/VPI/NVENC device warp path remains active

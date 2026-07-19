@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract_id": "hybrid_realtime_matrix_handoff_v1",
-  "status": "mock_handoff_validated",
+  "status": "stream_handoff_validated",
   "loop_type": "hybrid_realtime_prototype",
   "loop_profile": "performance_loop",
   "autonomy_level": "L3",
@@ -74,6 +74,17 @@
     "vpi_warp_avg_ms_at_frame_100": 1.46156,
     "accepted_device_vs_mock_mean_abs_center_avg": 6.052197,
     "cpu_vs_mock_mean_abs_center_avg": 30.724221,
+    "report": "docs/hybrid_realtime_matrix_handoff_2026-07-19.md"
+  },
+  "validated_stream_handoff": {
+    "frames_processed": 120,
+    "streamed_matrix_rows": 120,
+    "fallback_count": 0,
+    "frame_index_mismatch_count": 0,
+    "vpi_warp_avg_ms_at_frame_100": 1.4855,
+    "mock_vs_stream_mean_abs_center_avg": 2.427583,
+    "accepted_device_vs_stream_mean_abs_center_avg": 6.247061,
+    "cpu_vs_stream_mean_abs_center_avg": 30.744841,
     "report": "docs/hybrid_realtime_matrix_handoff_2026-07-19.md"
   },
   "stop_reasons": [
