@@ -110,6 +110,18 @@ direction for VPI PerspectiveWarp on this device replay path. For the real EIS
 Regular05 replay, source_to_dest convention is the correct current convention.
 ```
 
+Primary display asset:
+
+```text
+C:\Users\Admin\Videos\orin nx\review\performance\20260719_regular05_device_replay\20260719_regular05_device_replay_regular_gate05_regular_6_jetson_source_cpu_fixed_grid.mp4
+```
+
+Use the bad-vs-fixed video only for diagnosis. The main review asset should show:
+
+```text
+source / CPU stabilized / fixed source_to_dest device replay
+```
+
 ## Current Boundary
 
 Keep these roles separate:

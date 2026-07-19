@@ -1,8 +1,8 @@
 # Device-Side Stage Demo Handoff - 2026-07-19
 
-## Accepted Stage Demo
+## Historical Outdoor-Car Stage Demo
 
-Current accepted device-side stage demo:
+Historical outdoor-car dataflow stage demo:
 
 ```text
 post_geometry_identity_first
@@ -10,17 +10,31 @@ post_geometry_identity_first
 ```
 
 This proves an offline CPU-matrix-driven MMAPI/VPI/NVENC device-side warp and
-encode path. It does not prove real-time full EIS.
+encode path on the outdoor-car smoke source. It does not prove real-time full
+EIS and it is not the current Regular05 EIS-quality replay convention.
+
+Current EIS-quality device replay convention:
+
+```text
+Regular05 source_to_dest
+```
+
+See:
+
+```text
+docs/layered_artifact_diagnosis_2026-07-19.md
+configs/harness/contracts/regular05_hybrid_matrix_handoff_v1.json
+```
 
 ## Best Evidence Assets
 
-Primary review video:
+Historical outdoor-car review video:
 
 ```text
 C:\Users\Admin\Videos\orin nx\review\performance\20260719_same_source_matrix_device_warp\20260719_device_matrix_warp_demo_sample_outdoor_car_jetson_post_geometry_identity_first_grid_compare.mp4
 ```
 
-Use this for human review because it compares:
+Use this only for dataflow/history review because it compares:
 
 ```text
 source / CPU stabilized / post_geometry / post_geometry_identity_first
@@ -99,15 +113,13 @@ pitch-linear main path into NVENC
 Regular05 global-affine tuning
 ```
 
-## Next Engineering Entry
+## Current Engineering Entry
 
-The next engineering direction is a minimal hybrid real-time design, not a new
-parity sweep:
+The next engineering direction for EIS-quality work starts from Regular05
+source_to_dest, not outdoor-car inverse/post_geometry matrices:
 
 ```text
-CPU online motion estimation
--> per-frame matrix handoff
--> MMAPI/VPI/NVENC device-side warp and encode
+regular05_hybrid_matrix_handoff_v1
 ```
 
 Before implementation, define:

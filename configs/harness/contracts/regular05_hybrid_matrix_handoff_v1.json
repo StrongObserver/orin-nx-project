@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "contract_id": "regular05_hybrid_matrix_handoff_v1",
+  "status": "draft_ready",
+  "loop_type": "regular05_hybrid_matrix_handoff",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Continue hybrid matrix handoff work on the real Regular05 EIS clip using the fixed source_to_dest device replay convention.",
+  "accepted_stage_dependency": {
+    "source_clip": "results/regular05_device_replay_20260719/remote_outputs/regular05_source.h264",
+    "cpu_reference": "results/regular05_device_replay_20260719/remote_outputs/cpu_regular05_postgeom_source.mp4",
+    "fixed_device_replay": "results/regular05_device_replay_20260719/remote_outputs/device_regular05_postgeom_idfirst_forward.h264",
+    "matrix_convention": "source_to_dest",
+    "claim_boundary": "Accepted as Regular05 device replay quality checkpoint; not full real-time EIS."
+  },
+  "claim_boundary": {
+    "allowed": [
+      "Regular05 device replay uses source_to_dest matrix convention",
+      "MMAPI/VPI/NVENC device-side warp path preserves full-frame output on Regular05",
+      "hybrid matrix handoff can be tested against the fixed Regular05 replay"
+    ],
+    "forbidden": [
+      "using outdoor-car inverse convention as the Regular05 default",
+      "real-time full EIS",
+      "zero-copy full chain",
+      "VPI optical-flow acceleration",
+      "all-scene EIS quality"
+    ]
+  },
+  "frozen_variables": [
+    "source clip: regular_gate05_regular_6",
+    "output resolution: 640x360",
+    "device replay convention: source_to_dest",
+    "VPI interpolation: linear",
+    "border mode: VPI_BORDER_ZERO",
+    "bad inverse is diagnostic only, not a main display asset"
+  ],
+  "next_actions": [
+    "Generate any future Regular05 stream/live producer matrices with source_to_dest convention.",
+    "Compare stream/live outputs against fixed Regular05 device replay, not outdoor-car post_geometry_identity_first.",
+    "Keep the clean source/CPU/fixed-device review video as the main visual asset."
+  ],
+  "external_observation": [
+    "black_border_summary",
+    "direct_video_diff_summary",
+    "VPI_warp_timing_summary",
+    "review_copy_exists"
+  ],
+  "success_criteria": [
+    "black_border_p95 stays below 0.01",
+    "no visible large black borders",
+    "output non-empty and readable",
+    "frame-index alignment log has no gaps if handoff is used",
+    "quality does not regress relative to fixed Regular05 device replay"
+  ],
+  "stop_reasons": [
+    "black_border_regression",
+    "matrix_convention_ambiguous",
+    "visual_review_worse_than_fixed_replay",
+    "would_return_to_outdoor_car_as_quality_source"
+  ],
+  "evidence_output_directory": "results/regular05_hybrid_matrix_handoff_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/performance/<YYYYMMDD>_regular05_hybrid_matrix_handoff",
+  "report_path": "docs/regular05_hybrid_matrix_handoff_<YYYY-MM-DD>.md"
+}

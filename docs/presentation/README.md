@@ -21,20 +21,24 @@ Read these files in order for a short interview-style walkthrough:
      boundaries.
 
 6. `../hybrid_realtime_eis_plan_2026-07-19.md`
-   - Next-stage hybrid real-time matrix-handoff plan.
+   - Hybrid real-time plan, updated to use Regular05 source_to_dest for
+     EIS-quality work.
 
 7. `../hybrid_realtime_matrix_handoff_2026-07-19.md`
-   - First mock online matrix-handoff result and verifier summary.
+   - Historical outdoor-car mock/FIFO/live handoff result; dataflow smoke only.
 
 8. `../layered_artifact_diagnosis_2026-07-19.md`
    - Why outdoor-car is dataflow smoke only, and how Regular05 should be used
      for EIS quality review.
 
-9. `challenge_boundary.md`
+9. `../../configs/harness/contracts/regular05_hybrid_matrix_handoff_v1.json`
+   - Current Regular05 source_to_dest handoff contract and quality boundary.
+
+10. `challenge_boundary.md`
    - Operating envelope: where Regular succeeds and where challenge sets expose
      model limits.
 
-10. `interview_qna.md`
+11. `interview_qna.md`
    - Concise answers to likely interview questions.
 
 Do not present local `results/` videos or CSV files as repository artifacts.

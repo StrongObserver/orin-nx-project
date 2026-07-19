@@ -5,10 +5,16 @@
 Define the smallest next step from the accepted offline device-side stage demo
 toward real-time EIS.
 
-Accepted current stage:
+Historical outdoor-car stage:
 
 ```text
 post_geometry_identity_first device-side warp/encode stage demo
+```
+
+Current EIS-quality device replay stage:
+
+```text
+regular_gate05_regular_6 with source_to_dest device matrix convention
 ```
 
 Target next stage:
@@ -132,16 +138,23 @@ Option B, then Option C only if Option B proves the timing and quality shape.
 
 ## Done Contract Draft
 
-Suggested contract id:
+Historical outdoor-car contract:
 
 ```text
 hybrid_realtime_matrix_handoff_v1
 ```
 
-Machine-readable draft:
+Current Regular05 EIS-quality contract:
+
+```text
+regular05_hybrid_matrix_handoff_v1
+```
+
+Machine-readable drafts:
 
 ```text
 configs/harness/contracts/hybrid_realtime_matrix_handoff_v1.json
+configs/harness/contracts/regular05_hybrid_matrix_handoff_v1.json
 ```
 
 Allowed claims:
@@ -164,9 +177,9 @@ all-scene EIS quality
 Frozen variables:
 
 ```text
-source clip
+source clip: regular_gate05_regular_6 for EIS-quality work
 output resolution
-accepted device matrix convention: post_geometry_identity_first
+accepted Regular05 device matrix convention: source_to_dest
 VPI interpolation: linear
 border mode: VPI_BORDER_ZERO
 CPU baseline for quality comparison
@@ -196,13 +209,14 @@ implementation requires broad C++ rewrite before a small verifier exists
 
 ## First Implementation Slice
 
-1. Reuse `source_120f.h264`.
-2. Feed the accepted `device_matrices_inverse_post_geometry_identity_first.csv`
-   through the existing device path as the control run.
-3. Build a mock online handoff that provides the same matrices with frame-index
-   timestamps.
-4. Verify output matches the CSV replay path within expected encoding variance.
-5. Only then replace mock matrices with live CPU-estimated matrices.
+1. Reuse `regular_gate05_regular_6` as the EIS-quality source.
+2. Feed the fixed source_to_dest Regular05 device matrix through the existing
+   device path as the control run.
+3. Build a handoff provider that preserves the same source_to_dest convention.
+4. Verify output matches the fixed Regular05 replay path within expected
+   encoding variance.
+5. Only then replace replay matrices with live CPU-estimated source_to_dest
+   matrices.
 
 Success criteria for slice 1:
 

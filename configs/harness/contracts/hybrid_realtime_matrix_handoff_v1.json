@@ -1,31 +1,35 @@
 {
   "schema_version": 1,
   "contract_id": "hybrid_realtime_matrix_handoff_v1",
-  "status": "live_provider_boundary_found",
+  "status": "outdoor_car_dataflow_superseded_for_eis_quality",
   "loop_type": "hybrid_realtime_prototype",
   "loop_profile": "performance_loop",
   "autonomy_level": "L3",
   "required_platform_label": "jetson",
-  "objective": "Prototype the smallest online matrix-handoff step from CPU motion estimation toward the accepted MMAPI/VPI/NVENC device-side warp and encode path.",
+  "objective": "Historical outdoor-car dataflow prototype for matrix handoff. Superseded for EIS-quality work by regular05_hybrid_matrix_handoff_v1.",
   "accepted_stage_dependency": {
     "contract_id": "device_matrix_warp_demo_v1",
     "candidate": "post_geometry_identity_first",
     "device_matrix_csv": "results/device_matrix_warp_demo_20260719/device_matrices_inverse_post_geometry_identity_first.csv",
-    "claim_boundary": "Accepted only as offline device-side warp/encode stage demo; not full real-time EIS."
+    "claim_boundary": "Accepted only as outdoor-car offline device-side warp/encode dataflow smoke; not EIS quality evidence."
+  },
+  "superseded_for_eis_quality_by": {
+    "contract_id": "regular05_hybrid_matrix_handoff_v1",
+    "reason": "Regular05 device replay showed that EIS-quality work must use source_to_dest convention, while this contract used outdoor-car inverse/post_geometry matrices for dataflow smoke."
   },
   "claim_boundary": {
     "allowed": [
-      "hybrid online matrix handoff prototype",
+      "outdoor-car hybrid matrix handoff prototype",
       "MMAPI/VPI/NVENC device-side warp remains active",
-      "frame-index alignment and matrix handoff timing are measured",
-      "quality no-regression is checked against accepted CPU/device evidence"
+      "frame-index alignment and matrix handoff timing are measured"
     ],
     "forbidden": [
       "zero-copy full chain",
       "VPI optical-flow acceleration",
       "product-grade real-time EIS",
       "all-scene EIS quality",
-      "CPU-output pixel equivalence"
+      "CPU-output pixel equivalence",
+      "Regular05 EIS quality progression"
     ]
   },
   "input_scope": {
@@ -41,12 +45,12 @@
     "Only after that, replace mock matrices with live CPU-estimated matrices."
   ],
   "frozen_variables": [
-    "source clip",
+    "source clip: outdoor-car smoke only",
     "output resolution",
-    "accepted device matrix convention: post_geometry_identity_first",
+    "accepted outdoor-car smoke matrix convention: post_geometry_identity_first",
     "VPI interpolation: linear",
     "border mode: VPI_BORDER_ZERO",
-    "CPU baseline and accepted device-stage evidence"
+    "CPU baseline and accepted device-stage evidence for outdoor-car smoke only"
   ],
   "external_observation": [
     "frame_index_alignment_log",

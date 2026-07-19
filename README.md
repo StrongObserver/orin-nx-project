@@ -241,6 +241,7 @@ configs/harness/contracts/regular_gate_est0p5_grid16_validation_v1.json
 configs/harness/contracts/gst_nvmm_decode_convert_latency_v1.json
 configs/harness/contracts/device_matrix_warp_demo_v1.json
 configs/harness/contracts/hybrid_realtime_matrix_handoff_v1.json
+configs/harness/contracts/regular05_hybrid_matrix_handoff_v1.json
 configs/harness/evaluation_datasets.json
 configs/harness/metric_schema.json
 docs/harness_engineering_v1.md
@@ -325,6 +326,7 @@ The current device-side acceleration path should stay scoped:
 First hybrid slice:
 
 ```text
+outdoor-car dataflow smoke:
 mock online matrix handoff validated:
   fallback_count = 0
   frame_index_mismatch_count = 0
@@ -345,6 +347,13 @@ first live CPU matrix producer boundary:
   decision: handoff works, estimator/correction convention is the next blocker
 ```
 
+Do not use the outdoor-car hybrid result as Regular05 EIS-quality progress.
+Current EIS-quality handoff work starts from:
+
+```text
+configs/harness/contracts/regular05_hybrid_matrix_handoff_v1.json
+```
+
 Artifact-diagnosis boundary:
 
 ```text
@@ -362,3 +371,18 @@ Regular05 device replay fix:
 |---|---:|---:|---|
 | inverse | 0.281428602 | 35.618840 | reject |
 | source_to_dest | 0.000972005 | 4.512432 | current fixed replay |
+
+Primary Regular05 device replay review:
+
+```text
+C:\Users\Admin\Videos\orin nx\review\performance\20260719_regular05_device_replay\20260719_regular05_device_replay_regular_gate05_regular_6_jetson_source_cpu_fixed_grid.mp4
+```
+
+The bad inverse comparison is kept only as diagnostic evidence, not as a main
+display asset.
+
+Next Regular05 handoff contract:
+
+```text
+configs/harness/contracts/regular05_hybrid_matrix_handoff_v1.json
+```
