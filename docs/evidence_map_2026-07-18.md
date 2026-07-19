@@ -28,6 +28,9 @@ This map points to local evidence. Most evidence files are ignored by Git.
 | Device stage demo handoff | `docs/device_stage_demo_handoff_2026-07-19.md` | Accepted stage demo boundary, best review assets, and claim wording | tracked |
 | Hybrid real-time EIS plan | `docs/hybrid_realtime_eis_plan_2026-07-19.md` | Minimal CPU-online-estimation to MMAPI/VPI/NVENC matrix-handoff plan | tracked |
 | Hybrid real-time matrix handoff contract | `configs/harness/contracts/hybrid_realtime_matrix_handoff_v1.json` | Machine-readable next-stage contract for online matrix handoff prototype | tracked |
+| Hybrid matrix handoff result | `docs/hybrid_realtime_matrix_handoff_2026-07-19.md` | Mock online matrix handoff result with frame-index and latency evidence | tracked |
+| Hybrid matrix handoff evidence | `results/hybrid_realtime_matrix_handoff_20260719/handoff_summary/summary.csv` | Matrix handoff fallback, frame-index alignment, and microsecond timing summary | ignored |
+| Hybrid matrix handoff review video | `C:\Users\Admin\Videos\orin nx\review\performance\20260719_hybrid_realtime_matrix_handoff\20260719_hybrid_realtime_matrix_handoff_sample_outdoor_car_jetson_mock_handoff_grid_compare.mp4` | Source / CPU / accepted device / mock handoff review asset | outside repo |
 | Device matrix panel diff | `results/device_matrix_warp_demo_20260719/triptych_cpu_vs_device/summary.md` | 120-frame CPU panel vs device panel diff from review video; shows this is not CPU-output equivalence | ignored |
 | Device matrix extracted-panel videos | `results/device_matrix_warp_demo_20260719/panels/` | Local fallback raw/cpu/device panel videos extracted from the review MP4 | ignored |
 | Device matrix panel-video diff | `results/device_matrix_warp_demo_20260719/panel_video_diff_cpu_vs_device/correctness_summary.csv` | Standard two-video diff over extracted CPU/device panels | ignored |

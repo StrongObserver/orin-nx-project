@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract_id": "hybrid_realtime_matrix_handoff_v1",
-  "status": "draft_ready",
+  "status": "mock_handoff_validated",
   "loop_type": "hybrid_realtime_prototype",
   "loop_profile": "performance_loop",
   "autonomy_level": "L3",
@@ -65,6 +65,17 @@
     "VPI warp avg remains near the current 1.44 ms/frame order",
     "quality does not regress relative to accepted post_geometry_identity_first stage output"
   ],
+  "validated_mock_handoff": {
+    "frames_processed": 120,
+    "fallback_count": 0,
+    "frame_index_mismatch_count": 0,
+    "handoff_elapsed_us_avg": 1.376,
+    "handoff_elapsed_us_p95": 1.8624,
+    "vpi_warp_avg_ms_at_frame_100": 1.46156,
+    "accepted_device_vs_mock_mean_abs_center_avg": 6.052197,
+    "cpu_vs_mock_mean_abs_center_avg": 30.724221,
+    "report": "docs/hybrid_realtime_matrix_handoff_2026-07-19.md"
+  },
   "stop_reasons": [
     "matrix_frame_mismatch_after_one_fix_attempt",
     "output_empty_or_unreadable",

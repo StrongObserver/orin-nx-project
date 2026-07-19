@@ -290,6 +290,7 @@ docs/stage_result_regular_performance_baseline_2026-07-18.md
 docs/device_matrix_warp_demo_2026-07-19.md
 docs/device_stage_demo_handoff_2026-07-19.md
 docs/hybrid_realtime_eis_plan_2026-07-19.md
+docs/hybrid_realtime_matrix_handoff_2026-07-19.md
 docs/gstreamer_nvmm_latency_plan_2026-07-18.md
 C:\Users\Admin\Videos\orin nx\review\quality\20260718_regular05_new_method\
 C:\Users\Admin\Videos\orin nx\review\performance\20260718_jetson_regular05_perf\
@@ -319,4 +320,14 @@ The current device-side acceleration path should stay scoped:
 7. next design a minimal hybrid real-time matrix-handoff path before any VPI
    optical-flow or full zero-copy expansion;
 8. do not return to Python appsink/appsrc EIS integration.
+```
+
+First hybrid slice:
+
+```text
+mock online matrix handoff validated:
+  fallback_count = 0
+  frame_index_mismatch_count = 0
+  matrix handoff avg = 1.376 us
+  VPI warp avg at frame 100 = 1.461560 ms
 ```

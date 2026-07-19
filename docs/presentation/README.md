@@ -23,11 +23,14 @@ Read these files in order for a short interview-style walkthrough:
 6. `../hybrid_realtime_eis_plan_2026-07-19.md`
    - Next-stage hybrid real-time matrix-handoff plan.
 
-7. `challenge_boundary.md`
+7. `../hybrid_realtime_matrix_handoff_2026-07-19.md`
+   - First mock online matrix-handoff result and verifier summary.
+
+8. `challenge_boundary.md`
    - Operating envelope: where Regular succeeds and where challenge sets expose
      model limits.
 
-8. `interview_qna.md`
+9. `interview_qna.md`
    - Concise answers to likely interview questions.
 
 Do not present local `results/` videos or CSV files as repository artifacts.
