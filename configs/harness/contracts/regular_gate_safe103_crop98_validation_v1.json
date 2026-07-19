@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "contract_id": "regular_gate_safe103_crop98_validation_v1",
+  "status": "failed_generalization_boundary",
+  "loop_type": "regular_gate_candidate_validation",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Validate the user-accepted Regular05 safe103_crop98 candidate across all five NUS Regular gate clips without per-clip retuning.",
+  "accepted_dependency": {
+    "contract_id": "regular05_bounded_delay_producer_v1",
+    "accepted_candidate": "delay90 bounded LP + safe103 constant scale + crop98 postprocess",
+    "accepted_clip": "regular_gate05_regular_6",
+    "user_review": "accepted safe103_crop98 on Regular05",
+    "review_copy": "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular05_bounded_delay_producer/20260720_regular05_bounded_delay_producer_regular_gate05_regular_6_jetson_source_safe103_safe103crop_postcrop_grid.mp4"
+  },
+  "claim_boundary": {
+    "allowed": [
+      "Regular gate same-parameter validation",
+      "bounded-delay producer with explicit 90-frame delay",
+      "safe103 constant-scale viewport policy with explicit FOV trade-off",
+      "crop98 postprocess as a separate output stage"
+    ],
+    "forbidden": [
+      "zero-latency real-time EIS",
+      "all-scene EIS quality",
+      "VPI optical-flow acceleration",
+      "postprocess crop98 as already integrated into MMAPI/VPI/NVENC",
+      "per-clip tuning hidden as one general producer"
+    ]
+  },
+  "must_freeze": [
+    "input set: nus_regular_gate_v1 five clips",
+    "matrix convention: source_to_dest",
+    "producer mode: bounded_delay_lp_rigid",
+    "producer delay: 90 frames",
+    "viewport policy: safe103 fixed scale derived from Regular05 median scale * 1.03 unless explicitly updated before the run",
+    "postprocess: crop_ratio=0.98",
+    "VPI interpolation: linear",
+    "border mode: VPI_BORDER_ZERO",
+    "no per-clip parameter tuning"
+  ],
+  "success_criteria": [
+    "all five outputs are readable",
+    "fallback_count remains 0 for each clip",
+    "frame_index_mismatch_count remains 0 for each clip",
+    "postprocess black_border_p95 remains below 0.01 for each clip",
+    "review videos are copied to the categorized review tree",
+    "clips are classified as accepted, conditional, or reject after human review"
+  ],
+  "validated_results": {
+    "summary": {
+      "pass_by_black_border_p95": "3/5",
+      "failed_clips": [
+        "regular_gate01_regular_10",
+        "regular_gate02_regular_19"
+      ],
+      "borderline_clips": [
+        "regular_gate04_regular_8"
+      ],
+      "report": "docs/regular_gate_safe103_crop98_validation_2026-07-20.md"
+    },
+    "per_clip": [
+      {
+        "clip": "regular_gate01_regular_10",
+        "black_border_p95": 0.02471441,
+        "frames_gt_0p01": 22,
+        "hard_gate": "fail"
+      },
+      {
+        "clip": "regular_gate02_regular_19",
+        "black_border_p95": 0.339244141,
+        "frames_gt_0p01": 172,
+        "hard_gate": "fail"
+      },
+      {
+        "clip": "regular_gate03_regular_13",
+        "black_border_p95": 0.000837674,
+        "frames_gt_0p01": 0,
+        "hard_gate": "pass"
+      },
+      {
+        "clip": "regular_gate04_regular_8",
+        "black_border_p95": 0.008358072,
+        "frames_gt_0p01": 5,
+        "hard_gate": "pass_by_p95_but_borderline_max"
+      },
+      {
+        "clip": "regular_gate05_regular_6",
+        "black_border_p95": 0.000421441,
+        "frames_gt_0p01": 0,
+        "hard_gate": "pass"
+      }
+    ],
+    "failure_attribution": "Stronger local crop95/crop92 did not fix regular_gate01 or regular_gate02, so the failure is not a simple postprocess crop strength issue. Continuing would require per-clip tuning or a different strategy."
+  },
+  "stop_reasons": [
+    "any clip has unreadable output",
+    "postprocess black_border_p95 >= 0.01",
+    "safe103_crop98 visibly fails on multiple Regular clips",
+    "per-clip tuning would be required to pass",
+    "Jetson SSH or MMAPI runtime blocker"
+  ],
+  "next_route": {
+    "decision": "Stop local patching of this same global-matrix + crop strategy. Use knowledge recovery or internal AI guidance for FOV-safe crop, border fill, causal smoothing, or scene-specific strategy.",
+    "recommended_action": "Generate internal AI prompt if the user wants to continue toward a general Regular producer."
+  },
+  "external_observation": [
+    "per_clip_matrix_diff_summary",
+    "per_clip_handoff_summary",
+    "per_clip_vpi_timing_summary",
+    "per_clip_black_border_summary",
+    "per_clip_review_copy_exists"
+  ],
+  "evidence_output_directory": "results/regular_gate_safe103_crop98_validation_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/performance/<YYYYMMDD>_regular_gate_safe103_crop98_validation",
+  "report_path": "docs/regular_gate_safe103_crop98_validation_<YYYY-MM-DD>.md"
+}

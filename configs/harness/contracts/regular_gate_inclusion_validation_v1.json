@@ -1,0 +1,180 @@
+{
+  "schema_version": 1,
+  "contract_id": "regular_gate_inclusion_validation_v1",
+  "status": "awaiting_human_review_after_color_fix",
+  "loop_type": "regular_gate_viewport_validation",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Validate the inclusion-constrained viewport strategy across all five NUS Regular gate clips without per-clip tuning.",
+  "claim_boundary": {
+    "allowed": [
+      "safe103_crop98 failed as a general Regular producer",
+      "inclusion-constrained matrix scaling removes geometry black-border risk on all five Regular clips",
+      "VPI Python allocated-image path with explicit BGR8 input fixes visible block distortion and color shift for the same inclusion matrices",
+      "MMAPI/VPI/NVENC replay consumed VPI_MATRIX_CSV matrices with rc=0 and fallback=0 but is rejected for quality because non-identity matrices distort",
+      "gray-threshold black-border metric is auxiliary when geometry-valid coverage is zero"
+    ],
+    "forbidden": [
+      "Regular gate fully accepted before human visual review",
+      "per-clip matrix composition or crop tuning hidden as one producer",
+      "using the distorted MMAPI EGL pitch-wrapper outputs as quality evidence",
+      "zero-latency real-time EIS",
+      "VPI optical-flow acceleration",
+      "all-scene EIS quality",
+      "postprocess crop as already integrated into MMAPI/VPI/NVENC"
+    ]
+  },
+  "frozen_candidate": {
+    "producer": "bounded_delay_lp_rigid",
+    "producer_delay_frames": 90,
+    "base_viewport": "safe103",
+    "matrix_convention": "source_to_dest",
+    "inclusion_scale": {
+      "safety_px": 1,
+      "lookahead": 90,
+      "rate_limit": 0.003,
+      "hysteresis": 0.002,
+      "composition": "pre_center_scale_S_at_H"
+    },
+    "bad_device_path": "MMAPI decode -> EGL pitch-wrapper -> in-place VPI CUDA perspective warp -> NVENC",
+    "correctness_path": "OpenCV decode -> explicit VPI BGR8 wrapper -> VPI CUDA allocated image conversion -> VPI CUDA perspective warp -> RGB8 readback -> OpenCV mp4 writer",
+    "vpi_env_var": "VPI_MATRIX_CSV",
+    "vpi_interpolation": "linear",
+    "vpi_border_mode": "VPI_BORDER_ZERO",
+    "no_per_clip_tuning": true
+  },
+  "validated_results": {
+    "summary_csv": "results/regular_gate_safe103_crop98_validation_20260720/inclusion_regular_gate_summary.csv",
+    "report": "docs/regular_gate_inclusion_validation_2026-07-20.md",
+    "jetson_matrix_load": "5/5",
+    "jetson_rc": "5/5 rc=0",
+    "fallback_count": "0 for every sampled log",
+    "geometry_coverage": {
+      "pass_by_geometry_invalid_p95": "5/5",
+      "p95_invalid_ratio": 0.0,
+      "max_invalid_ratio": 0.0
+    },
+    "gray_threshold_black_border": {
+      "pass_by_gray_p95": "3/5",
+      "flagged_clips": [
+        "regular_gate01_regular_10",
+        "regular_gate04_regular_8"
+      ],
+      "interpretation": "Flagged clips have zero geometry-invalid coverage and are treated as likely dark-edge or metric false positives pending human review."
+    },
+    "distortion_fix": {
+      "root_cause_scope": "The current C++ MMAPI EGL pitch-wrapper VPI warp path corrupts non-identity matrices with block-like tearing. Identity is normal; pure translation, scale, rotation, safe103, and inclusion matrices distort. VPI Python allocated-image path renders the same matrices without block tearing.",
+      "fix_summary_csv": "results/regular_gate_distortion_diagnosis_20260720/regular_gate_vpipy_fix_summary.csv",
+      "corrected_path": "scripts/apply_matrix_video_vpi.py",
+      "corrected_outputs": [
+        "results/regular_gate_distortion_diagnosis_20260720/regular_gate01_inclusion_vpipy.mp4",
+        "results/regular_gate_distortion_diagnosis_20260720/regular_gate02_inclusion_vpipy.mp4",
+        "results/regular_gate_distortion_diagnosis_20260720/regular_gate03_inclusion_vpipy.mp4",
+        "results/regular_gate_distortion_diagnosis_20260720/regular_gate04_inclusion_vpipy.mp4",
+        "results/regular_gate_distortion_diagnosis_20260720/regular_gate05_inclusion_vpipy.mp4"
+      ],
+      "black_border_p95": {
+        "regular_gate01_regular_10": 0.009632596,
+        "regular_gate02_regular_19": 0.000256293,
+        "regular_gate03_regular_13": 0.000321181,
+        "regular_gate04_regular_8": 0.002131944,
+        "regular_gate05_regular_6": 0.0
+      }
+    },
+    "color_fix": {
+      "root_cause": "OpenCV VideoCapture returns BGR frames. The first VPI Python correction wrapped the array without an explicit source format, so BGR data was interpreted with the wrong channel order before conversion to NV12_ER.",
+      "fix": "Use vpi.asimage(frame_bgr, vpi.Format.BGR8).convert(vpi.Format.NV12_ER).",
+      "script": "scripts/apply_matrix_video_vpi.py --input-format bgr8",
+      "summary_csv": "results/regular_gate_color_fix_20260720/regular_gate_bgr8_color_fix_summary.csv",
+      "outputs": [
+        "results/regular_gate_color_fix_20260720/regular_gate01_inclusion_vpipy_bgr8.mp4",
+        "results/regular_gate_color_fix_20260720/regular_gate02_inclusion_vpipy_bgr8.mp4",
+        "results/regular_gate_color_fix_20260720/regular_gate03_inclusion_vpipy_bgr8.mp4",
+        "results/regular_gate_color_fix_20260720/regular_gate04_inclusion_vpipy_bgr8.mp4",
+        "results/regular_gate_color_fix_20260720/regular_gate05_inclusion_vpipy_bgr8.mp4"
+      ],
+      "mean_abs_all_vs_local": {
+        "regular_gate01_regular_10": 2.179464,
+        "regular_gate02_regular_19": 2.157899,
+        "regular_gate03_regular_13": 2.032374,
+        "regular_gate04_regular_8": 1.795264,
+        "regular_gate05_regular_6": 1.950458
+      }
+    },
+    "per_clip": [
+      {
+        "clip": "regular_gate01_regular_10",
+        "frames": 180,
+        "gray_p95_black_border": 0.031259983,
+        "geometry_p95_invalid": 0.0,
+        "planned_scale_max": 1.014401308,
+        "review_status": "pending"
+      },
+      {
+        "clip": "regular_gate02_regular_19",
+        "frames": 300,
+        "gray_p95_black_border": 0.000296658,
+        "geometry_p95_invalid": 0.0,
+        "planned_scale_max": 1.223233403,
+        "review_status": "pending"
+      },
+      {
+        "clip": "regular_gate03_regular_13",
+        "frames": 180,
+        "gray_p95_black_border": 0.000816406,
+        "geometry_p95_invalid": 0.0,
+        "planned_scale_max": 1.011314755,
+        "review_status": "pending"
+      },
+      {
+        "clip": "regular_gate04_regular_8",
+        "frames": 180,
+        "gray_p95_black_border": 0.014146267,
+        "geometry_p95_invalid": 0.0,
+        "planned_scale_max": 1.015951162,
+        "review_status": "pending"
+      },
+      {
+        "clip": "regular_gate05_regular_6",
+        "frames": 180,
+        "gray_p95_black_border": 0.000365017,
+        "geometry_p95_invalid": 0.0,
+        "planned_scale_max": 1.016772415,
+        "review_status": "pending"
+      }
+    ]
+  },
+  "rejected_detours": [
+    "safe103 fixed crop95/crop92 did not solve generalization",
+    "VPI_MATRIX_FIFO run was invalid for this sample because the sample reads VPI_MATRIX_CSV",
+    "post composition fixed Regular01 but worsened Regular04",
+    "uniform margin103 and margin106 did not solve the gray-threshold flags",
+    "crop98 after inclusion output did not solve gray-threshold flags"
+  ],
+  "review_assets": {
+    "review_dir": "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular_gate_vpi_bgr8_color_fix",
+    "main_videos": [
+      "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular_gate_vpi_bgr8_color_fix/20260720_regular_gate_vpi_bgr8_color_fix_regular_gate01_regular_10_source_oldcolor_fixedbgr8_grid.mp4",
+      "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular_gate_vpi_bgr8_color_fix/20260720_regular_gate_vpi_bgr8_color_fix_regular_gate02_regular_19_source_oldcolor_fixedbgr8_grid.mp4",
+      "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular_gate_vpi_bgr8_color_fix/20260720_regular_gate_vpi_bgr8_color_fix_regular_gate03_regular_13_source_oldcolor_fixedbgr8_grid.mp4",
+      "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular_gate_vpi_bgr8_color_fix/20260720_regular_gate_vpi_bgr8_color_fix_regular_gate04_regular_8_source_oldcolor_fixedbgr8_grid.mp4",
+      "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular_gate_vpi_bgr8_color_fix/20260720_regular_gate_vpi_bgr8_color_fix_regular_gate05_regular_6_source_oldcolor_fixedbgr8_grid.mp4"
+    ],
+    "worst_frame_sheets": [
+      "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular_gate_inclusion_validation/20260720_regular_gate_inclusion_validation_regular_gate01_regular_10_jetson_gray_metric_worst_sheet.jpg",
+      "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular_gate_inclusion_validation/20260720_regular_gate_inclusion_validation_regular_gate04_regular_8_jetson_gray_metric_worst_sheet.jpg"
+    ]
+  },
+  "next_route": {
+    "decision": "Wait for human review of the five color-fixed BGR8 VPI Python grids before freezing as a conditional Regular gate viewport candidate.",
+    "if_accepted": "Freeze VPI Python allocated-image output with explicit BGR8 input as the visual correctness candidate; keep MMAPI EGL pitch-wrapper path as an acceleration boundary requiring a separate C++ integration fix.",
+    "if_rejected": "Escalate to knowledge recovery for VPI color/format parity, border-aware warp, or mesh/grid stabilization rather than per-clip crop tuning."
+  },
+  "stop_reasons": [
+    "human visual review rejects inclusion output",
+    "geometry coverage becomes nonzero after a code or matrix change",
+    "per-clip tuning would be required to pass",
+    "Jetson SSH or MMAPI runtime blocker"
+  ]
+}

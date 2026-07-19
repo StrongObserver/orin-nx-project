@@ -32,15 +32,24 @@
     "source clip: regular_gate05_regular_6",
     "output resolution: 640x360",
     "device replay convention: source_to_dest",
+    "live_matrix_producer.py must use --output-convention source_to_dest for Regular05 work",
     "VPI interpolation: linear",
     "border mode: VPI_BORDER_ZERO",
     "bad inverse is diagnostic only, not a main display asset"
   ],
   "next_actions": [
-    "Generate any future Regular05 stream/live producer matrices with source_to_dest convention.",
+    "Generate any future Regular05 stream/live producer matrices with source_to_dest convention, explicitly passing --output-convention source_to_dest when using live_matrix_producer.py.",
     "Compare stream/live outputs against fixed Regular05 device replay, not outdoor-car post_geometry_identity_first.",
     "Keep the clean source/CPU/fixed-device review video as the main visual asset."
   ],
+  "matrix_convention_audit": {
+    "cpu_stabilize_matrix_output": "Writes per-output-frame 3x3 warp matrices for frames after the first output frame; rows are source_to_dest for OpenCV warp semantics before fixed crop/resize/sharpen post-processing.",
+    "prepare_device_matrix_csv.py": "Supports --output-convention source_to_dest|inverse and can compose post geometry. Use source_to_dest for Regular05 replay/handoff; inverse remains historical outdoor-car smoke behavior.",
+    "stream_matrix_csv.py": "Convention-neutral row streamer. It preserves the input CSV convention and only handles delivery timing.",
+    "live_matrix_producer.py": "Now supports --output-convention source_to_dest|inverse. Default remains inverse for historical compatibility; Regular05 work must pass source_to_dest explicitly.",
+    "mmapi_stream_consumer": "Consumes matrix rows as provided. It does not infer or convert convention; therefore the producer or prepared CSV must already match the active contract.",
+    "outdoor_car_boundary": "Outdoor-car inverse/post_geometry_identity_first remains dataflow smoke only and must not be used as Regular05 EIS-quality convention."
+  },
   "external_observation": [
     "black_border_summary",
     "direct_video_diff_summary",

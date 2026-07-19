@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "contract_id": "regular05_live_producer_alignment_v1",
+  "status": "offline_upper_bound_validated",
+  "loop_type": "regular05_live_producer_alignment",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Reduce the matrix-quality gap between the simple live CPU producer and the accepted offline Regular05 fixed replay before adding more device-side pipeline complexity.",
+  "accepted_dependency": {
+    "contract_id": "regular05_hybrid_matrix_handoff_v1",
+    "result": "Regular05 source_to_dest FIFO handoff runs on Jetson with zero fallback, zero frame-index mismatch, black_border_p95=0, and VPI warp running avg at frame 100 = 0.647185 ms.",
+    "evidence": "docs/regular05_hybrid_matrix_handoff_2026-07-20.md"
+  },
+  "problem_statement": "FIFO delivery and MMAPI/VPI/NVENC warp are not the current blocker. The current blocker is that live producer matrices differ from the accepted fixed replay matrices, mainly in translation.",
+  "baseline_gap": {
+    "fixed_vs_live_translation_abs_mean_px": 35.890052,
+    "fixed_vs_live_translation_abs_p95_px": 62.7624,
+    "fixed_vs_live_linear_fro_abs_mean": 0.06776,
+    "stream_black_border_p95": 0.0,
+    "fallback_count": 0,
+    "frame_index_mismatch_count": 0
+  },
+  "validated_results": {
+    "fixed_fifo_control": {
+      "decision": "pass",
+      "fallback_count": 0,
+      "frame_index_mismatch_count": 0,
+      "fixed_replay_vs_fixed_fifo_mean_abs_center_avg": 0.0,
+      "black_border_p95": 0.000972005,
+      "vpi_warp_running_avg_ms_at_frame_100": 0.563228
+    },
+    "offline_lp_rigid_upper_bound": {
+      "decision": "valid_upper_bound_not_realtime",
+      "fixed_vs_offline_lp_translation_abs_mean_px": 0.50164,
+      "fixed_vs_offline_lp_translation_abs_p95_px": 1.341285,
+      "fixed_replay_vs_offline_lp_fifo_mean_abs_center_avg": 5.163971,
+      "black_border_p95": 0.001477648,
+      "fallback_count": 0,
+      "frame_index_mismatch_count": 0,
+      "vpi_warp_running_avg_ms_at_frame_100": 0.380287,
+      "report": "docs/regular05_live_producer_alignment_2026-07-20.md"
+    }
+  },
+  "allowed_changes": [
+    "live_matrix_producer.py trajectory/correction convention",
+    "causal smoothing window or delayed-window smoothing",
+    "post_geometry composition only if convention audit shows a mismatch",
+    "diagnostic matrix comparison scripts"
+  ],
+  "must_freeze": [
+    "input clip: regular05_source.h264",
+    "output resolution: 640x360",
+    "matrix convention: source_to_dest",
+    "MMAPI stream consumer behavior",
+    "VPI interpolation: linear",
+    "border mode: VPI_BORDER_ZERO",
+    "accepted fixed replay matrix CSV for comparison"
+  ],
+  "success_criteria": [
+    "fixed-vs-live translation_abs_mean decreases materially from 35.890052 px",
+    "fixed-vs-live translation_abs_p95 decreases materially from 62.762400 px",
+    "stream output remains readable",
+    "black_border_p95 remains below 0.01",
+    "fallback_count remains 0",
+    "frame_index_mismatch_count remains 0",
+    "review grid does not look worse than fixed replay"
+  ],
+  "next_route": {
+    "id": "regular05_bounded_delay_producer_v1",
+    "decision": "Use bounded delayed-window smoothing next. Do not claim offline LP-rigid as full real-time.",
+    "why": "Fixed FIFO control proves delivery is correct. Offline LP-rigid proves the quality gap is producer smoothing. The remaining engineering question is the latency-quality trade-off of a bounded-delay producer."
+  },
+  "stop_reasons": [
+    "same_failure_retried_without_new_hypothesis",
+    "matrix gap is caused by offline noncausal LP smoothing not reproducible without latency",
+    "quality improvement requires mesh/grid/gyro/RS outside current contract",
+    "stream output becomes visually worse than fixed replay",
+    "black_border_regression"
+  ],
+  "recovery_actions": {
+    "offline_noncausal_gap": "Classify the remaining gap as causal smoothing latency trade-off; propose a bounded delayed-window producer contract instead of claiming full real-time parity.",
+    "model_quality_gap": "Stop producer tuning and route to mesh/grid or internal EIS reference prompt.",
+    "visual_regression": "Revert the producer change and preserve the previous source_to_dest handoff checkpoint."
+  },
+  "external_observation": [
+    "matrix_diff_summary",
+    "producer_log_summary",
+    "matrix_handoff_summary",
+    "VPI_warp_timing_summary",
+    "black_border_summary",
+    "review_copy_exists"
+  ],
+  "evidence_output_directory": "results/regular05_live_producer_alignment_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/performance/<YYYYMMDD>_regular05_live_producer_alignment",
+  "report_path": "docs/regular05_live_producer_alignment_<YYYY-MM-DD>.md"
+}

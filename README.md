@@ -41,6 +41,28 @@ Device-side MMAPI/VPI/NVENC path:
   real-time full EIS pipeline yet. The latest panel-diff check also shows it is
   not yet a close CPU-output reproduction because CPU crop/zoom/sharpen parity
   is not implemented on the device path.
+
+Regular05 FIFO matrix handoff:
+  Regular05 now uses source_to_dest convention for EIS-quality device replay.
+  A Python producer / CSV stream -> FIFO -> MMAPI/VPI/NVENC consumer run reached
+  zero matrix fallback and zero frame-index mismatch. This validates the
+  handoff shape, but not full real-time EIS, because the current live producer
+  still differs from the accepted offline matrices.
+
+Regular gate inclusion viewport validation:
+  safe103_crop98 is accepted only for Regular05 and failed as a general
+  five-clip producer. The newer inclusion-constrained source_to_dest matrices
+  have 5/5 geometry-valid coverage with p95/max invalid ratio 0.
+
+Regular gate distortion fix:
+  The first MMAPI EGL pitch-wrapper -> in-place VPI warp -> NVENC output was
+  rejected because non-identity matrices caused block-like tearing. Identity,
+  pure translation/scale/rotation, safe103, and inclusion matrices confirmed
+  this is a device integration issue, not an inclusion algorithm issue. The
+  corrected visual candidate uses a VPI Python allocated-image path with
+  explicit `vpi.Format.BGR8` input and removes both visible tearing and the
+  earlier green/cyan color shift on all five Regular clips. This is a
+  correctness path, not the final MMAPI/NVENC acceleration claim.
 ```
 
 ## Current Stage
@@ -381,8 +403,44 @@ C:\Users\Admin\Videos\orin nx\review\performance\20260719_regular05_device_repla
 The bad inverse comparison is kept only as diagnostic evidence, not as a main
 display asset.
 
+Regular05 FIFO handoff checkpoint:
+
+| Metric | Value |
+|---|---:|
+| fallback_count | 0 |
+| frame_index_mismatch_count | 0 |
+| handoff elapsed avg | 96.181 us |
+| handoff elapsed p95 | 377.310 us |
+| VPI warp running avg at frame 100 | 0.647185 ms |
+| stream output black_border_p95 | 0.000000000 |
+| fixed replay vs stream mean_abs_center_avg | 26.018254 |
+
+The current next problem is producer alignment: the live producer matrices still
+differ from the fixed replay matrices mainly in translation, so do not promote
+this to full real-time EIS or extend blindly to all Regular clips yet.
+
+Regular05 producer alignment:
+
+| Check | Result | Decision |
+|---|---:|---|
+| fixed CSV through FIFO vs fixed replay | mean_abs_center_avg = 0.000000 | FIFO/consumer path is exact |
+| original live producer matrix gap | translation_abs_mean = 35.890052 px | too weak |
+| offline LP-rigid producer matrix gap | translation_abs_mean = 0.501640 px | valid upper bound |
+| offline LP-rigid FIFO output | black_border_p95 = 0.001477648 | no hard black-border regression |
+
+The offline LP-rigid producer is a quality upper bound, not a zero-latency
+real-time claim. The next contract should test bounded-delay producers and
+explicitly report the latency-quality trade-off.
+
 Next Regular05 handoff contract:
 
 ```text
-configs/harness/contracts/regular05_hybrid_matrix_handoff_v1.json
+configs/harness/contracts/regular_gate_inclusion_validation_v1.json
+```
+
+Current human-review assets:
+
+```text
+C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_python_fix\
+C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_bgr8_color_fix\
 ```

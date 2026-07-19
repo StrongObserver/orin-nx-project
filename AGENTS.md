@@ -14,21 +14,64 @@ This `.txt` file is the current authoritative oral-template entrypoint. Do not
 look for or create an `.md` oral-template replacement unless the user explicitly
 changes this rule.
 
-2. High-level project target reference, especially "项目二：Jetson Orin NX 视频稳像（EIS）与异构加速":
+2. Progressive onboarding manifest:
+
+```text
+C:\Users\Admin\Desktop\orin nx project\configs\harness\onboarding_manifest.json
+```
+
+Use the manifest to keep startup lightweight. The default startup path is:
+
+```powershell
+py -3.12 scripts\harness_runner.py onboard
+```
+
+Do not full-read the long-term context document, full internal reference folders,
+or all evidence directories during default startup. First read the manifest,
+active contracts, and exact task-specific docs. Load long documents only when a
+trigger in the manifest or active Done Contract requires them.
+
+3. Active overall engineering loop:
+
+```text
+C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\orin_next_engineering_loop_v1.json
+```
+
+This contract owns the current P0-P3 task sequence. Unless the user changes the
+objective, future agents should continue that loop until all tasks are complete
+or a declared stop reason is hit.
+
+4. Current task-specific Done Contract:
+
+```text
+C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\regular_gate_inclusion_validation_v1.json
+```
+
+This is the current Regular gate inclusion / viewport correctness entry. It
+starts from source-to-destination matrices and the color-fixed VPI Python
+allocated-image path with explicit `BGR8` input. The old MMAPI EGL pitch-wrapper
+path is diagnostic only because non-identity matrices caused visible block
+tearing.
+
+5. High-level project target reference, especially "项目二：Jetson Orin NX 视频稳像（EIS）与异构加速":
 
 ```text
 C:\Users\Admin\Nutstore\1\Typora_save\自己的项目\6.14项目整理版.md
 ```
 
-3. Long-term project context and milestone log:
+6. Long-term project context and milestone log:
 
 ```text
 C:\Users\Admin\Nutstore\1\Typora_save\自己的项目\jetson orin nx project_AI上下文.md
 ```
 
-Before editing the long-term context document, read its "文档维护原则" section first and follow its permission rules.
+Do not full-read this file by default. It is a long historical record. First read
+its heading list, then only the sections required by the current task. For the
+current Regular gate inclusion/color-fix work, the usual relevant sections are
+M40, 操作与复现指南, and 下一步计划. Before editing the long-term context document,
+read its "文档维护原则" section first and follow its permission rules.
 
-4. Harness gate and Done Contract control plane:
+7. Harness gate and Done Contract control plane:
 
 ```text
 C:\Users\Admin\Desktop\orin nx project\docs\harness_engineering_v1.md
@@ -43,7 +86,7 @@ C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\jetson_regular0
 
 Harness V1 is the runtime and evidence control plane. Loop Engineering V2 is the decision layer above it: choose a loop profile, freeze variables, name external observations, and stop/recover instead of blind retry. Evaluation System V1 is the lifecycle dataset and metric contract; use it before adding or changing quality metrics.
 
-5. External knowledge-base routing, used only when a real blocker appears:
+8. External knowledge-base routing, used only when a real blocker appears:
 
 ```text
 C:\Users\Admin\Desktop\orin nx project\docs\knowledge_base\README.md

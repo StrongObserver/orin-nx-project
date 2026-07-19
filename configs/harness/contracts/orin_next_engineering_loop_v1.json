@@ -1,0 +1,335 @@
+{
+  "schema_version": 1,
+  "contract_id": "orin_next_engineering_loop_v1",
+  "status": "active",
+  "loop_type": "multi_stage_engineering_loop",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "objective": "Run the agreed P0-P3 engineering sequence without exiting early unless all tasks are complete, a stop rule is hit, or user/hardware approval is required.",
+  "progressive_onboarding": {
+    "manifest": "configs/harness/onboarding_manifest.json",
+    "default_rule": "Use progressive disclosure. Read lightweight routing and active contracts first; load long project context, internal references, and external knowledge only when the active task or blocker requires them.",
+    "token_budget_intent": "Reduce repeated startup token cost while preserving enough current-state evidence to avoid stale decisions."
+  },
+  "active_task_contract": "configs/harness/contracts/regular_gate_inclusion_validation_v1.json",
+  "current_loop_state": {
+    "last_completed_task": "regular_gate_inclusion_validation_v1/vpi_python_bgr8_color_fix",
+    "current_task": "human_review_regular_gate_bgr8_color_fix",
+    "latest_result": "Regular gate inclusion now uses VPI Python allocated-image rendering with explicit BGR8 input. This fixed the previous MMAPI block tearing and the VPI Python green/cyan color shift. Five color-fixed review grids are in C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular_gate_vpi_bgr8_color_fix/.",
+    "current_blocker": "Human visual review is needed for the five color-fixed BGR8 grids before freezing the candidate. The C++ MMAPI EGL pitch-wrapper path remains rejected for quality and is a separate future integration bug.",
+    "recommended_next_contract": "regular_gate_inclusion_validation_v1"
+  },
+  "global_claim_boundary": {
+    "allowed": [
+      "Regular05 source_to_dest is the current EIS-quality device replay convention",
+      "MMAPI/VPI/NVENC device-side handoff is the active acceleration frontier",
+      "Regular performance baseline is accepted only inside the Regular gate boundary",
+      "Challenge and diagnostic sets explain model boundaries"
+    ],
+    "forbidden": [
+      "outdoor-car inverse/post_geometry as Regular05 EIS-quality progress",
+      "full real-time EIS without live same-input evidence",
+      "zero-copy full chain without measured proof",
+      "VPI optical-flow acceleration without backend support and timing evidence",
+      "all-scene or product-grade EIS quality"
+    ]
+  },
+  "task_sequence": [
+    {
+      "id": "P0-1",
+      "title": "Harness static health check",
+      "loop_profile": "documentation_loop",
+      "objective": "Verify gate, contract, JSON, and onboarding control-plane health before new experiments.",
+      "external_observation": [
+        "harness_runner_doctor_exit_code",
+        "onboard_manifest_prints",
+        "json_parse_passes"
+      ],
+      "success_criteria": [
+        "onboard command works",
+        "doctor passes or every failure is classified",
+        "active loop contract and Regular05 handoff contract parse as JSON"
+      ],
+      "stop_reasons": [
+        "active_contract_missing",
+        "gate_paths_missing_without_explanation"
+      ]
+    },
+    {
+      "id": "P0-2",
+      "title": "Regular05 fixed replay baseline audit",
+      "loop_profile": "performance_loop",
+      "objective": "Make the fixed Regular05 source_to_dest device replay the comparison baseline for all following handoff work.",
+      "external_observation": [
+        "black_border_summary",
+        "direct_video_diff_summary",
+        "review_copy_exists"
+      ],
+      "success_criteria": [
+        "fixed replay evidence exists",
+        "bad inverse is marked diagnostic only",
+        "main review copy path is identified"
+      ],
+      "stop_reasons": [
+        "fixed_replay_artifact_missing",
+        "matrix_convention_ambiguous"
+      ]
+    },
+    {
+      "id": "P0-3",
+      "title": "Matrix convention audit",
+      "loop_profile": "performance_loop",
+      "objective": "Align cpu_stabilize.py matrix export, prepare_device_matrix_csv.py, live_matrix_producer.py, stream provider, and MMAPI patch convention before changing producer logic.",
+      "external_observation": [
+        "source_to_dest_or_inverse_mapping_table",
+        "script_arguments_checked",
+        "no outdoor-car convention leakage"
+      ],
+      "success_criteria": [
+        "each producer/consumer path declares its matrix convention",
+        "Regular05 future producer target is source_to_dest",
+        "outdoor-car inverse/post_geometry scope remains dataflow smoke only"
+      ],
+      "stop_reasons": [
+        "consumer_expected_convention_unknown",
+        "requires_unavailable_jetson_source_inspection"
+      ]
+    },
+    {
+      "id": "P0-4",
+      "title": "Regular05 stream provider adaptation",
+      "loop_profile": "performance_loop",
+      "objective": "Make the smallest producer or matrix-preparation change needed for Regular05 source_to_dest matrix handoff.",
+      "external_observation": [
+        "code_diff_scope",
+        "matrix_csv_rows",
+        "frame_index_alignment_log"
+      ],
+      "success_criteria": [
+        "producer emits expected row count",
+        "frame index starts from the contract-defined first frame behavior",
+        "no broad MMAPI rewrite"
+      ],
+      "stop_reasons": [
+        "would_require_broad_cxx_rewrite_before_verifier",
+        "matrix_frame_mismatch_after_one_fix_attempt"
+      ]
+    },
+    {
+      "id": "P0-5",
+      "title": "Regular05 precomputed FIFO handoff run",
+      "loop_profile": "performance_loop",
+      "objective": "Run or prepare the Regular05 precomputed matrix FIFO handoff on Jetson and compare against fixed replay.",
+      "external_observation": [
+        "fallback_count",
+        "frame_index_mismatch_count",
+        "VPI_warp_timing_summary",
+        "black_border_summary",
+        "review_copy_exists"
+      ],
+      "success_criteria": [
+        "fallback_count equals 0",
+        "frame_index_mismatch_count equals 0",
+        "output video is readable",
+        "black_border_p95 below 0.01",
+        "review copy is in categorized tree"
+      ],
+      "stop_reasons": [
+        "jetson_ssh_or_device_blocker",
+        "visual_review_worse_than_fixed_replay",
+        "output_empty_or_unreadable"
+      ]
+    },
+    {
+      "id": "P0-6",
+      "title": "Live CPU producer convention alignment",
+      "loop_profile": "performance_loop",
+      "objective": "Compare live CPU producer matrices against accepted offline Regular05 matrices and fix convention before adding complexity.",
+      "external_observation": [
+        "producer_estimate_ms_avg",
+        "matrix_diff_summary",
+        "fallback_count",
+        "cpu_vs_output_diff_summary"
+      ],
+      "success_criteria": [
+        "live producer convention is explained",
+        "major black-border regression is absent",
+        "remaining quality gap is classified before further acceleration work"
+      ],
+      "stop_reasons": [
+        "same_failure_retried_without_new_hypothesis",
+        "needs_new_algorithm_model_not_convention_fix",
+        "jetson_ssh_or_device_blocker"
+      ]
+    },
+    {
+      "id": "P1-1",
+      "title": "End-to-end latency breakdown",
+      "loop_profile": "performance_loop",
+      "objective": "Separate CPU estimate, matrix handoff, VPI warp, encode, and wall time under frozen Regular05 semantics.",
+      "external_observation": [
+        "timing_summary_csv",
+        "platform_label_jetson",
+        "same_input_semantics"
+      ],
+      "success_criteria": [
+        "timing table names each stage",
+        "same-input semantics are frozen",
+        "no speed claim is made from module-only timing alone"
+      ],
+      "stop_reasons": [
+        "missing_platform_label",
+        "timing_fields_missing_after_one_fix_attempt"
+      ]
+    },
+    {
+      "id": "P1-2",
+      "title": "Quality no-regression review",
+      "loop_profile": "quality_loop",
+      "objective": "Compare CPU baseline, fixed replay, stream output, and live output with visual assets plus black-border/diff checks.",
+      "external_observation": [
+        "side_by_side_or_grid_video",
+        "black_border_summary",
+        "direct_video_diff_summary",
+        "manual_visual_veto_status"
+      ],
+      "success_criteria": [
+        "quality no-regression is supported by review assets",
+        "raw pixel diff is not used as the only quality decision",
+        "visual-veto labels are explicit when present"
+      ],
+      "stop_reasons": [
+        "manual_visual_veto",
+        "metric_improves_but_visual_quality_worsens"
+      ]
+    },
+    {
+      "id": "P1-3",
+      "title": "Regular gate device replay extension",
+      "loop_profile": "performance_loop",
+      "objective": "After Regular05 succeeds, extend the device replay/handoff check to all five Regular gate clips.",
+      "external_observation": [
+        "per_clip_black_border_summary",
+        "per_clip_output_readability",
+        "review_copy_exists"
+      ],
+      "success_criteria": [
+        "five Regular outputs are readable",
+        "no clip has large black-border regression",
+        "clips are classified as showcase or boundary"
+      ],
+      "stop_reasons": [
+        "Regular05_not_stable_enough_to_extend",
+        "batch_extension_hides_per_clip_failure"
+      ]
+    },
+    {
+      "id": "P2-1",
+      "title": "High-signal context and presentation update",
+      "loop_profile": "documentation_loop",
+      "objective": "Update only concise conclusion, evidence, command, and boundary records after measured progress.",
+      "external_observation": [
+        "no_invented_metrics",
+        "links_to_existing_evidence",
+        "git_diff_scope"
+      ],
+      "success_criteria": [
+        "long-term context update follows maintenance rules if edited",
+        "README/presentation wording matches measured evidence",
+        "no internal original content is copied"
+      ],
+      "stop_reasons": [
+        "would_need_new_measurement",
+        "public_doc_would_copy_internal_content"
+      ]
+    },
+    {
+      "id": "P2-2",
+      "title": "Git hygiene checkpoint",
+      "loop_profile": "documentation_loop",
+      "objective": "Prepare commit scope when a coherent stage is reached.",
+      "external_observation": [
+        "git_status",
+        "git_diff_scope",
+        "no_large_or_secret_files"
+      ],
+      "success_criteria": [
+        "only source/config/docs changes are staged if committing",
+        "results/raw/review videos remain untracked",
+        "commit only when the user asks or stage is ready"
+      ],
+      "stop_reasons": [
+        "unrelated_dirty_files_in_scope",
+        "large_or_secret_file_detected"
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Future extension selection",
+      "loop_profile": "knowledge_recovery_loop",
+      "objective": "Only after the device handoff mainline stabilizes, select one future route: VPI optical flow, mesh/grid warp, RS/gyro-like route, or perf-per-watt table.",
+      "external_observation": [
+        "one_concrete_recovery_idea",
+        "one_risk",
+        "one_verifier"
+      ],
+      "success_criteria": [
+        "future route matches Orin NX EIS project target",
+        "choice is based on current blocker evidence",
+        "user prompt is generated if company-internal AI is needed"
+      ],
+      "stop_reasons": [
+        "requires_product_level_decision",
+        "requires_unavailable_internal_reference",
+        "no_actionable_recovery_found"
+      ]
+    }
+  ],
+  "selected_future_route": {
+    "id": "regular_gate_inclusion_validation_v1",
+    "decision": "Human-review the color-fixed BGR8 VPI Python outputs before freezing the Regular gate visual correctness candidate.",
+    "reason": "safe103_crop98 failed as a general Regular producer. Inclusion-constrained matrices solve geometry coverage, but the MMAPI EGL pitch-wrapper path distorts non-identity matrices. VPI Python allocated-image rendering with explicit BGR8 input fixes the visual tearing and color shift.",
+    "next_verifier": [
+      "human review accepts all five color-fixed Regular grids",
+      "no block tearing in fixed_bgr8 panels",
+      "color stays close to inc_local/source and avoids the old green/cyan shift",
+      "Regular01 dark-edge gray-threshold flag is treated as auxiliary unless visually rejected"
+    ],
+    "defer_until_after_alignment": [
+      "C++ MMAPI/VPI/NVENC allocated-image or correct NvBufSurface integration",
+      "VPI optical-flow acceleration",
+      "mesh/grid warp route",
+      "perf-per-watt table"
+    ]
+  },
+  "loop_exit_policy": {
+    "do_not_exit_until": [
+      "all task_sequence items are complete",
+      "a stop_reason is hit and cannot be recovered locally",
+      "user approval or device-side manual action is required",
+      "the user changes the objective"
+    ],
+    "blocker_report_required_fields": [
+      "current_problem_plain_language",
+      "cause_and_context",
+      "attempts_made",
+      "why_unresolved",
+      "what_user_needs_to_do",
+      "exact_commands_or_internal_ai_prompt_when_needed"
+    ]
+  },
+  "knowledge_recovery_policy": {
+    "order": [
+      "try local fix first",
+      "read docs/knowledge_base/routing.md and at most two matched source cards",
+      "if local/internal index does not help, search public web or official references",
+      "clone or inspect external code only when it plausibly solves the exact blocker",
+      "if still blocked, stop the loop and report in chat without writing a document"
+    ],
+    "internal_ai_prompt_required_when": [
+      "technical road fork cannot be decided from local and public evidence",
+      "industrial EIS practice is needed to choose the correct route",
+      "company internal references are likely to contain the missing implementation detail"
+    ]
+  }
+}

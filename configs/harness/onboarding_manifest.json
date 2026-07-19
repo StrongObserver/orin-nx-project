@@ -1,0 +1,82 @@
+{
+  "schema_version": 1,
+  "manifest_id": "orin_eis_progressive_onboarding_v1",
+  "purpose": "Reduce repeated AI onboarding token cost by replacing full-context preloads with a lightweight routing manifest and on-demand document loading.",
+  "default_onboarding_mode": "progressive_disclosure",
+  "token_hotspots_observed": [
+    {
+      "source": "C:/Users/Admin/Nutstore/1/Typora_save/自己的项目/jetson orin nx project_AI上下文.md",
+      "cost_reason": "Long-term context is about 1992 lines and contains many historical milestones.",
+      "new_rule": "Do not full-read by default. Read section headings first, then load only the current-stage sections, especially M27-M29 and 下一步计划 when device-side handoff is the task."
+    },
+    {
+      "source": "C:/Users/Admin/Nutstore/1/Typora_save/字节_嵌入式camera实习",
+      "cost_reason": "Internal/reference folders include many long Markdown files. A broad EIS keyword scan can produce thousands of lines.",
+      "new_rule": "Do not broad-read folders during startup. Use docs/knowledge_base/routing.md and .local_knowledge/internal_reference_index.md only after a real blocker or new technical domain appears."
+    },
+    {
+      "source": "README.md plus large docs under docs/",
+      "cost_reason": "Project docs duplicate many conclusions for presentation, evidence, harness, and device-stage history.",
+      "new_rule": "Read README current highlights plus the active contract first. Open detailed docs only when the active task references that exact doc."
+    },
+    {
+      "source": "results/ evidence summaries and review asset directories",
+      "cost_reason": "Evidence directories contain many historical runs and generated artifacts.",
+      "new_rule": "Use contract-declared evidence paths and targeted summaries. Do not enumerate all results unless verifying a missing path."
+    }
+  ],
+  "startup_sequence": [
+    "Read C:/Users/Admin/Desktop/orin nx project/orin nx 项目口播模板.txt from the first line, including the rules section.",
+    "Run or read this manifest via: py -3.12 scripts/harness_runner.py onboard",
+    "Read AGENTS.md only for dispatch rules and safety boundaries.",
+    "Read the active loop contract: configs/harness/contracts/orin_next_engineering_loop_v1.json",
+    "Read the task-specific Done Contract before running or editing: currently configs/harness/contracts/regular_gate_inclusion_validation_v1.json",
+    "Run harness static checks before experiments: doctor, check-claim, and JSON/schema checks as needed."
+  ],
+  "load_on_demand": [
+    {
+      "trigger": "Need exact project history or stale-state reconciliation",
+      "open": [
+        "Select-String headings from the long-term context first",
+        "Only then open the relevant sections, currently M27, M28, M29, 当前项目结构, 操作与复现指南, 下一步计划"
+      ]
+    },
+    {
+      "trigger": "Need EIS quality algorithm recovery after a scoped failed attempt",
+      "open": [
+        "docs/knowledge_base/routing.md",
+        ".local_knowledge/internal_reference_index.md if an internal source key is selected",
+        "At most two matched source documents before returning to a Done Contract"
+      ]
+    },
+    {
+      "trigger": "Need device-side MMAPI/VPI/NVENC handoff details",
+      "open": [
+        "configs/harness/contracts/regular_gate_inclusion_validation_v1.json",
+        "configs/harness/contracts/regular05_hybrid_matrix_handoff_v1.json",
+        "docs/device_stage_demo_handoff_2026-07-19.md",
+        "docs/hybrid_realtime_matrix_handoff_2026-07-19.md",
+        "scripts/prepare_device_matrix_csv.py",
+        "scripts/live_matrix_producer.py",
+        "scripts/stream_matrix_csv.py"
+      ]
+    },
+    {
+      "trigger": "Need evidence or presentation wording",
+      "open": [
+        "README.md current highlights and next direction sections",
+        "docs/presentation/one_page_summary.md",
+        "the exact evidence summary referenced by the active contract"
+      ]
+    }
+  ],
+  "active_loop_contract": "configs/harness/contracts/orin_next_engineering_loop_v1.json",
+  "active_task_contract": "configs/harness/contracts/regular_gate_inclusion_validation_v1.json",
+  "hard_rules": [
+    "Do not load the full long-term context or full internal reference folders during default startup.",
+    "Do not copy internal original text, images, private links, or screenshots into public GitHub outputs.",
+    "Do not treat outdoor-car inverse/post_geometry results as Regular05 EIS-quality progress.",
+    "Do not claim full real-time EIS, zero-copy full chain, VPI optical-flow acceleration, or all-scene EIS quality until measured evidence supports it.",
+    "Keep generated reviewable videos under C:/Users/Admin/Videos/orin nx/review/<category>/<YYYYMMDD>_<loop_or_gate>/ with descriptive filenames."
+  ]
+}

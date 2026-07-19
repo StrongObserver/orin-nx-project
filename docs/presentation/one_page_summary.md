@@ -65,6 +65,26 @@ Regular05 EIS replay:
   source_to_dest convention fixed device black borders.
   black_border_p95 = 0.000972005
   CPU-vs-device mean_abs_center_avg = 4.512432
+
+Regular05 FIFO handoff:
+  Python producer / CSV stream -> FIFO -> MMAPI/VPI/NVENC consumer works.
+  fallback_count = 0, frame_index_mismatch_count = 0
+  VPI warp running avg at frame 100 = 0.647185 ms
+  stream black_border_p95 = 0
+
+Regular05 producer alignment:
+  fixed CSV through FIFO is pixel-identical to fixed replay.
+  original live producer gap = 35.890052 px mean translation.
+  offline LP-rigid upper bound gap = 0.501640 px mean translation.
+
+Regular gate inclusion viewport:
+  safe103_crop98 failed as a general five-clip producer.
+  geometry-valid coverage = 5/5, p95/max invalid ratio = 0.
+  The first MMAPI EGL pitch-wrapper VPI output was rejected because non-identity
+  matrices caused block-like tearing.
+  VPI Python allocated-image output with explicit BGR8 input fixes the visible
+  tearing and the green/cyan color shift on all five Regular clips.
+  It is now the visual correctness candidate pending human review.
 ```
 
 Conclusion:
@@ -72,6 +92,8 @@ Conclusion:
 ```text
 Python-in-the-loop GStreamer EIS integration is not the next acceleration path;
 the current acceleration frontier is the C++ device-side MMAPI/VPI/NVENC path.
+The next unresolved issue is bounded-delay live producer quality, not FIFO
+delivery.
 ```
 
 ## Model Boundary
@@ -110,4 +132,8 @@ docs/challenge_boundary_report_2026-07-18.md
 docs/vpi_warp_module_report_2026-07-18.md
 docs/presentation/hardware_acceleration_boundary.md
 docs/device_matrix_warp_demo_2026-07-19.md
+docs/regular05_hybrid_matrix_handoff_2026-07-20.md
+docs/regular05_live_producer_alignment_2026-07-20.md
+docs/regular_gate_inclusion_validation_2026-07-20.md
+docs/regular_gate_vpi_distortion_fix_2026-07-20.md
 ```

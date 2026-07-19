@@ -30,6 +30,9 @@
     }
   ],
   "default_rules": {
+    "onboarding_manifest": "configs/harness/onboarding_manifest.json",
+    "default_onboarding_mode": "progressive_disclosure",
+    "full_context_preload_forbidden": true,
     "knowledge_base_entry": "docs/knowledge_base/routing.md",
     "internal_reference_index": ".local_knowledge/internal_reference_index.md",
     "state_update_policy": "record outcome, evidence, blocker, and next action only; do not preserve running logs",

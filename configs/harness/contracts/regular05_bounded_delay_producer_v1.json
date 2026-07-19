@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "contract_id": "regular05_bounded_delay_producer_v1",
+  "status": "delay90_validated_pending_human_review",
+  "loop_type": "bounded_delay_live_producer",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Build a bounded-latency producer that approaches the offline LP-rigid matrix quality while keeping explicit delay and preserving the verified Regular05 FIFO/MMAPI/VPI/NVENC handoff.",
+  "accepted_dependency": {
+    "contract_id": "regular05_live_producer_alignment_v1",
+    "result": "Fixed FIFO control is exact, and offline LP-rigid upper bound reduces fixed-vs-produced translation gap to about 0.50 px mean / 1.34 px p95.",
+    "report": "docs/regular05_live_producer_alignment_2026-07-20.md"
+  },
+  "claim_boundary": {
+    "allowed": [
+      "bounded-delay producer quality/latency trade-off",
+      "Regular05 same-input Jetson evidence",
+      "FIFO/MMAPI/VPI/NVENC handoff with explicit producer delay"
+    ],
+    "forbidden": [
+      "zero-latency real-time EIS unless the delay is actually zero and measured",
+      "offline LP-rigid as live realtime",
+      "all-scene EIS quality",
+      "VPI optical-flow acceleration",
+      "zero-copy full chain"
+    ]
+  },
+  "must_freeze": [
+    "input clip: regular05_source.h264",
+    "output resolution: 640x360",
+    "matrix convention: source_to_dest",
+    "MMAPI stream consumer behavior",
+    "VPI interpolation: linear",
+    "border mode: VPI_BORDER_ZERO",
+    "fixed replay matrix CSV as quality reference",
+    "offline LP-rigid upper bound as non-realtime target"
+  ],
+  "allowed_changes": [
+    "live_matrix_producer.py bounded-delay smoothing mode",
+    "producer delay parameter",
+    "diagnostic matrix comparison scripts",
+    "review grid generation"
+  ],
+  "candidate_delays_frames": [
+    15,
+    30,
+    45
+  ],
+  "validated_results": {
+    "local_matrix_candidates": {
+      "delay15_translation_abs_mean_px": 14.565927,
+      "delay15_translation_abs_p95_px": 45.419468,
+      "delay30_translation_abs_mean_px": 8.8178,
+      "delay30_translation_abs_p95_px": 28.767727,
+      "delay45_translation_abs_mean_px": 4.936812,
+      "delay45_translation_abs_p95_px": 22.264091,
+      "decision": "delay45 was the best local matrix candidate and was promoted to Jetson run"
+    },
+    "jetson_delay45": {
+      "decision": "intermediate_improvement_not_final",
+      "producer_delay_frames": 45,
+      "translation_abs_mean_px": 7.308316,
+      "translation_abs_p95_px": 33.183706,
+      "producer_avg_estimate_ms": 8.239195,
+      "fallback_count": 0,
+      "frame_index_mismatch_count": 0,
+      "black_border_p95": 0.000143447,
+      "fixed_vs_delay45_mean_abs_center_avg": 17.206929,
+      "vpi_warp_running_avg_ms_at_frame_100": 0.659701,
+      "report": "docs/regular05_bounded_delay_producer_2026-07-20.md"
+    },
+    "jetson_delay90": {
+      "decision": "current_best_bounded_delay_pending_human_review",
+      "producer_delay_frames": 90,
+      "translation_abs_mean_px": 1.09947,
+      "translation_abs_p95_px": 3.39961,
+      "producer_avg_estimate_ms": 8.21622,
+      "fallback_count": 0,
+      "frame_index_mismatch_count": 0,
+      "black_border_p95": 0.000670356,
+      "fixed_vs_delay90_mean_abs_center_avg": 9.753476,
+      "vpi_warp_running_avg_ms_at_frame_100": 0.772729,
+      "review_copy": "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular05_bounded_delay_producer/20260720_regular05_bounded_delay_producer_regular_gate05_regular_6_jetson_source_fixed_delay45_delay90_grid.mp4",
+      "report": "docs/regular05_bounded_delay_producer_2026-07-20.md"
+    },
+    "viewport_stability_diagnosis": {
+      "decision": "delay90_fade15_preferred_pending_human_review",
+      "reason": "Forcing constant scale and copying frame1 into frame0 reduces scale and first-frame jumps but causes hard black-border regression under VPI zero border.",
+      "fixed_scale_black_border_p95": 0.025768229,
+      "fixed_scale_frames_gt_0p01": 27,
+      "original_delay90_black_border_p95": 0.000670356,
+      "diagnostic_review_copy": "C:/Users/Admin/Videos/orin nx/review/diagnostic/20260720_regular05_viewport_stability/20260720_regular05_viewport_stability_regular_gate05_regular_6_jetson_delay90_vs_fixedscale_reject_grid.mp4",
+      "local_window_candidates": {
+        "decision": "reject_current_form",
+        "localwin45_translation_abs_mean_px": 37.406169,
+        "localwin60_translation_abs_mean_px": 33.153689,
+        "localwin90_translation_abs_mean_px": 17.322793
+      },
+      "delay90_fade15": {
+        "decision": "preferred_viewport_stability_candidate_pending_human_review",
+        "fallback_count": 0,
+        "frame_index_mismatch_count": 0,
+        "black_border_p95": 0.000670356,
+        "delay90_vs_fade15_mean_abs_center_avg": 3.230821,
+        "review_copy": "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular05_bounded_delay_producer/20260720_regular05_bounded_delay_producer_regular_gate05_regular_6_jetson_source_fixed_delay90_fade15_grid.mp4"
+      },
+      "delay90_safe103": {
+        "decision": "valid_review_candidate_not_automatic_replacement",
+        "reason": "Constant high scale removes scale variation and keeps black-border hard gate healthy, but changes framing more than fade15 and sacrifices more field of view.",
+        "fallback_count": 0,
+        "frame_index_mismatch_count": 0,
+        "scale_delta_p95": 0.0,
+        "black_border_p95": 0.000238715,
+        "delay90_vs_safe103_mean_abs_center_avg": 15.132977,
+        "vpi_warp_running_avg_ms_at_frame_100": 0.63059,
+        "review_copy": "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular05_bounded_delay_producer/20260720_regular05_bounded_delay_producer_regular_gate05_regular_6_jetson_source_fixed_delay90_safe103_grid.mp4"
+      },
+      "postprocess_border_safe": {
+        "decision": "valid_review_candidates",
+        "reason": "Post-processing keeps delay90 matrices unchanged and removes visible edge-connected black border via fixed crop or reflect/crop output processing.",
+        "crop98": {
+          "black_border_p95": 0.0,
+          "max_black_border": 0.000008681,
+          "delay90_vs_post_mean_abs_center_avg": 8.146386
+        },
+        "reflect8_crop98": {
+          "black_border_p95": 0.000042534,
+          "max_black_border": 0.004231771,
+          "delay90_vs_post_mean_abs_center_avg": 6.853398
+        },
+        "review_copy": "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular05_bounded_delay_producer/20260720_regular05_bounded_delay_producer_regular_gate05_regular_6_jetson_source_delay90_safe103_postcrop98_grid.mp4"
+      },
+      "safe103_crop98": {
+        "decision": "strongest_tested_viewport_candidate_pending_human_review",
+        "reason": "Combines constant high scale to remove scale variation with fixed 98% output crop to remove residual edge black border.",
+        "black_border_mean": 0.0,
+        "black_border_p95": 0.0,
+        "black_border_max": 0.0,
+        "frames_gt_0p001": 0,
+        "frames_gt_0p01": 0,
+        "safe103_vs_safe103_crop98_mean_abs_center_avg": 8.079741,
+        "review_copy": "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular05_bounded_delay_producer/20260720_regular05_bounded_delay_producer_regular_gate05_regular_6_jetson_source_safe103_safe103crop_postcrop_grid.mp4"
+      }
+    }
+  },
+  "success_criteria": [
+    "translation_abs_mean improves materially over original live producer 35.890052 px",
+    "translation_abs_p95 improves materially over original live producer 62.762400 px",
+    "black_border_p95 remains below 0.01",
+    "fallback_count remains 0",
+    "frame_index_mismatch_count remains 0",
+    "producer delay is explicitly reported",
+    "review grid is copied to the review tree"
+  ],
+  "stop_reasons": [
+    "delayed producer cannot improve matrix gap without unacceptable latency",
+    "black_border_regression",
+    "visual review worse than fixed replay",
+    "quality requires mesh/grid/gyro/RS outside current contract"
+  ],
+  "next_route": {
+    "decision": "Delay90 is the current best bounded-delay producer, but do not expand to five Regular clips until human review accepts the video.",
+    "recommended_actions": [
+      "User reviews delay90_fade15 and delay90_safe103.",
+      "If fade15 is accepted, run delay90_fade15 across all five Regular clips.",
+      "If safe103 is accepted, run delay90_safe103 across all five Regular clips but report the field-of-view trade-off explicitly.",
+      "If postprocess crop98 or reflect8_crop98 is accepted, apply the same post-process across all five Regular clips and report crop/FOV trade-off.",
+      "If safe103_crop98 is accepted, apply the same constant-scale plus crop98 policy across all five Regular clips and report FOV trade-off explicitly.",
+      "If safe103_crop98 is rejected because of remaining framing artifacts or FOV loss, stop local patching and generate an internal AI prompt for industry EIS guidance."
+    ]
+  },
+  "external_observation": [
+    "matrix_diff_summary",
+    "producer_delay_frames",
+    "producer_log_summary",
+    "matrix_handoff_summary",
+    "VPI_warp_timing_summary",
+    "black_border_summary",
+    "review_copy_exists"
+  ],
+  "evidence_output_directory": "results/regular05_bounded_delay_producer_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/performance/<YYYYMMDD>_regular05_bounded_delay_producer",
+  "report_path": "docs/regular05_bounded_delay_producer_<YYYY-MM-DD>.md"
+}

@@ -270,6 +270,35 @@ The knowledge base is not part of every loop preflight. Use it like this:
 
 If more than two sources seem necessary, the task is not scoped tightly enough.
 
+## Progressive Disclosure Startup
+
+Startup itself is now part of the loop design. Future agents should avoid a
+large default context load and follow this order:
+
+```text
+1. Read the oral template from the first line, including its rules.
+2. Read configs/harness/onboarding_manifest.json, or run:
+   py -3.12 scripts\harness_runner.py onboard
+3. Read configs/harness/contracts/orin_next_engineering_loop_v1.json.
+4. Read the current task contract, currently:
+   configs/harness/contracts/regular05_hybrid_matrix_handoff_v1.json.
+5. Open long-term context sections or reference folders only when a manifest
+   trigger, contract stop/recovery rule, or real blocker requires them.
+```
+
+The largest avoidable token costs are:
+
+- full-reading the long-term context when only the latest milestone sections are
+  needed;
+- broad-scanning internal camera-reference folders at startup;
+- reading multiple presentation/evidence documents that repeat the same
+  boundary;
+- enumerating all `results/` folders instead of following the active contract.
+
+This rule must not weaken recovery. If a blocker appears, the agent should still
+use `docs/knowledge_base/routing.md`, the local internal index, or public search
+as directed by the current contract.
+
 ## Project-Specific Stop Rules
 
 Stop instead of continuing when:

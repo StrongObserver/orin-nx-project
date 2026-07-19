@@ -32,6 +32,28 @@ boundary set for the current pure-visual global-affine pipeline.
 Each real experiment starts from a Done Contract under
 `configs/harness/contracts/`.
 
+## Progressive Onboarding
+
+Default startup should not load every long document and reference folder.
+
+Use the lightweight onboarding manifest first:
+
+```text
+configs/harness/onboarding_manifest.json
+```
+
+Command:
+
+```powershell
+py -3.12 scripts\harness_runner.py onboard
+```
+
+This command names the active overall loop contract and the current task-specific
+contract. It also lists which long documents are on-demand only. The long-term
+context document and internal camera-reference folders are not default preflight
+loads; open them only when the current loop, blocker, or manifest trigger points
+to a specific section or source.
+
 Loop Engineering V2 adds a decision layer above this harness:
 
 ```text

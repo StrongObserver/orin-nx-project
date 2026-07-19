@@ -11,6 +11,7 @@ DEFAULT_CONTRACT = REPO_ROOT / "configs" / "harness" / "contracts" / "jetson_reg
 DEFAULT_LOOP_PROFILES = REPO_ROOT / "configs" / "harness" / "loop_profiles.json"
 DEFAULT_EVALUATION_DATASETS = REPO_ROOT / "configs" / "harness" / "evaluation_datasets.json"
 DEFAULT_METRIC_SCHEMA = REPO_ROOT / "configs" / "harness" / "metric_schema.json"
+DEFAULT_ONBOARDING_MANIFEST = REPO_ROOT / "configs" / "harness" / "onboarding_manifest.json"
 
 
 def repo_rel(path: Path | str) -> Path:
@@ -124,6 +125,31 @@ def command_print_contract(args: argparse.Namespace) -> int:
     return 0
 
 
+def command_onboard(args: argparse.Namespace) -> int:
+    manifest = load_json(args.manifest)
+    print(f"manifest_id: {manifest.get('manifest_id', '')}")
+    print(f"mode: {manifest.get('default_onboarding_mode', '')}")
+    print(f"active_loop_contract: {manifest.get('active_loop_contract', '')}")
+    print(f"active_task_contract: {manifest.get('active_task_contract', '')}")
+    print("\nstartup_sequence:")
+    for item in manifest.get("startup_sequence", []):
+        print(f"- {item}")
+    print("\ntoken_hotspots:")
+    for hotspot in manifest.get("token_hotspots_observed", []):
+        print(f"- {hotspot.get('source', '')}")
+        print(f"  reason: {hotspot.get('cost_reason', '')}")
+        print(f"  rule: {hotspot.get('new_rule', '')}")
+    print("\nload_on_demand:")
+    for route in manifest.get("load_on_demand", []):
+        print(f"- trigger: {route.get('trigger', '')}")
+        for target in route.get("open", []):
+            print(f"  open: {target}")
+    print("\nhard_rules:")
+    for item in manifest.get("hard_rules", []):
+        print(f"- {item}")
+    return 0
+
+
 def command_list_loop_profiles(args: argparse.Namespace) -> int:
     data = load_json(args.loop_profiles)
     for profile in data.get("profiles", []):
@@ -157,6 +183,18 @@ def command_check_loop_rules(args: argparse.Namespace) -> int:
     profiles = {profile["id"]: profile for profile in data.get("profiles", [])}
 
     checks = [
+        (
+            "default_onboarding_mode_progressive",
+            default_rules.get("default_onboarding_mode") == "progressive_disclosure",
+        ),
+        (
+            "full_context_preload_forbidden",
+            bool(default_rules.get("full_context_preload_forbidden", False)),
+        ),
+        (
+            "onboarding_manifest_declared",
+            bool(default_rules.get("onboarding_manifest")),
+        ),
         (
             "stable_checkpoint_is_not_terminal_goal",
             bool(default_rules.get("stable_checkpoint_is_not_terminal_goal", False)),
@@ -506,6 +544,10 @@ def main() -> int:
     print_contract = subparsers.add_parser("print-contract", help="Print a Done Contract JSON.")
     print_contract.add_argument("--contract", type=Path, default=DEFAULT_CONTRACT)
     print_contract.set_defaults(func=command_print_contract)
+
+    onboard = subparsers.add_parser("onboard", help="Print lightweight progressive onboarding instructions.")
+    onboard.add_argument("--manifest", type=Path, default=DEFAULT_ONBOARDING_MANIFEST)
+    onboard.set_defaults(func=command_onboard)
 
     list_loop_profiles = subparsers.add_parser("list-loop-profiles", help="List Loop Engineering V2 profiles.")
     list_loop_profiles.add_argument("--loop-profiles", type=Path, default=DEFAULT_LOOP_PROFILES)
