@@ -6,8 +6,9 @@ Fixed and producer-generated Regular05 matrices can run through the accepted C++
 MMAPI/VPI/NVENC EGLImage path. This confirms that the accepted device path is
 usable beyond static review assets and can consume existing producer matrix CSVs.
 
-This is not full real-time EIS yet. The runs use precomputed CSV files, not a
-concurrent live FIFO producer.
+This is not full real-time EIS yet. Precomputed CSV and concurrent live FIFO
+runs both preserve the consumer correctness gates, but the live run is dominated
+by producer computation.
 
 ## Inputs
 
@@ -88,9 +89,6 @@ source / fixed / offline_lp / delay90
 This closes the immediate integration gap between the producer-matrix side and
 the accepted C++ EGLImage consumer. The remaining live-EIS question is no longer
 "can the accepted C++ path consume producer matrices?" It can.
-
-The next question is whether a concurrent producer/FIFO version can preserve the
-same quality and timing while matrices are generated online.
 
 The concurrent producer version preserves the consumer correctness gates, but it
 is much slower than precomputed CSV replay. The next bottleneck is producer

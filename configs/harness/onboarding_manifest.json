@@ -6,8 +6,8 @@
   "token_hotspots_observed": [
     {
       "source": "C:/Users/Admin/Nutstore/1/Typora_save/自己的项目/jetson orin nx project_AI上下文.md",
-      "cost_reason": "Long-term context is about 1992 lines and contains many historical milestones.",
-      "new_rule": "Do not full-read by default. Read section headings first, then load only the current-stage sections, especially M27-M29 and 下一步计划 when device-side handoff is the task."
+      "cost_reason": "Long-term context is long and contains many historical milestones.",
+      "new_rule": "Do not full-read by default. Read section headings first, then load only the current-stage sections, especially M40, M41, 操作与复现指南, and 下一步计划 when device-side handoff or session closeout is the task."
     },
     {
       "source": "C:/Users/Admin/Nutstore/1/Typora_save/字节_嵌入式camera实习",
@@ -30,7 +30,7 @@
     "Run or read this manifest via: py -3.12 scripts/harness_runner.py onboard",
     "Read AGENTS.md only for dispatch rules and safety boundaries.",
     "Read the active loop contract: configs/harness/contracts/orin_next_engineering_loop_v1.json",
-    "Read the task-specific Done Contract before running or editing: currently configs/harness/contracts/regular_gate_inclusion_validation_v1.json",
+    "Read the task-specific Done Contract before running or editing: currently configs/harness/contracts/regular05_live_eglimage_path_v1.json",
     "Run harness static checks before experiments: doctor, check-claim, and JSON/schema checks as needed."
   ],
   "load_on_demand": [
@@ -38,7 +38,7 @@
       "trigger": "Need exact project history or stale-state reconciliation",
       "open": [
         "Select-String headings from the long-term context first",
-        "Only then open the relevant sections, currently M27, M28, M29, 当前项目结构, 操作与复现指南, 下一步计划"
+        "Only then open the relevant sections, currently M40, M41, 当前项目结构, 操作与复现指南, 下一步计划"
       ]
     },
     {
@@ -53,9 +53,11 @@
       "trigger": "Need device-side MMAPI/VPI/NVENC handoff details",
       "open": [
         "configs/harness/contracts/regular_gate_inclusion_validation_v1.json",
-        "configs/harness/contracts/regular05_hybrid_matrix_handoff_v1.json",
-        "docs/device_stage_demo_handoff_2026-07-19.md",
-        "docs/hybrid_realtime_matrix_handoff_2026-07-19.md",
+        "configs/harness/contracts/regular05_live_eglimage_path_v1.json",
+        "configs/harness/contracts/regular05_eglimage_wrapper_reuse_root_cause_v1.json",
+        "docs/regular_gate_eglimage_fix_2026-07-20.md",
+        "docs/regular05_eglimage_wrapper_reuse_root_cause_2026-07-20.md",
+        "docs/regular05_live_eglimage_path_2026-07-20.md",
         "scripts/prepare_device_matrix_csv.py",
         "scripts/live_matrix_producer.py",
         "scripts/stream_matrix_csv.py"
@@ -71,7 +73,7 @@
     }
   ],
   "active_loop_contract": "configs/harness/contracts/orin_next_engineering_loop_v1.json",
-  "active_task_contract": "configs/harness/contracts/regular_gate_inclusion_validation_v1.json",
+  "active_task_contract": "configs/harness/contracts/regular05_live_eglimage_path_v1.json",
   "hard_rules": [
     "Do not load the full long-term context or full internal reference folders during default startup.",
     "Do not copy internal original text, images, private links, or screenshots into public GitHub outputs.",

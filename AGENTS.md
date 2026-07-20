@@ -44,14 +44,14 @@ or a declared stop reason is hit.
 4. Current task-specific Done Contract:
 
 ```text
-C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\regular_gate_inclusion_validation_v1.json
+C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\regular05_live_eglimage_path_v1.json
 ```
 
-This is the current Regular gate inclusion / viewport correctness entry. It
-starts from source-to-destination matrices and the color-fixed VPI Python
-allocated-image path with explicit `BGR8` input. The old MMAPI EGL pitch-wrapper
-path is diagnostic only because non-identity matrices caused visible block
-tearing.
+This is the current Regular05 device-consumer / FIFO-live entry. It starts from
+the accepted C++ MMAPI/VPI/NVENC EGLImage-wrapper path, explicit
+`source_to_dest` matrices, and the frozen BGR8 visual correctness reference. The
+old MMAPI pitch-pointer path and EGLImage image-wrapper reuse path are
+diagnostic/rejected only because they caused visible block tearing.
 
 5. High-level project target reference, especially "项目二：Jetson Orin NX 视频稳像（EIS）与异构加速":
 

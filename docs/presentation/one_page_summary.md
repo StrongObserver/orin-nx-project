@@ -66,16 +66,12 @@ Regular05 EIS replay:
   black_border_p95 = 0.000972005
   CPU-vs-device mean_abs_center_avg = 4.512432
 
-Regular05 FIFO handoff:
-  Python producer / CSV stream -> FIFO -> MMAPI/VPI/NVENC consumer works.
-  fallback_count = 0, frame_index_mismatch_count = 0
-  VPI warp running avg at frame 100 = 0.647185 ms
-  stream black_border_p95 = 0
-
-Regular05 producer alignment:
-  fixed CSV through FIFO is pixel-identical to fixed replay.
-  original live producer gap = 35.890052 px mean translation.
-  offline LP-rigid upper bound gap = 0.501640 px mean translation.
+Regular05 FIFO/live handoff:
+  fixed/offline-LP/delay90 CSV, fixed FIFO, delay90 FIFO, and concurrent
+  live delay90 all pass through the accepted C++ consumer with rc=0,
+  fallback=0, mismatch=0, and black-border p95 below 1%.
+  live_delay90 took about 68.7 s for 180 frames, so producer compute/scheduling
+  is the next bottleneck.
 
 Regular gate inclusion viewport:
   safe103_crop98 failed as a general five-clip producer.
@@ -141,7 +137,7 @@ Pitch encoder probe:
 Producer matrices on C++ path:
   Fixed replay, offline-LP, and delay90 Regular05 matrices all ran through the
   accepted C++ EGLImage consumer with rc=0, fallback=0, mismatch=0, and
-  black-border p95 below 1%. Next step is concurrent FIFO/live streaming.
+  black-border p95 below 1%.
 
 Concurrent FIFO/live:
   The FIFO-enabled accepted consumer also handled fixed CSV, delay90 CSV, and
@@ -155,8 +151,8 @@ Conclusion:
 ```text
 Python-in-the-loop GStreamer EIS integration is not the next acceleration path;
 the current acceleration frontier is the C++ device-side MMAPI/VPI/NVENC path.
-The next unresolved issue is bounded-delay live producer quality, not FIFO
-delivery.
+The accepted consumer/FIFO path is healthy; the next unresolved issue is live
+producer compute/scheduling, plus same-input power/perf evidence.
 ```
 
 ## Model Boundary
@@ -184,7 +180,8 @@ This is not just a stabilizer demo. I built a measurement loop: Regular is the
 in-domain success case, Challenge sets define the model boundary, VPI shows where
 hardware acceleration helps, GStreamer/NVMM measurements explain why direct
 Python dataflow integration is not currently worthwhile, and the MMAPI/VPI/NVENC
-path now has a Regular05 source_to_dest replay checkpoint.
+path now has an accepted Regular gate EGLImage device path plus a Regular05
+FIFO/live handoff checkpoint.
 ```
 
 ## Evidence
@@ -199,4 +196,7 @@ docs/regular05_hybrid_matrix_handoff_2026-07-20.md
 docs/regular05_live_producer_alignment_2026-07-20.md
 docs/regular_gate_inclusion_validation_2026-07-20.md
 docs/regular_gate_vpi_distortion_fix_2026-07-20.md
+docs/regular_gate_eglimage_fix_2026-07-20.md
+docs/regular05_eglimage_wrapper_reuse_root_cause_2026-07-20.md
+docs/regular05_live_eglimage_path_2026-07-20.md
 ```

@@ -281,7 +281,7 @@ large default context load and follow this order:
    py -3.12 scripts\harness_runner.py onboard
 3. Read configs/harness/contracts/orin_next_engineering_loop_v1.json.
 4. Read the current task contract, currently:
-   configs/harness/contracts/regular05_hybrid_matrix_handoff_v1.json.
+   configs/harness/contracts/regular05_live_eglimage_path_v1.json.
 5. Open long-term context sections or reference folders only when a manifest
    trigger, contract stop/recovery rule, or real blocker requires them.
 ```

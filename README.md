@@ -35,19 +35,17 @@ GStreamer/NVMM boundary:
   so direct Python-in-the-loop EIS integration is not the next acceleration path
 
 Device-side MMAPI/VPI/NVENC path:
-  C++ Jetson Multimedia API experiments now run decode -> NvBufSurface scratch
-  -> VPI CUDA warp -> block-linear NV12 -> NVENC. Same-source inverse matrix
-  drive is validated as an offline-matrix device-side warp/encode path, not a
-  real-time full EIS pipeline yet. The latest panel-diff check also shows it is
-  not yet a close CPU-output reproduction because CPU crop/zoom/sharpen parity
-  is not implemented on the device path.
+  The accepted C++ EGLImage-wrapper path now runs decode -> block-linear main
+  NvBufSurface -> pitch-linear NV12_ER scratch -> VPI CUDA warp -> block-linear
+  NV12 -> NVENC. It is the frozen Regular gate C++ device path, not a full
+  real-time or zero-copy EIS claim.
 
 Regular05 FIFO matrix handoff:
   Regular05 now uses source_to_dest convention for EIS-quality device replay.
-  A Python producer / CSV stream -> FIFO -> MMAPI/VPI/NVENC consumer run reached
-  zero matrix fallback and zero frame-index mismatch. This validates the
-  handoff shape, but not full real-time EIS, because the current live producer
-  still differs from the accepted offline matrices.
+  Fixed/offline-LP/delay90 CSV, fixed FIFO, delay90 FIFO, and concurrent live
+  delay90 matrices all reached zero fallback and zero frame-index mismatch
+  through the accepted C++ consumer. This validates the consumer/FIFO path, but
+  not full real-time EIS because the live producer is still too slow.
 
 Regular gate inclusion viewport validation:
   safe103_crop98 is accepted only for Regular05 and failed as a general
@@ -130,7 +128,7 @@ Regular05 producer matrices on C++ path:
   The accepted C++ EGLImage consumer ran fixed replay, offline-LP, and delay90
   Regular05 matrices with rc=0, fallback=0, frame-index mismatch=0, and
   black-border p95 below 1%. This validates the accepted device consumer for
-  existing producer CSVs; the next step is concurrent FIFO/live streaming.
+  existing producer CSVs.
 
 Concurrent FIFO/live producer:
   The FIFO-enabled accepted EGLImage consumer also ran fixed CSV, delay90 CSV,
@@ -339,6 +337,10 @@ configs/harness/contracts/gst_nvmm_decode_convert_latency_v1.json
 configs/harness/contracts/device_matrix_warp_demo_v1.json
 configs/harness/contracts/hybrid_realtime_matrix_handoff_v1.json
 configs/harness/contracts/regular05_hybrid_matrix_handoff_v1.json
+configs/harness/contracts/orin_next_engineering_loop_v1.json
+configs/harness/contracts/regular_gate_inclusion_validation_v1.json
+configs/harness/contracts/regular05_eglimage_wrapper_reuse_root_cause_v1.json
+configs/harness/contracts/regular05_live_eglimage_path_v1.json
 configs/harness/evaluation_datasets.json
 configs/harness/metric_schema.json
 docs/harness_engineering_v1.md
@@ -390,12 +392,20 @@ docs/device_stage_demo_handoff_2026-07-19.md
 docs/hybrid_realtime_eis_plan_2026-07-19.md
 docs/hybrid_realtime_matrix_handoff_2026-07-19.md
 docs/gstreamer_nvmm_latency_plan_2026-07-18.md
+docs/regular_gate_inclusion_validation_2026-07-20.md
+docs/regular_gate_vpi_distortion_fix_2026-07-20.md
+docs/regular_gate_eglimage_fix_2026-07-20.md
+docs/regular05_eglimage_wrapper_reuse_root_cause_2026-07-20.md
+docs/regular05_live_eglimage_path_2026-07-20.md
 C:\Users\Admin\Videos\orin nx\review\quality\20260718_regular05_new_method\
 C:\Users\Admin\Videos\orin nx\review\performance\20260718_jetson_regular05_perf\
 C:\Users\Admin\Videos\orin nx\review\performance\20260718_backend_compare\
 C:\Users\Admin\Videos\orin nx\review\performance\20260718_estimate_scale_regular05\
 C:\Users\Admin\Videos\orin nx\review\performance\20260718_estimate_scale_quality_perf\
 C:\Users\Admin\Videos\orin nx\review\performance\20260718_regular_gate_est0p5_grid16_validation\
+C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_bgr8_color_fix\
+C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_eglimage_fix\
+C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular05_live_eglimage_path\
 ```
 
 ## Next Engineering Direction
@@ -408,114 +418,86 @@ The current device-side acceleration path should stay scoped:
 1. keep CPU quality-safe and Regular performance baselines distinct;
 2. keep Challenge sets as model-boundary evidence, not headline pass rates;
 3. keep high-resolution VPI warp/remap as module-level acceleration evidence;
-4. use MMAPI/NvBufSurface scratch-buffer device-side flow for the next
-   acceleration path;
-5. keep same-source inverse-matrix device output as a warp/encode boundary until
-   CPU post-processing parity or a direct raw-video diff supports a stronger
-   claim;
-6. use `post_geometry_identity_first` as the accepted device-side stage demo
-   candidate;
-7. next design a minimal hybrid real-time matrix-handoff path before any VPI
-   optical-flow or full zero-copy expansion;
+4. use the accepted C++ EGLImage-wrapper path for Regular gate device replay;
+5. keep the BGR8 VPI Python path as visual correctness reference, not as a
+   real-time acceleration result;
+6. do not reuse EGLImage image wrappers in this MMAPI path;
+7. optimize producer compute/scheduling before making stronger live-EIS claims;
 8. do not return to Python appsink/appsrc EIS integration.
 ```
 
-First hybrid slice:
+Current accepted Regular05 device path:
 
 ```text
-outdoor-car dataflow smoke:
-mock online matrix handoff validated:
-  fallback_count = 0
-  frame_index_mismatch_count = 0
-  matrix handoff avg = 1.376 us
-  VPI warp avg at frame 100 = 1.461560 ms
-
-FIFO stream matrix handoff validated:
-  fallback_count = 0
-  frame_index_mismatch_count = 0
-  VPI warp avg at frame 100 = 1.485500 ms
-  mock_vs_stream mean_abs_center_avg = 2.427583
-
-first live CPU matrix producer boundary:
-  fallback_count = 0
-  frame_index_mismatch_count = 0
-  producer estimate avg ~= 18 ms/frame
-  CPU-vs-output mean_abs_center_avg = 42.764717 to 43.405001
-  decision: handoff works, estimator/correction convention is the next blocker
+H264 input
+-> MMAPI decode / block-linear main NvBufSurface
+-> NvBufSurfTransform to pitch-linear NV12_ER scratch
+-> VPI CUDA PerspectiveWarp via per-frame EGLImage wrappers
+-> NvBufSurfTransform back to block-linear NV12 main chain
+-> NVENC
 ```
 
-Do not use the outdoor-car hybrid result as Regular05 EIS-quality progress.
-Current EIS-quality handoff work starts from:
+Current active contracts:
 
 ```text
-configs/harness/contracts/regular05_hybrid_matrix_handoff_v1.json
+configs/harness/contracts/orin_next_engineering_loop_v1.json
+configs/harness/contracts/regular05_live_eglimage_path_v1.json
+configs/harness/contracts/regular05_eglimage_wrapper_reuse_root_cause_v1.json
 ```
 
-Artifact-diagnosis boundary:
+Rejected or diagnostic-only routes:
 
 ```text
 sample_outdoor_car_1080p_10fps:
   dataflow / matrix handoff smoke only, not EIS quality evidence.
 
-regular_gate05_regular_6:
-  correct source type for EIS quality review and device replay visual check.
-  device replay uses source_to_dest matrix convention.
+old MMAPI pitch-pointer wrapper:
+  rejected because non-identity matrices caused block-like tearing.
+
+EGLImage image-wrapper reuse:
+  rejected after single-wrapper, per-buffer, input-only, output-only,
+  persistent-mapping, and explicit-sync variants tore or failed.
+
+direct mismatched NvBuffer input:
+  rejected because VPI required matching input/output formats.
+
+block-linear VPI scratch pair:
+  rejected by VPI PerspectiveWarp format support.
+
+pitch-linear main encoder chain:
+  rejected because it returned success but produced near-solid green output.
 ```
 
-Regular05 device replay fix:
+Regular05 accepted C++ consumer summary:
 
-| Convention | black p95 | CPU-vs-device mean_abs_center_avg | Decision |
-|---|---:|---:|---|
-| inverse | 0.281428602 | 35.618840 | reject |
-| source_to_dest | 0.000972005 | 4.512432 | current fixed replay |
+| Input | rc | fallback | mismatch | black p95 | Decision |
+|---|---:|---:|---:|---:|---|
+| fixed replay CSV | 0 | 0 | 0 | 0.000951823 | accepted |
+| offline-LP CSV | 0 | 0 | 0 | 0.001459201 | accepted |
+| delay90 CSV | 0 | 0 | 0 | 0.000639106 | accepted |
+| fixed FIFO | 0 | 0 | 0 | 0.000951823 | accepted |
+| delay90 FIFO | 0 | 0 | 0 | 0.000639106 | accepted |
+| concurrent live delay90 | 0 | 0 | 0 | 0.000583333 | consumer healthy; producer slow |
 
-Primary Regular05 device replay review:
-
-```text
-C:\Users\Admin\Videos\orin nx\review\performance\20260719_regular05_device_replay\20260719_regular05_device_replay_regular_gate05_regular_6_jetson_source_cpu_fixed_grid.mp4
-```
-
-The bad inverse comparison is kept only as diagnostic evidence, not as a main
-display asset.
-
-Regular05 FIFO handoff checkpoint:
-
-| Metric | Value |
-|---|---:|
-| fallback_count | 0 |
-| frame_index_mismatch_count | 0 |
-| handoff elapsed avg | 96.181 us |
-| handoff elapsed p95 | 377.310 us |
-| VPI warp running avg at frame 100 | 0.647185 ms |
-| stream output black_border_p95 | 0.000000000 |
-| fixed replay vs stream mean_abs_center_avg | 26.018254 |
-
-The current next problem is producer alignment: the live producer matrices still
-differ from the fixed replay matrices mainly in translation, so do not promote
-this to full real-time EIS or extend blindly to all Regular clips yet.
-
-Regular05 producer alignment:
-
-| Check | Result | Decision |
-|---|---:|---|
-| fixed CSV through FIFO vs fixed replay | mean_abs_center_avg = 0.000000 | FIFO/consumer path is exact |
-| original live producer matrix gap | translation_abs_mean = 35.890052 px | too weak |
-| offline LP-rigid producer matrix gap | translation_abs_mean = 0.501640 px | valid upper bound |
-| offline LP-rigid FIFO output | black_border_p95 = 0.001477648 | no hard black-border regression |
-
-The offline LP-rigid producer is a quality upper bound, not a zero-latency
-real-time claim. The next contract should test bounded-delay producers and
-explicitly report the latency-quality trade-off.
-
-Next Regular05 handoff contract:
+Primary current review assets:
 
 ```text
-configs/harness/contracts/regular_gate_inclusion_validation_v1.json
-```
-
-Current human-review assets:
-
-```text
-C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_python_fix\
 C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_bgr8_color_fix\
+C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_eglimage_fix\
+C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular05_live_eglimage_path\
+```
+
+Regular05 live delay90 took about 68.7 seconds for 180 frames while the
+consumer/FIFO path stayed healthy. The next useful engineering problem is
+producer compute/scheduling, plus power/perf evidence, not another wrapper-reuse
+attempt.
+
+Next technical direction:
+
+```text
+1. keep the accepted C++ consumer fixed;
+2. profile or restructure live producer compute/scheduling;
+3. record same-input latency and power/perf evidence;
+4. only after producer bottleneck is understood, consider VPI optical flow or a
+   different motion-estimation route.
 ```
