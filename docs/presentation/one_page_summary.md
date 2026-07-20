@@ -100,9 +100,10 @@ EGLImage timing boundary:
   about 10.5 ms. The next performance target is dataflow, not the warp kernel.
 
 Wrapper reuse boundary:
-  Full wrapper reuse reduced timing but was rejected because it reintroduced
-  visible block tearing. Stream-only reuse avoids the observed tearing but has
-  limited performance value. The next target is NvBufSurfTransform/dataflow cost.
+  VPI stream reuse is safe, but EGLImage image-wrapper reuse is closed for this
+  MMAPI path after single-wrapper, per-buffer, input-only, output-only,
+  persistent-mapping, and explicit-sync variants failed or tore. The next target
+  is NvBufSurfTransform/dataflow cost.
 ```
 
 Conclusion:

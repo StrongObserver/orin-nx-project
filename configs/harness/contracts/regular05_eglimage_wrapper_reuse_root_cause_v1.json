@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "contract_id": "regular05_eglimage_wrapper_reuse_root_cause_v1",
+  "status": "closed_dead_end_for_image_wrapper_reuse",
+  "loop_type": "device_dataflow_root_cause",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Determine whether EGLImage wrapper reuse can be made safe for the Regular gate C++ MMAPI/VPI/NVENC path, instead of abandoning the route after the first tearing failure.",
+  "problem_statement": "The accepted C++ EGLImage-wrapper path is visually correct. The first full wrapper reuse implementation reduced timing but caused visible block tearing. Stream-only reuse avoids tearing but has limited performance value. The route is not proven dead until safer reuse granularity and sync/lifetime variants are tested.",
+  "accepted_dependency": {
+    "frozen_cxx_path": "C++ MMAPI/VPI/NVENC EGLImage-wrapper path",
+    "quality_reference": "VPI Python allocated-image + explicit BGR8 correctness path",
+    "known_bad_candidate": "single input/output VPI wrapper reused across changing EGLImages via vpiImageSetWrapper",
+    "safe_control": "stream-only reuse: reuse VPI stream, recreate EGLImage wrappers per frame"
+  },
+  "frozen_variables": [
+    "input clip for minimal root cause: regular_gate04_regular_8",
+    "matrix convention: source_to_dest",
+    "matrix: inclusion_source_to_dest.csv",
+    "VPI interpolation: linear",
+    "border mode: VPI_BORDER_ZERO",
+    "do not change stabilization matrices",
+    "do not change accepted_egl or fixed_bgr8 references"
+  ],
+  "must_test_before_dead_end": [
+    "per-buffer-index input/output wrapper reuse",
+    "input-wrapper-only reuse",
+    "output-wrapper-only reuse",
+    "explicit sync/lifetime variant around vpiImageSetWrapper and EGL unmap",
+    "documented VPI/MMAPI API limitation from local or official references if experiments remain ambiguous"
+  ],
+  "success_criteria": [
+    "candidate output is readable",
+    "fallback_count remains 0",
+    "frame_index_mismatch_count remains 0",
+    "no visible block tearing relative to accepted_egl on gate04 review frames",
+    "if gate04 succeeds, run all five Regular clips before promotion"
+  ],
+  "dead_end_criteria": [
+    "per-buffer-index wrapper reuse still tears under correct sync/lifetime handling",
+    "input-only and output-only reuse localize an unavoidable unsupported side",
+    "official/local VPI documentation confirms wrapper reuse over changing EGLImage/NvBuffer surfaces is unsupported for this usage",
+    "a minimal non-MMAPI or copied-sample reproducer shows the same VPI wrapper reuse tearing with no remaining sync/lifetime variable"
+  ],
+  "validated_result": {
+    "decision": "Do not promote VPI EGLImage image-wrapper reuse in this MMAPI path.",
+    "reason": "single-wrapper, per-buffer-wrapper, input-only, output-only, persistent-mapping, and explicit-sync variants either produced visible block tearing or VPI/MMAPI errors. Stream-only reuse was safe, which localizes the risk to image-wrapper reuse rather than VPI stream reuse.",
+    "safe_control": "reuse VPI stream only and recreate EGLImage image wrappers per frame",
+    "report": "docs/regular05_eglimage_wrapper_reuse_root_cause_2026-07-20.md"
+  },
+  "forbidden_claims": [
+    "wrapper reuse route is dead before must_test_before_dead_end is covered",
+    "full real-time EIS",
+    "zero-copy full chain",
+    "VPI optical-flow acceleration",
+    "performance improvement without visual no-regression"
+  ],
+  "evidence_output_directory": "results/regular05_eglimage_wrapper_reuse_root_cause_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/performance/<YYYYMMDD>_regular05_eglimage_wrapper_reuse_root_cause",
+  "report_path": "docs/regular05_eglimage_wrapper_reuse_root_cause_<YYYY-MM-DD>.md"
+}

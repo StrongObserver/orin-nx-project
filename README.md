@@ -81,11 +81,10 @@ EGLImage timing boundary:
   the PerspectiveWarp kernel alone.
 
 Wrapper reuse boundary:
-  Full VPI stream + EGLImage wrapper reuse reduced timing on Regular05, but was
-  rejected because it caused visible block tearing on Regular clips. Stream-only
-  reuse avoids the observed tearing, but its performance value is limited. The
-  next performance target is NvBufSurfTransform cost or format-matched NvBuffer
-  input/output, not full wrapper reuse.
+  VPI stream reuse is safe, but EGLImage image-wrapper reuse is closed as a
+  dead end for this MMAPI path. Single-wrapper, per-buffer, input-only,
+  output-only, persistent mapping, and explicit-sync variants either tore or
+  failed. Continue performance work on NvBufSurfTransform/dataflow cost instead.
 ```
 
 ## Current Stage

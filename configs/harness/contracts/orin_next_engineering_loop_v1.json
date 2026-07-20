@@ -11,13 +11,13 @@
     "default_rule": "Use progressive disclosure. Read lightweight routing and active contracts first; load long project context, internal references, and external knowledge only when the active task or blocker requires them.",
     "token_budget_intent": "Reduce repeated startup token cost while preserving enough current-state evidence to avoid stale decisions."
   },
-  "active_task_contract": "configs/harness/contracts/regular05_eglimage_dataflow_cost_v1.json",
+  "active_task_contract": "configs/harness/contracts/regular05_eglimage_wrapper_reuse_root_cause_v1.json",
   "current_loop_state": {
     "last_completed_task": "regular_gate_inclusion_validation_v1/human_review_regular_gate_bgr8_color_fix",
-    "current_task": "regular05_eglimage_dataflow_cost_v1",
-    "latest_result": "Regular gate inclusion visual correctness is frozen through the VPI Python allocated-image BGR8 path. The accepted C++ MMAPI/VPI/NVENC EGLImage-wrapper path ran all five Regular inclusion matrices with rc=0, fallback=0, and frame-index mismatch=0. Full wrapper reuse was rejected after user review and frame-sheet diagnosis because it caused visible block tearing. Stream-only reuse avoids the observed tearing and ran all five Regular clips with rc=0, fallback=0, and mismatch=0, but its performance value is limited; the next meaningful performance target is NvBufSurfTransform cost or format-matched NvBuffer input/output.",
-    "current_blocker": "No blocker on the frozen Regular gate C++ path. Full wrapper reuse is rejected; stream-only reuse is a safe but low-value variant. Continue dataflow optimization from the accepted EGLImage path without using full wrapper reuse.",
-    "recommended_next_contract": "regular05_eglimage_dataflow_cost_v1"
+    "current_task": "regular05_eglimage_wrapper_reuse_root_cause_v1",
+    "latest_result": "Regular gate inclusion visual correctness is frozen through the VPI Python allocated-image BGR8 path. The accepted C++ MMAPI/VPI/NVENC EGLImage-wrapper path ran all five Regular inclusion matrices with rc=0, fallback=0, and frame-index mismatch=0. VPI EGLImage image-wrapper reuse was tested through single-wrapper, per-buffer, input-only, output-only, persistent-mapping, and explicit-sync variants; those variants either produced visible block tearing or VPI/MMAPI errors. Stream-only reuse is safe, so the dead end is image-wrapper reuse, not stream reuse or the accepted C++ path.",
+    "current_blocker": "No blocker on the frozen Regular gate C++ path. Image-wrapper reuse is closed as a dead end for this MMAPI path; continue performance work by isolating NvBufSurfTransform/dataflow cost or testing format-matched NvBuffer input/output.",
+    "recommended_next_contract": "regular05_eglimage_wrapper_reuse_root_cause_v1"
   },
   "global_claim_boundary": {
     "allowed": [
