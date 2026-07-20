@@ -118,6 +118,10 @@ Wrapper lifecycle:
   Creating and destroying the input/output VPI EGLImage wrappers costs about
   3.7 ms at frame 100, with a large first-frame initialization spike. This is a
   real cost, but image-wrapper reuse was unsafe in this MMAPI path.
+
+Identity warp:
+  Identity PerspectiveWarp is only slightly faster than the inclusion matrix
+  path, so matrix complexity is not the current bottleneck.
 ```
 
 Conclusion:

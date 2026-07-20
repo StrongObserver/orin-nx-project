@@ -103,6 +103,11 @@ VPI wrapper lifecycle:
   the input/output VPI EGLImage wrappers at frame 100, with a large first-frame
   initialization spike. Wrapper lifecycle is a major cost, but image-wrapper
   reuse is unsafe in this MMAPI path.
+
+Identity warp probe:
+  Regular05 identity PerspectiveWarp averaged about 1.49 ms versus about 1.55 ms
+  for the inclusion matrix. Matrix complexity is not the current dataflow
+  bottleneck.
 ```
 
 ## Current Stage

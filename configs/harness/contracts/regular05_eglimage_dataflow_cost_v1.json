@@ -64,6 +64,17 @@
       "frame_1_wrapper_create_ms": 265.077,
       "black_border_p95": 0.0,
       "interpretation": "VPI wrapper lifecycle is a major component of the accepted EGLImage stage cost; wrapper reuse removed real cost but was unsafe in this EGLImage/NvBufSurface path."
+    },
+    "identity_warp_probe": {
+      "report": "docs/regular05_identity_warp_probe_2026-07-20.md",
+      "rc": 0,
+      "wall_time_ms": 1842,
+      "fallback_count": 0,
+      "frame_index_mismatch_count": 0,
+      "identity_vpi_warp_avg_ms": 1.48883,
+      "inclusion_vpi_warp_avg_ms": 1.55494,
+      "black_border_p95": 0.0,
+      "interpretation": "Identity warp is only slightly faster than inclusion warp; matrix complexity is not the main dataflow bottleneck."
     }
   },
   "allowed_experiments": [
