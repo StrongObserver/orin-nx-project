@@ -75,6 +75,17 @@
       "inclusion_vpi_warp_avg_ms": 1.55494,
       "black_border_p95": 0.0,
       "interpretation": "Identity warp is only slightly faster than inclusion warp; matrix complexity is not the main dataflow bottleneck."
+    },
+    "surface_format_probe": {
+      "report": "docs/regular05_surface_format_probe_2026-07-20.md",
+      "rc": 0,
+      "main_color_format": 6,
+      "main_layout": 1,
+      "main_pitch": 640,
+      "scratch_color_format": 7,
+      "scratch_layout": 0,
+      "scratch_pitch": 768,
+      "interpretation": "The accepted transform sandwich is required by observed main/scratch format, layout, and pitch mismatch. Direct NvBuffer wrapping must use format-matched input/output pairs."
     }
   },
   "allowed_experiments": [

@@ -108,6 +108,12 @@ Identity warp probe:
   Regular05 identity PerspectiveWarp averaged about 1.49 ms versus about 1.55 ms
   for the inclusion matrix. Matrix complexity is not the current dataflow
   bottleneck.
+
+Surface format probe:
+  The encoder main DMABUF and VPI scratch are not format/layout compatible:
+  main uses colorFormat=6, layout=1, pitch=640; scratch uses colorFormat=7,
+  layout=0, pitch=768. Direct NvBuffer wrapping must start from a deliberately
+  format-matched input/output pair.
 ```
 
 ## Current Stage

@@ -122,6 +122,11 @@ Wrapper lifecycle:
 Identity warp:
   Identity PerspectiveWarp is only slightly faster than the inclusion matrix
   path, so matrix complexity is not the current bottleneck.
+
+Surface formats:
+  Main DMABUF and VPI scratch differ in color format, layout, and pitch. Direct
+  NvBuffer wrapping must use a format-matched pair; the current mismatch explains
+  the earlier direct-wrap failure.
 ```
 
 Conclusion:
