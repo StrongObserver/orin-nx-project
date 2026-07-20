@@ -114,6 +114,11 @@ Surface format probe:
   main uses colorFormat=6, layout=1, pitch=640; scratch uses colorFormat=7,
   layout=0, pitch=768. Direct NvBuffer wrapping must start from a deliberately
   format-matched input/output pair.
+
+Block-linear probe:
+  VPI PerspectiveWarp rejected both tested block-linear scratch pairs: limited
+  range NV12 failed because full range is required, and block-linear NV12_ER was
+  unsupported. The pitch-linear NV12_ER scratch pair remains required for VPI.
 ```
 
 ## Current Stage

@@ -127,6 +127,11 @@ Surface formats:
   Main DMABUF and VPI scratch differ in color format, layout, and pitch. Direct
   NvBuffer wrapping must use a format-matched pair; the current mismatch explains
   the earlier direct-wrap failure.
+
+Block-linear probe:
+  VPI rejected the tested block-linear scratch pairs, including full-range
+  NV12_ER. The current VPI-compatible scratch format remains pitch-linear
+  NV12_ER.
 ```
 
 Conclusion:

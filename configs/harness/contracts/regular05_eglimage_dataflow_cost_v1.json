@@ -86,6 +86,14 @@
       "scratch_layout": 0,
       "scratch_pitch": 768,
       "interpretation": "The accepted transform sandwich is required by observed main/scratch format, layout, and pitch mismatch. Direct NvBuffer wrapping must use format-matched input/output pairs."
+    },
+    "blocklinear_pair_probe": {
+      "report": "docs/regular05_blocklinear_pair_probe_2026-07-20.md",
+      "limited_range_blocklinear_rc": 139,
+      "limited_range_error": "Only image formats with full range are accepted",
+      "full_range_blocklinear_rc": 139,
+      "full_range_error": "Unsupported image format for BT601_ER BLOCK16_LINEAR",
+      "interpretation": "VPI PerspectiveWarp does not accept the tested block-linear scratch pairs; pitch-linear NV12_ER scratch remains required for VPI compatibility."
     }
   },
   "allowed_experiments": [
