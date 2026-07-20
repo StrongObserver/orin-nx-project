@@ -109,6 +109,10 @@ Transform cost probe:
   Three NvBufSurfTransform calls cost about 2.7 ms steady-state on Regular05,
   so the full EGLImage stage cost is not explained by transforms alone. The next
   target is wrapper/map/submit/sync overhead around VPI.
+
+EGL map probe:
+  EGLImage map/unmap is small, about 0.14 ms combined at the frame-100 sample.
+  The remaining cost is more likely VPI wrapper creation plus submit/sync.
 ```
 
 Conclusion:

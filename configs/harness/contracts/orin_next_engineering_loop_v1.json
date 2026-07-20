@@ -15,8 +15,8 @@
   "current_loop_state": {
     "last_completed_task": "regular_gate_inclusion_validation_v1/human_review_regular_gate_bgr8_color_fix",
     "current_task": "regular05_transform_cost_probe",
-    "latest_result": "Regular gate inclusion visual correctness is frozen through the VPI Python allocated-image BGR8 path. The accepted C++ MMAPI/VPI/NVENC EGLImage-wrapper path ran all five Regular inclusion matrices with rc=0, fallback=0, and frame-index mismatch=0. VPI EGLImage image-wrapper reuse was closed as a dead end for this MMAPI path after multiple variants tore or failed. A Regular05 transform-only probe measured three NvBufSurfTransform calls at about 2.7 ms steady-state, which is much smaller than the accepted EGLImage stage cost.",
-    "current_blocker": "No blocker on the frozen Regular gate C++ path. Continue performance work by isolating VPI wrapper, EGLImage map/unmap, submit, and sync overhead around the accepted per-frame wrapper path.",
+    "latest_result": "Regular gate inclusion visual correctness is frozen through the VPI Python allocated-image BGR8 path. The accepted C++ MMAPI/VPI/NVENC EGLImage-wrapper path ran all five Regular inclusion matrices with rc=0, fallback=0, and frame-index mismatch=0. VPI EGLImage image-wrapper reuse was closed as a dead end for this MMAPI path after multiple variants tore or failed. A Regular05 transform-only probe measured three NvBufSurfTransform calls at about 2.7 ms steady-state. A Regular05 EGL map/unmap probe measured only about 0.14 ms combined map/unmap cost at frame 100.",
+    "current_blocker": "No blocker on the frozen Regular gate C++ path. Continue performance work by isolating VPI wrapper creation and VPI submit/sync overhead around the accepted per-frame wrapper path.",
     "recommended_next_contract": "regular05_eglimage_dataflow_cost_v1"
   },
   "global_claim_boundary": {

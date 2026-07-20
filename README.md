@@ -92,6 +92,11 @@ Transform cost probe:
   stage cost, so remaining performance work should isolate VPI wrapper,
   EGLImage map/unmap, submit, and sync overhead rather than blaming transform
   cost alone.
+
+EGL map probe:
+  Regular05 EGLImage map/unmap cost is small: about 0.14 ms combined at the
+  frame-100 sample. The remaining gap is therefore more likely VPI wrapper
+  creation plus VPI submit/sync behavior.
 ```
 
 ## Current Stage
