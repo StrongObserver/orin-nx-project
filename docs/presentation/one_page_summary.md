@@ -104,6 +104,11 @@ Wrapper reuse boundary:
   MMAPI path after single-wrapper, per-buffer, input-only, output-only,
   persistent-mapping, and explicit-sync variants failed or tore. The next target
   is NvBufSurfTransform/dataflow cost.
+
+Transform cost probe:
+  Three NvBufSurfTransform calls cost about 2.7 ms steady-state on Regular05,
+  so the full EGLImage stage cost is not explained by transforms alone. The next
+  target is wrapper/map/submit/sync overhead around VPI.
 ```
 
 Conclusion:

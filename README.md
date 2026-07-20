@@ -85,6 +85,13 @@ Wrapper reuse boundary:
   dead end for this MMAPI path. Single-wrapper, per-buffer, input-only,
   output-only, persistent mapping, and explicit-sync variants either tore or
   failed. Continue performance work on NvBufSurfTransform/dataflow cost instead.
+
+Transform cost probe:
+  A transform-only Regular05 probe measured the three-transform dataflow at
+  about 2.7 ms steady-state. That is much smaller than the accepted EGLImage
+  stage cost, so remaining performance work should isolate VPI wrapper,
+  EGLImage map/unmap, submit, and sync overhead rather than blaming transform
+  cost alone.
 ```
 
 ## Current Stage

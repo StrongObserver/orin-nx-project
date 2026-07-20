@@ -32,6 +32,19 @@
     "black_border_p95": 0.0,
     "note": "The measured bottleneck is the dataflow stage around VPI, not the PerspectiveWarp kernel alone."
   },
+  "validated_observations": {
+    "transform_only_probe": {
+      "report": "docs/regular05_transform_cost_probe_2026-07-20.md",
+      "rc": 0,
+      "steady_state_total_ms": "about 2.5 to 2.8 ms for three NvBufSurfTransform calls",
+      "frame_100_input_ms": 0.920774,
+      "frame_100_scratch_copy_ms": 0.902885,
+      "frame_100_output_ms": 0.911653,
+      "frame_100_total_ms": 2.73531,
+      "black_border_p95": 0.0,
+      "interpretation": "Transform cost is significant but does not explain the full 10.5 ms EGLImage stage; wrapper/map/submit/sync overhead remains the next target."
+    }
+  },
   "allowed_experiments": [
     "measure repeated wrapper creation versus reusable wrapper behavior",
     "measure NvBufSurfTransform input and output costs separately",
