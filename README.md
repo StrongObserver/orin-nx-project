@@ -125,6 +125,12 @@ Pitch encoder probe:
   near-solid green video. NVENC/main-chain output must stay block-linear in this
   path, so the block-linear main chain plus pitch-linear VPI scratch transform
   sandwich is a current hard boundary.
+
+Regular05 producer matrices on C++ path:
+  The accepted C++ EGLImage consumer ran fixed replay, offline-LP, and delay90
+  Regular05 matrices with rc=0, fallback=0, frame-index mismatch=0, and
+  black-border p95 below 1%. This validates the accepted device consumer for
+  existing producer CSVs; the next step is concurrent FIFO/live streaming.
 ```
 
 ## Current Stage

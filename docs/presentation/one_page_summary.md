@@ -137,6 +137,11 @@ Pitch encoder probe:
   Pitch-linear main-chain encoding returned success but produced near-solid
   green output. The current block-linear main chain plus pitch-linear VPI scratch
   sandwich is a hard boundary for this stage.
+
+Producer matrices on C++ path:
+  Fixed replay, offline-LP, and delay90 Regular05 matrices all ran through the
+  accepted C++ EGLImage consumer with rc=0, fallback=0, mismatch=0, and
+  black-border p95 below 1%. Next step is concurrent FIFO/live streaming.
 ```
 
 Conclusion:

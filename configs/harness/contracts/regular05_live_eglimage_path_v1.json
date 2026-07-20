@@ -1,0 +1,84 @@
+{
+  "schema_version": 1,
+  "contract_id": "regular05_live_eglimage_path_v1",
+  "status": "active",
+  "loop_type": "live_producer_device_path",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Connect Regular05 producer matrices to the accepted C++ MMAPI/VPI/NVENC EGLImage path and measure quality/timing without using rejected pitch-pointer or wrapper-reuse paths.",
+  "accepted_dependency": {
+    "device_path": "C++ MMAPI/VPI/NVENC EGLImage-wrapper path with per-frame image wrappers",
+    "quality_reference": "VPI Python allocated-image + explicit BGR8 correctness path",
+    "clip": "regular_gate05_regular_6",
+    "matrix_convention": "source_to_dest"
+  },
+  "frozen_variables": [
+    "input clip: regular_gate05_regular_6 source.h264",
+    "consumer path: accepted EGLImage-wrapper sample",
+    "VPI interpolation: linear",
+    "border mode: VPI_BORDER_ZERO",
+    "do not use rejected CUDA pitch-pointer path",
+    "do not use rejected image-wrapper reuse path",
+    "do not claim full real-time EIS"
+  ],
+  "candidate_sequence": [
+    "fixed accepted CSV replay through accepted EGLImage path",
+    "offline_lp_rigid producer CSV through accepted EGLImage path",
+    "bounded_delay_lp_rigid producer CSV through accepted EGLImage path"
+  ],
+  "validated_results": {
+    "report": "docs/regular05_live_eglimage_path_2026-07-20.md",
+    "summary_csv": "results/regular05_live_eglimage_path_20260720/regular05_live_eglimage_path_summary.csv",
+    "review_copy": "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular05_live_eglimage_path/20260720_regular05_live_eglimage_path_regular_gate05_source_fixed_offlinelp_delay90_grid.mp4",
+    "fixed_replay": {
+      "rc": 0,
+      "wall_time_ms": 1855,
+      "fallback_count": 0,
+      "frame_index_mismatch_count": 0,
+      "vpi_warp_avg_ms": 1.49979,
+      "black_border_p95": 0.000951823
+    },
+    "offline_lp": {
+      "rc": 0,
+      "wall_time_ms": 1847,
+      "fallback_count": 0,
+      "frame_index_mismatch_count": 0,
+      "vpi_warp_avg_ms": 1.54448,
+      "black_border_p95": 0.001459201
+    },
+    "delay90": {
+      "rc": 0,
+      "wall_time_ms": 1975,
+      "fallback_count": 0,
+      "frame_index_mismatch_count": 0,
+      "vpi_warp_avg_ms": 1.54907,
+      "black_border_p95": 0.000639106
+    }
+  },
+  "success_criteria": [
+    "output video is readable",
+    "fallback_count remains 0",
+    "frame_index_mismatch_count remains 0",
+    "black_border_p95 remains below 0.01 or any gray-metric flag is visually classified",
+    "review grid is copied to categorized review tree",
+    "timing distinguishes matrix production, device stage, and wall time"
+  ],
+  "stop_reasons": [
+    "Jetson SSH or runtime blocker",
+    "accepted C++ sample missing or fails to run",
+    "producer matrix convention becomes ambiguous",
+    "visual output regresses relative to accepted EGLImage path",
+    "would require changing stabilization algorithm rather than connecting existing producer"
+  ],
+  "forbidden_claims": [
+    "zero-latency real-time EIS",
+    "zero-copy full chain",
+    "VPI optical-flow acceleration",
+    "all-scene EIS quality",
+    "CPU-output pixel equivalence"
+  ],
+  "evidence_output_directory": "results/regular05_live_eglimage_path_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/performance/<YYYYMMDD>_regular05_live_eglimage_path",
+  "report_path": "docs/regular05_live_eglimage_path_<YYYY-MM-DD>.md"
+}

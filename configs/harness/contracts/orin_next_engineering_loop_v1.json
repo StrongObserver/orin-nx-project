@@ -11,13 +11,13 @@
     "default_rule": "Use progressive disclosure. Read lightweight routing and active contracts first; load long project context, internal references, and external knowledge only when the active task or blocker requires them.",
     "token_budget_intent": "Reduce repeated startup token cost while preserving enough current-state evidence to avoid stale decisions."
   },
-  "active_task_contract": "configs/harness/contracts/regular05_eglimage_dataflow_cost_v1.json",
+  "active_task_contract": "configs/harness/contracts/regular05_live_eglimage_path_v1.json",
   "current_loop_state": {
     "last_completed_task": "regular_gate_inclusion_validation_v1/human_review_regular_gate_bgr8_color_fix",
-    "current_task": "regular05_transform_cost_probe",
-    "latest_result": "Regular gate inclusion visual correctness is frozen through the VPI Python allocated-image BGR8 path. The accepted C++ MMAPI/VPI/NVENC EGLImage-wrapper path ran all five Regular inclusion matrices with rc=0, fallback=0, and frame-index mismatch=0. VPI EGLImage image-wrapper reuse was closed as a dead end for this MMAPI path after multiple variants tore or failed. Regular05 probes measured three NvBufSurfTransform calls at about 2.7 ms steady-state, EGL map/unmap at about 0.14 ms combined, VPI wrapper create/destroy at about 3.7 ms at frame 100, and identity warp at about 1.49 ms versus inclusion warp at about 1.55 ms. Surface probing showed main DMABUF colorFormat=6/layout=1/pitch=640 while VPI scratch uses colorFormat=7/layout=0/pitch=768. VPI rejected tested block-linear scratch pairs, including full-range NV12_ER. Pitch-linear main-chain encoding returned success but produced near-solid green output.",
-    "current_blocker": "No blocker on the frozen Regular gate C++ path. The current dataflow boundary is clear: NVENC/main chain needs block-linear while VPI needs pitch-linear NV12_ER scratch, so the transform sandwich is required in this stage.",
-    "recommended_next_contract": "regular05_eglimage_dataflow_cost_v1"
+    "current_task": "regular05_live_eglimage_path_v1",
+    "latest_result": "Regular gate inclusion visual correctness is frozen through the VPI Python allocated-image BGR8 path. The accepted C++ MMAPI/VPI/NVENC EGLImage-wrapper path ran all five Regular inclusion matrices with rc=0, fallback=0, and frame-index mismatch=0. Dataflow probing closed the current zero-copy route: VPI needs pitch-linear NV12_ER scratch while NVENC/main chain needs block-linear. The accepted C++ path also consumed Regular05 fixed, offline-LP, and delay90 matrix CSVs with rc=0, fallback=0, mismatch=0, and black-border p95 below 1%.",
+    "current_blocker": "No blocker on the frozen Regular gate C++ path. The next step is concurrent FIFO/live producer streaming through the accepted EGLImage consumer.",
+    "recommended_next_contract": "regular05_live_eglimage_path_v1"
   },
   "global_claim_boundary": {
     "allowed": [
