@@ -79,6 +79,13 @@ EGLImage timing boundary:
   around 1.55 ms, while the larger EGLImage scratch-buffer stage is about
   10.5 ms. The next performance target is the memory/dataflow around VPI, not
   the PerspectiveWarp kernel alone.
+
+Wrapper reuse probe:
+  Reusing VPI stream and EGLImage wrappers reduced Regular05 same-input wall
+  time from about 2002 ms to 1573 ms for 180 frames, and reduced the measured
+  EGLImage stage from about 10.5 ms to 7.87 ms. Direct NvBuffer input wrapping
+  was rejected because VPI required input and output images to have the same
+  format.
 ```
 
 ## Current Stage

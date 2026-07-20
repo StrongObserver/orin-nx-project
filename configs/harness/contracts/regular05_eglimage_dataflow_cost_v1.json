@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "contract_id": "regular05_eglimage_dataflow_cost_v1",
+  "status": "active",
+  "loop_type": "device_dataflow_performance",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Isolate the dataflow cost around the accepted C++ EGLImage-wrapper Regular05 path without changing the accepted visual output semantics.",
+  "accepted_dependency": {
+    "cxx_path": "C++ MMAPI/VPI/NVENC EGLImage-wrapper path",
+    "quality_reference": "VPI Python allocated-image + explicit BGR8 correctness path",
+    "clip": "regular_gate05_regular_6",
+    "matrix": "inclusion_source_to_dest.csv",
+    "claim_boundary": "Regular gate C++ path is frozen for inclusion replay; this contract only studies dataflow cost."
+  },
+  "frozen_variables": [
+    "input clip: regular_gate05_regular_6 source.h264",
+    "matrix convention: source_to_dest",
+    "matrix file: inclusion_source_to_dest.csv",
+    "VPI interpolation: linear",
+    "border mode: VPI_BORDER_ZERO",
+    "do not change stabilization matrices",
+    "do not change BGR8 correctness reference",
+    "do not run optical-flow acceleration inside this contract"
+  ],
+  "baseline_observation": {
+    "regular05_wall_time_ms": 2002,
+    "matrix_handoff_avg_us": 1.099636,
+    "vpi_warp_only_avg_ms": 1.55494,
+    "eglimage_stage_avg_ms": 10.5041,
+    "black_border_p95": 0.0,
+    "note": "The measured bottleneck is the dataflow stage around VPI, not the PerspectiveWarp kernel alone."
+  },
+  "allowed_experiments": [
+    "measure repeated wrapper creation versus reusable wrapper behavior",
+    "measure NvBufSurfTransform input and output costs separately",
+    "test format-matched NvBuffer input/output pairs only if the format match is explicit",
+    "add logging instrumentation to a copied MMAPI sample directory"
+  ],
+  "forbidden_claims": [
+    "full real-time EIS",
+    "zero-copy full chain",
+    "VPI optical-flow acceleration",
+    "all-scene EIS quality",
+    "CPU-output pixel equivalence",
+    "performance improvement without same-input timing and quality sanity"
+  ],
+  "success_criteria": [
+    "Regular05 output remains readable",
+    "fallback_count remains 0",
+    "frame_index_mismatch_count remains 0",
+    "black_border_p95 remains below 0.01 or any gray-metric flag is visually classified",
+    "timing table separates handoff, VPI warp, transform, wrapper, and wall time",
+    "if an experiment fails, the exact VPI/MMAPI error is recorded as negative evidence"
+  ],
+  "stop_reasons": [
+    "Jetson SSH or runtime blocker",
+    "format mismatch blocks the attempted path",
+    "output unreadable or empty",
+    "quality regression relative to accepted EGLImage path",
+    "would require broad MMAPI rewrite beyond a copied sample"
+  ],
+  "evidence_output_directory": "results/regular05_eglimage_dataflow_cost_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/performance/<YYYYMMDD>_regular05_eglimage_dataflow_cost",
+  "report_path": "docs/regular05_eglimage_dataflow_cost_<YYYY-MM-DD>.md"
+}

@@ -98,6 +98,11 @@ EGLImage timing boundary:
   Regular05 C++ path wall time was about 2002 ms for 180 frames. VPI warp-only
   avg was about 1.55 ms, while the larger EGLImage scratch-buffer stage averaged
   about 10.5 ms. The next performance target is dataflow, not the warp kernel.
+
+Wrapper reuse probe:
+  Reusing VPI stream and EGLImage wrappers reduced Regular05 wall time to about
+  1573 ms for 180 frames and reduced the measured EGLImage stage to about
+  7.87 ms. Direct NvBuffer input wrapping failed due to a VPI format mismatch.
 ```
 
 Conclusion:
