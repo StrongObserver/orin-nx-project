@@ -13,10 +13,10 @@
   },
   "active_task_contract": "configs/harness/contracts/regular_gate_inclusion_validation_v1.json",
   "current_loop_state": {
-    "last_completed_task": "regular_gate_inclusion_validation_v1/vpi_python_bgr8_color_fix",
-    "current_task": "human_review_regular_gate_bgr8_color_fix",
-    "latest_result": "Regular gate inclusion now uses VPI Python allocated-image rendering with explicit BGR8 input. This fixed the previous MMAPI block tearing and the VPI Python green/cyan color shift. Five color-fixed review grids are in C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular_gate_vpi_bgr8_color_fix/.",
-    "current_blocker": "Human visual review is needed for the five color-fixed BGR8 grids before freezing the candidate. The C++ MMAPI EGL pitch-wrapper path remains rejected for quality and is a separate future integration bug.",
+    "last_completed_task": "regular_gate_inclusion_validation_v1/human_review_regular_gate_bgr8_color_fix",
+    "current_task": "regular_gate_eglimage_path_frozen",
+    "latest_result": "Regular gate inclusion visual correctness is frozen through the VPI Python allocated-image BGR8 path. A new C++ MMAPI/VPI/NVENC EGLImage-wrapper candidate replaced the rejected manual CUDA pitch-pointer wrapper and ran on Jetson across all five Regular inclusion matrices. All five runs had rc=0, fallback=0, and frame-index mismatch=0; VPI_EGLIMAGE_WARP running averages were about 1.51-1.55 ms. Four clips had clean gray-threshold black-border p95, while Regular01 keeps the known dark-edge gray-metric caveat.",
+    "current_blocker": "The five Regular EGLImage-wrapper grids were accepted by human review. The C++ MMAPI/VPI/NVENC EGLImage-wrapper path is frozen for Regular gate inclusion, with full real-time EIS, zero-copy full chain, and VPI optical-flow acceleration still out of scope.",
     "recommended_next_contract": "regular_gate_inclusion_validation_v1"
   },
   "global_claim_boundary": {
@@ -287,13 +287,13 @@
   ],
   "selected_future_route": {
     "id": "regular_gate_inclusion_validation_v1",
-    "decision": "Human-review the color-fixed BGR8 VPI Python outputs before freezing the Regular gate visual correctness candidate.",
+    "decision": "Freeze the color-fixed BGR8 VPI Python outputs as the Regular gate visual correctness candidate and freeze the accepted C++ MMAPI/VPI/NVENC EGLImage-wrapper path for Regular gate inclusion.",
     "reason": "safe103_crop98 failed as a general Regular producer. Inclusion-constrained matrices solve geometry coverage, but the MMAPI EGL pitch-wrapper path distorts non-identity matrices. VPI Python allocated-image rendering with explicit BGR8 input fixes the visual tearing and color shift.",
     "next_verifier": [
-      "human review accepts all five color-fixed Regular grids",
-      "no block tearing in fixed_bgr8 panels",
-      "color stays close to inc_local/source and avoids the old green/cyan shift",
-      "Regular01 dark-edge gray-threshold flag is treated as auxiliary unless visually rejected"
+      "next end-to-end timing keeps same-input Regular gate semantics",
+      "timing separates matrix handoff, VPI warp, NvBufSurfTransform, encode, and wall time",
+      "quality no-regression uses the accepted EGLImage-wrapper grids as the current C++ device path evidence",
+      "Regular01 dark-edge gray-threshold flag remains auxiliary unless future visual review rejects it"
     ],
     "defer_until_after_alignment": [
       "C++ MMAPI/VPI/NVENC allocated-image or correct NvBufSurface integration",

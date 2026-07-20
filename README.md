@@ -61,8 +61,24 @@ Regular gate distortion fix:
   this is a device integration issue, not an inclusion algorithm issue. The
   corrected visual candidate uses a VPI Python allocated-image path with
   explicit `vpi.Format.BGR8` input and removes both visible tearing and the
-  earlier green/cyan color shift on all five Regular clips. This is a
+  earlier green/cyan color shift on all five Regular clips. The user accepted
+  the five BGR8 review grids, so this is now the frozen visual correctness
+  candidate for Regular gate inclusion. This is a
   correctness path, not the final MMAPI/NVENC acceleration claim.
+
+C++ EGLImage-wrapper candidate:
+  A new MMAPI/VPI/NVENC sample avoids the rejected CUDA pitch-pointer wrapper
+  by using VPI EGLImage wrappers on pitch-linear NvBuffer scratch surfaces.
+  It ran all five Regular inclusion matrices with rc=0, fallback=0, and no
+  frame-index mismatch in sampled handoff logs. The user accepted the five
+  review grids, so this is the frozen C++ device-side path for Regular gate
+  inclusion.
+
+EGLImage timing boundary:
+  Regular05 timing on the accepted C++ path shows VPI warp-only running avg
+  around 1.55 ms, while the larger EGLImage scratch-buffer stage is about
+  10.5 ms. The next performance target is the memory/dataflow around VPI, not
+  the PerspectiveWarp kernel alone.
 ```
 
 ## Current Stage

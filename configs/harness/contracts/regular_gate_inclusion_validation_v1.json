@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract_id": "regular_gate_inclusion_validation_v1",
-  "status": "awaiting_human_review_after_color_fix",
+  "status": "accepted_visual_correctness_candidate",
   "loop_type": "regular_gate_viewport_validation",
   "loop_profile": "performance_loop",
   "autonomy_level": "L3",
@@ -11,12 +11,12 @@
     "allowed": [
       "safe103_crop98 failed as a general Regular producer",
       "inclusion-constrained matrix scaling removes geometry black-border risk on all five Regular clips",
-      "VPI Python allocated-image path with explicit BGR8 input fixes visible block distortion and color shift for the same inclusion matrices",
+      "VPI Python allocated-image path with explicit BGR8 input fixes visible block distortion and color shift for the same inclusion matrices and has been accepted by human review",
       "MMAPI/VPI/NVENC replay consumed VPI_MATRIX_CSV matrices with rc=0 and fallback=0 but is rejected for quality because non-identity matrices distort",
       "gray-threshold black-border metric is auxiliary when geometry-valid coverage is zero"
     ],
     "forbidden": [
-      "Regular gate fully accepted before human visual review",
+      "Regular gate fully accepted without human visual review",
       "per-clip matrix composition or crop tuning hidden as one producer",
       "using the distorted MMAPI EGL pitch-wrapper outputs as quality evidence",
       "zero-latency real-time EIS",
@@ -61,7 +61,7 @@
         "regular_gate01_regular_10",
         "regular_gate04_regular_8"
       ],
-      "interpretation": "Flagged clips have zero geometry-invalid coverage and are treated as likely dark-edge or metric false positives pending human review."
+      "interpretation": "Flagged clips have zero geometry-invalid coverage and were accepted in human review as dark-edge or metric false positives rather than geometry black borders."
     },
     "distortion_fix": {
       "root_cause_scope": "The current C++ MMAPI EGL pitch-wrapper VPI warp path corrupts non-identity matrices with block-like tearing. Identity is normal; pure translation, scale, rotation, safe103, and inclusion matrices distort. VPI Python allocated-image path renders the same matrices without block tearing.",
@@ -102,6 +102,14 @@
         "regular_gate05_regular_6": 1.950458
       }
     },
+    "human_review": {
+      "date": "2026-07-20",
+      "review_status": "accepted",
+      "reviewer": "user",
+      "decision": "Five color-fixed BGR8 Regular gate review grids accepted. Freeze as the current Regular gate visual correctness candidate.",
+      "accepted_review_dir": "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular_gate_vpi_bgr8_color_fix",
+      "claim_boundary": "Accepted for visual correctness of the VPI Python allocated-image path only; this does not fix the C++ MMAPI EGL pitch-wrapper path and is not a real-time acceleration claim."
+    },
     "per_clip": [
       {
         "clip": "regular_gate01_regular_10",
@@ -109,7 +117,7 @@
         "gray_p95_black_border": 0.031259983,
         "geometry_p95_invalid": 0.0,
         "planned_scale_max": 1.014401308,
-        "review_status": "pending"
+        "review_status": "accepted"
       },
       {
         "clip": "regular_gate02_regular_19",
@@ -117,7 +125,7 @@
         "gray_p95_black_border": 0.000296658,
         "geometry_p95_invalid": 0.0,
         "planned_scale_max": 1.223233403,
-        "review_status": "pending"
+        "review_status": "accepted"
       },
       {
         "clip": "regular_gate03_regular_13",
@@ -125,7 +133,7 @@
         "gray_p95_black_border": 0.000816406,
         "geometry_p95_invalid": 0.0,
         "planned_scale_max": 1.011314755,
-        "review_status": "pending"
+        "review_status": "accepted"
       },
       {
         "clip": "regular_gate04_regular_8",
@@ -133,7 +141,7 @@
         "gray_p95_black_border": 0.014146267,
         "geometry_p95_invalid": 0.0,
         "planned_scale_max": 1.015951162,
-        "review_status": "pending"
+        "review_status": "accepted"
       },
       {
         "clip": "regular_gate05_regular_6",
@@ -141,7 +149,7 @@
         "gray_p95_black_border": 0.000365017,
         "geometry_p95_invalid": 0.0,
         "planned_scale_max": 1.016772415,
-        "review_status": "pending"
+        "review_status": "accepted"
       }
     ]
   },
@@ -167,8 +175,8 @@
     ]
   },
   "next_route": {
-    "decision": "Wait for human review of the five color-fixed BGR8 VPI Python grids before freezing as a conditional Regular gate viewport candidate.",
-    "if_accepted": "Freeze VPI Python allocated-image output with explicit BGR8 input as the visual correctness candidate; keep MMAPI EGL pitch-wrapper path as an acceleration boundary requiring a separate C++ integration fix.",
+    "decision": "Freeze the five color-fixed BGR8 VPI Python grids as the current Regular gate visual correctness candidate.",
+    "if_accepted": "Completed on 2026-07-20. VPI Python allocated-image output with explicit BGR8 input is frozen as the visual correctness candidate; keep MMAPI EGL pitch-wrapper path as an acceleration boundary requiring a separate C++ integration fix.",
     "if_rejected": "Escalate to knowledge recovery for VPI color/format parity, border-aware warp, or mesh/grid stabilization rather than per-clip crop tuning."
   },
   "stop_reasons": [

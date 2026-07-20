@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 LINE_RE = re.compile(
-    r"VPI_(?:TRANSCODE|ENC)_WARP\s+frame=(?P<frame>\d+)\s+"
+    r"VPI_(?:TRANSCODE|ENC|EGLIMAGE)_WARP\s+frame=(?P<frame>\d+)\s+"
     r"elapsed_ms=(?P<elapsed>[0-9.]+)\s+avg_ms=(?P<avg>[0-9.]+)"
 )
 

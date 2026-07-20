@@ -12,14 +12,15 @@ Current status:
 candidate: bounded_delay_lp_rigid delay90 + safe103 + inclusion scale
 matrix convention: source_to_dest
 bad Jetson consumer: MMAPI EGL pitch-wrapper -> in-place VPI warp -> NVENC
-corrected Jetson candidate: VPI Python allocated-image path
+corrected Jetson candidate: VPI Python allocated-image path with explicit BGR8 input
 geometry coverage: 5/5 pass, invalid output coverage = 0
 visual distortion: fixed by VPI Python allocated-image path
-human review: pending for five corrected review grids
+human review: accepted for five color-fixed BGR8 review grids
 ```
 
-Do not claim this as final accepted Regular gate quality until the user reviews
-the five copied videos.
+Do not claim this as final MMAPI/NVENC acceleration or full real-time EIS. The
+accepted result is the Regular gate visual correctness candidate for the VPI
+Python allocated-image path.
 
 ## Root Cause Found
 
@@ -80,6 +81,8 @@ implementation: scripts/apply_matrix_video_vpi.py on Jetson
 path: OpenCV decode -> VPI CUDA convert to NV12_ER -> VPI CUDA perspective warp
       -> VPI CUDA convert to RGB8 -> OpenCV mp4 writer
 role: correctness/visual validation path, not final MMAPI/NVENC acceleration path
+input format: explicit BGR8
+human review: accepted on 2026-07-20
 ```
 
 ## Jetson Results
@@ -160,26 +163,26 @@ C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_inclusion
 C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_inclusion_validation\20260720_regular_gate_inclusion_validation_regular_gate05_regular_6_jetson_source_safe103_inclusion_grid.mp4
 ```
 
-Corrected distortion-fix review directory:
+Corrected color-fix review directory:
 
 ```text
-C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_python_fix\
+C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_bgr8_color_fix\
 ```
 
 Corrected review videos:
 
 ```text
-C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_python_fix\20260720_regular_gate_vpi_python_fix_regular_gate01_regular_10_jetson_source_badmmapi_fixedvpipy_grid.mp4
-C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_python_fix\20260720_regular_gate_vpi_python_fix_regular_gate02_regular_19_jetson_source_badmmapi_fixedvpipy_grid.mp4
-C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_python_fix\20260720_regular_gate_vpi_python_fix_regular_gate03_regular_13_jetson_source_badmmapi_fixedvpipy_grid.mp4
-C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_python_fix\20260720_regular_gate_vpi_python_fix_regular_gate04_regular_8_jetson_source_badmmapi_fixedvpipy_grid.mp4
-C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_python_fix\20260720_regular_gate_vpi_python_fix_regular_gate05_regular_6_jetson_source_badmmapi_fixedvpipy_grid.mp4
+C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_bgr8_color_fix\20260720_regular_gate_vpi_bgr8_color_fix_regular_gate01_regular_10_source_oldcolor_fixedbgr8_grid.mp4
+C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_bgr8_color_fix\20260720_regular_gate_vpi_bgr8_color_fix_regular_gate02_regular_19_source_oldcolor_fixedbgr8_grid.mp4
+C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_bgr8_color_fix\20260720_regular_gate_vpi_bgr8_color_fix_regular_gate03_regular_13_source_oldcolor_fixedbgr8_grid.mp4
+C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_bgr8_color_fix\20260720_regular_gate_vpi_bgr8_color_fix_regular_gate04_regular_8_source_oldcolor_fixedbgr8_grid.mp4
+C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_bgr8_color_fix\20260720_regular_gate_vpi_bgr8_color_fix_regular_gate05_regular_6_source_oldcolor_fixedbgr8_grid.mp4
 ```
 
-Each corrected review grid shows:
+Each corrected BGR8 review grid shows:
 
 ```text
-source / bad_mmapi / fixed_vpipy / inc_local
+source / old_color / fixed_bgr8 / inc_local
 ```
 
 Focused gray-metric worst-frame sheets:
@@ -214,7 +217,7 @@ should be demoted to an auxiliary diagnostic when geometry coverage is zero.
 Forbidden:
 
 ```text
-Regular gate is fully accepted before human review.
+Regular gate is fully accepted without human review.
 Per-clip pre/post composition or crop tuning as one frozen strategy.
 Full real-time EIS.
 VPI optical-flow acceleration.
@@ -223,8 +226,8 @@ All-scene EIS quality.
 
 ## Next Step
 
-Ask the user to review the five corrected `regular_gate_vpi_python_fix` grids.
-If accepted, freeze the VPI Python allocated-image output as the visual
-correctness candidate, and keep the MMAPI EGL pitch-wrapper path as a rejected
-acceleration boundary until a C++ allocated-image or correct NvBufSurface/VPI
-integration is implemented.
+The user accepted the five corrected BGR8 grids. Freeze the VPI Python
+allocated-image output with explicit BGR8 input as the current Regular gate
+visual correctness candidate. Keep the MMAPI EGL pitch-wrapper path as a
+rejected acceleration boundary until a C++ allocated-image or correct
+NvBufSurface/VPI integration is implemented.

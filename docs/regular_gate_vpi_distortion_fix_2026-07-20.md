@@ -4,12 +4,14 @@
 
 The visible block-like distortion in the previous Regular gate inclusion review
 videos is fixed by switching the visual correctness path from the C++ MMAPI EGL
-pitch-wrapper integration to a VPI allocated-image path.
+pitch-wrapper integration to a VPI allocated-image path with explicit BGR8
+input. The user accepted the five BGR8 review grids, so this path is frozen as
+the current Regular gate visual correctness candidate.
 
-Current corrected review directory:
+Frozen corrected review directory:
 
 ```text
-C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_python_fix\
+C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_bgr8_color_fix\
 ```
 
 ## User-Reported Problem
@@ -75,7 +77,8 @@ OpenCV decode
 ```
 
 This corrected path is a visual correctness path, not a final hardware
-acceleration claim.
+acceleration claim. The C++ MMAPI EGL pitch-wrapper path remains rejected for
+quality until a separate integration fix is implemented.
 
 ## Color Shift Fix
 
@@ -102,6 +105,12 @@ This is implemented in:
 
 ```text
 scripts/apply_matrix_video_vpi.py --input-format bgr8
+```
+
+Human review status:
+
+```text
+2026-07-20: accepted all five color-fixed BGR8 Regular gate review grids.
 ```
 
 ## Corrected Output Metrics
@@ -204,8 +213,8 @@ The previous MMAPI EGL pitch-wrapper output is rejected because it tears under
 non-identity matrices.
 The same inclusion matrices render without block tearing through the VPI
 allocated-image path.
-The VPI Python path with explicit `BGR8` input is the current visual correctness
-candidate for human review.
+The VPI Python path with explicit `BGR8` input is the frozen visual correctness
+candidate for Regular gate inclusion after human review.
 ```
 
 Forbidden:
@@ -219,14 +228,12 @@ Do not reuse the distorted MMAPI outputs as quality evidence.
 
 ## Next Step
 
-Ask the user to review the five corrected videos in:
+The user accepted the five corrected BGR8 videos in:
 
 ```text
 C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_vpi_bgr8_color_fix\
 ```
 
-If accepted, freeze the VPI Python allocated-image + explicit BGR8 output as
-the Regular gate visual correctness candidate. The next engineering task is a
-separate C++ fix for the MMAPI/VPI/NVENC path, likely by replacing the fragile
-EGL pitch-wrapper warp with a VPI-allocated image or a correct NvBufSurface/VPI
-integration.
+The next engineering task is a separate C++ fix for the MMAPI/VPI/NVENC path,
+likely by replacing the fragile EGL pitch-wrapper warp with a VPI-allocated
+image or a correct NvBufSurface/VPI integration.

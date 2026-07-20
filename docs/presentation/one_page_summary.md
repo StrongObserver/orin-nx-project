@@ -84,7 +84,20 @@ Regular gate inclusion viewport:
   matrices caused block-like tearing.
   VPI Python allocated-image output with explicit BGR8 input fixes the visible
   tearing and the green/cyan color shift on all five Regular clips.
-  It is now the visual correctness candidate pending human review.
+  The user accepted all five BGR8 review grids, so it is now the frozen visual
+  correctness candidate for Regular gate inclusion.
+
+C++ EGLImage-wrapper candidate:
+  Replacing the manual CUDA pitch-pointer wrapper with VPI EGLImage wrappers on
+  pitch-linear NvBuffer scratch surfaces ran all five Regular inclusion matrices
+  with rc=0, fallback=0, and no sampled frame-index mismatch. The user accepted
+  the five review grids, so this is the frozen C++ MMAPI/VPI/NVENC path for
+  Regular gate inclusion.
+
+EGLImage timing boundary:
+  Regular05 C++ path wall time was about 2002 ms for 180 frames. VPI warp-only
+  avg was about 1.55 ms, while the larger EGLImage scratch-buffer stage averaged
+  about 10.5 ms. The next performance target is dataflow, not the warp kernel.
 ```
 
 Conclusion:
