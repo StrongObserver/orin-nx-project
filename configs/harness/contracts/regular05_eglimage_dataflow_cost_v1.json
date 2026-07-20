@@ -54,6 +54,16 @@
       "frame_100_total_ms": 2.90418,
       "black_border_p95": 0.0,
       "interpretation": "EGLImage map/unmap cost is small and does not explain the accepted EGLImage stage cost; wrapper creation and VPI submit/sync remain the next target."
+    },
+    "vpi_wrapper_create_probe": {
+      "report": "docs/regular05_vpi_wrapper_create_probe_2026-07-20.md",
+      "rc": 0,
+      "frame_100_wrapper_create_ms": 3.40633,
+      "frame_100_wrapper_destroy_ms": 0.285869,
+      "frame_100_total_ms": 6.53464,
+      "frame_1_wrapper_create_ms": 265.077,
+      "black_border_p95": 0.0,
+      "interpretation": "VPI wrapper lifecycle is a major component of the accepted EGLImage stage cost; wrapper reuse removed real cost but was unsafe in this EGLImage/NvBufSurface path."
     }
   },
   "allowed_experiments": [

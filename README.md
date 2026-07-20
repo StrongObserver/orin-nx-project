@@ -97,6 +97,12 @@ EGL map probe:
   Regular05 EGLImage map/unmap cost is small: about 0.14 ms combined at the
   frame-100 sample. The remaining gap is therefore more likely VPI wrapper
   creation plus VPI submit/sync behavior.
+
+VPI wrapper lifecycle:
+  A wrapper-create probe measured about 3.41 ms to create and 0.29 ms to destroy
+  the input/output VPI EGLImage wrappers at frame 100, with a large first-frame
+  initialization spike. Wrapper lifecycle is a major cost, but image-wrapper
+  reuse is unsafe in this MMAPI path.
 ```
 
 ## Current Stage

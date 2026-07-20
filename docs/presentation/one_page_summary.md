@@ -113,6 +113,11 @@ Transform cost probe:
 EGL map probe:
   EGLImage map/unmap is small, about 0.14 ms combined at the frame-100 sample.
   The remaining cost is more likely VPI wrapper creation plus submit/sync.
+
+Wrapper lifecycle:
+  Creating and destroying the input/output VPI EGLImage wrappers costs about
+  3.7 ms at frame 100, with a large first-frame initialization spike. This is a
+  real cost, but image-wrapper reuse was unsafe in this MMAPI path.
 ```
 
 Conclusion:
