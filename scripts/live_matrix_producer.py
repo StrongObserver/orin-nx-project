@@ -54,10 +54,60 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--lp-w3", type=float, default=20.0)
     parser.add_argument("--lp-w4", type=float, default=30.0)
     parser.add_argument("--stabilization-strength", type=float, default=0.80)
+    parser.add_argument(
+        "--lp-prefix-stride",
+        type=int,
+        default=1,
+        help=(
+            "For bounded_delay_lp_rigid only, solve LP prefixes every N frames and reuse the most recent "
+            "prefix between solves. Default 1 preserves the original per-prefix behavior."
+        ),
+    )
+    parser.add_argument(
+        "--lock-published-prefix",
+        action="store_true",
+        help=(
+            "For bounded_delay_lp_rigid, add a soft continuity penalty toward already emitted LP output "
+            "matrices when later prefixes are re-solved. Default off preserves historical behavior."
+        ),
+    )
+    parser.add_argument(
+        "--published-prefix-weight",
+        type=float,
+        default=0.0,
+        help=(
+            "Soft continuity weight for already emitted LP output matrices. Values >0 enable the penalty. "
+            "--lock-published-prefix uses 100 when this is left at 0."
+        ),
+    )
+    parser.add_argument(
+        "--intent-reference-weight",
+        type=float,
+        default=0.0,
+        help="Soft LP weight toward a low-pass camera-intent correction path. Default 0 preserves historical behavior.",
+    )
+    parser.add_argument(
+        "--intent-reference-radius",
+        type=int,
+        default=30,
+        help="Gaussian radius for the low-pass intent trajectory used by --intent-reference-weight.",
+    )
+    parser.add_argument(
+        "--intent-reference-stdev",
+        type=float,
+        default=0.0,
+        help="Gaussian stdev for the low-pass intent trajectory; <=0 uses radius/3.",
+    )
     parser.add_argument("--mask-safety-max-invalid", type=float, default=0.01)
     parser.add_argument("--min-features", type=int, default=24)
     parser.add_argument("--ransac-threshold", type=float, default=3.0)
     parser.add_argument("--flush-each-row", action="store_true")
+    parser.add_argument(
+        "--timing-summary",
+        type=Path,
+        default=None,
+        help="Optional one-row CSV with producer stage timing. Does not change matrix output.",
+    )
     return parser.parse_args()
 
 
@@ -208,6 +258,56 @@ def prepare_output_matrix(mat: np.ndarray, output_convention: str) -> np.ndarray
     return np.linalg.inv(mat)
 
 
+def add_ms(timing: dict[str, float], key: str, start: float) -> None:
+    timing[key] = timing.get(key, 0.0) + (time.perf_counter() - start) * 1000.0
+
+
+def gaussian_average(values: np.ndarray, radius: int, stdev: float) -> np.ndarray:
+    if radius <= 0:
+        return values.copy()
+    if stdev <= 0:
+        stdev = max(1.0, float(radius) / 3.0)
+    offsets = np.arange(-radius, radius + 1, dtype=np.float64)
+    weights = np.exp(-0.5 * (offsets / stdev) * (offsets / stdev))
+    weights /= np.sum(weights)
+    padded = np.pad(values, (radius, radius), mode="edge")
+    return np.convolve(padded, weights, mode="same")[radius:-radius]
+
+
+def smooth_pose_reference(poses: np.ndarray, radius: int, stdev: float) -> np.ndarray:
+    if len(poses) == 0:
+        return poses.copy()
+    out = poses.astype(np.float64, copy=True)
+    for col in range(out.shape[1]):
+        out[:, col] = gaussian_average(out[:, col], radius, stdev)
+    return out.astype(np.float32)
+
+
+def transform_vec_to_mat(vec: np.ndarray) -> np.ndarray:
+    dx, dy, angle = [float(v) for v in vec]
+    c = math.cos(angle)
+    s = math.sin(angle)
+    return np.array(
+        [
+            [c, -s, dx],
+            [s, c, dy],
+            [0.0, 0.0, 1.0],
+        ],
+        dtype=np.float32,
+    )
+
+
+def write_timing_summary(path: Path | None, timing: dict[str, object]) -> None:
+    if path is None:
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = list(timing.keys())
+    with path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerow(timing)
+
+
 def write_offline_lp_rigid(
     args: argparse.Namespace,
     cap: cv2.VideoCapture,
@@ -224,6 +324,32 @@ def write_offline_lp_rigid(
         solve_lp_motion_stabilizer_rigid,
     )
 
+    total_t0 = time.perf_counter()
+    timing: dict[str, object] = {
+        "matrix_mode": args.matrix_mode,
+        "output_convention": args.output_convention,
+        "producer_delay_frames": int(args.producer_delay_frames),
+        "lp_prefix_stride": max(1, int(args.lp_prefix_stride)),
+        "lock_published_prefix": bool(args.lock_published_prefix),
+        "intent_reference_weight": float(args.intent_reference_weight),
+        "intent_reference_radius": int(args.intent_reference_radius),
+        "estimate_scale": float(args.estimate_scale),
+        "feature_grid_size": int(args.feature_grid_size),
+        "frames_written": 0,
+        "motion_rows": 0,
+        "lp_solve_calls": 0,
+        "lp_solve_prefix_frames_total": 0,
+        "lp_solve_max_ms": 0.0,
+        "lp_solve_total_ms": 0.0,
+        "mask_safety_total_ms": 0.0,
+        "candidate_build_total_ms": 0.0,
+        "matrix_write_total_ms": 0.0,
+        "decode_total_ms": 0.0,
+        "gray_total_ms": 0.0,
+        "estimate_total_ms": 0.0,
+        "interpolate_limit_total_ms": 0.0,
+        "output_matrix_total_ms": 0.0,
+    }
     prev_gray = first_gray
     transforms = []
     valid_mask = []
@@ -232,10 +358,14 @@ def write_offline_lp_rigid(
     while True:
         if args.max_frames and frame_index >= args.max_frames:
             break
+        t_decode = time.perf_counter()
         ok, frame = cap.read()
+        add_ms(timing, "decode_total_ms", t_decode)
         if not ok:
             break
+        t_gray = time.perf_counter()
         curr_gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        add_ms(timing, "gray_total_ms", t_gray)
         t0 = time.perf_counter()
         transform, details = estimate_transform(
             prev_gray,
@@ -248,6 +378,7 @@ def write_offline_lp_rigid(
             args.ransac_threshold,
         )
         estimate_ms = (time.perf_counter() - t0) * 1000.0
+        timing["estimate_total_ms"] = float(timing["estimate_total_ms"]) + estimate_ms
         if transform is None:
             transform = np.array([0.0, 0.0, 0.0], dtype=np.float32)
             valid = False
@@ -264,6 +395,7 @@ def write_offline_lp_rigid(
 
     transforms_np = np.asarray(transforms, dtype=np.float32)
     valid_np = np.asarray(valid_mask, dtype=bool)
+    t_pre_lp = time.perf_counter()
     transforms_for_smoothing = interpolate_invalid_transforms(transforms_np, valid_np)
     transforms_limited, _, _ = limit_transform_sequence(
         transforms_for_smoothing,
@@ -273,10 +405,33 @@ def write_offline_lp_rigid(
         accel_limit_px=10.0,
         accel_limit_deg=0.5,
     )
+    add_ms(timing, "interpolate_limit_total_ms", t_pre_lp)
     strength = float(np.clip(args.stabilization_strength, 0.0, 1.0))
     identity = np.eye(3, dtype=np.float32)
+    published_prefix_weight = float(args.published_prefix_weight)
+    if args.lock_published_prefix and published_prefix_weight <= 0.0:
+        published_prefix_weight = 100.0
+    lock_published_prefix = published_prefix_weight > 0.0
+    timing["published_prefix_weight"] = published_prefix_weight
+    trajectory = np.cumsum(transforms_limited, axis=0)
+    intent_reference_mats: list[np.ndarray] | None = None
+    intent_reference_weight = max(0.0, float(args.intent_reference_weight))
+    if intent_reference_weight > 0.0:
+        radius = max(1, int(args.intent_reference_radius))
+        intent_trajectory = smooth_pose_reference(trajectory, radius, float(args.intent_reference_stdev))
+        intent_delta = intent_trajectory - trajectory
+        intent_transforms = transforms_limited + intent_delta
+        intent_reference_mats = [transform_vec_to_mat(vec) for vec in intent_transforms]
 
-    def solve_output_mats_for_prefix(prefix_len: int) -> list[np.ndarray]:
+    published_solver_mats: list[np.ndarray] = []
+
+    def output_to_solver_domain(mat: np.ndarray) -> np.ndarray:
+        if strength <= 1e-6:
+            return identity.copy()
+        return (identity + (mat.astype(np.float32) - identity) / strength).astype(np.float32)
+
+    def solve_output_mats_for_prefix(prefix_len: int, locked_prefix_mats: list[np.ndarray] | None = None) -> list[np.ndarray]:
+        solve_t0 = time.perf_counter()
         lp_mats = solve_lp_motion_stabilizer_rigid(
             transforms_limited[:prefix_len],
             width,
@@ -287,9 +442,21 @@ def write_offline_lp_rigid(
             w3=args.lp_w3,
             w4=args.lp_w4,
             anchor_first=False,
+            locked_prefix_mats=locked_prefix_mats,
+            locked_prefix_weight=published_prefix_weight,
+            reference_mats=None if intent_reference_mats is None else intent_reference_mats[:prefix_len],
+            reference_weight=intent_reference_weight,
         )
+        solve_ms = (time.perf_counter() - solve_t0) * 1000.0
+        timing["lp_solve_calls"] = int(timing["lp_solve_calls"]) + 1
+        timing["lp_solve_prefix_frames_total"] = int(timing["lp_solve_prefix_frames_total"]) + int(prefix_len)
+        timing["lp_solve_total_ms"] = float(timing["lp_solve_total_ms"]) + solve_ms
+        timing["lp_solve_max_ms"] = max(float(timing["lp_solve_max_ms"]), solve_ms)
+        t_candidates = time.perf_counter()
         candidate_mats = [identity + strength * (mat.astype(np.float32) - identity) for mat in lp_mats[1:]]
         zoom_curve = np.full(len(candidate_mats), float(args.zoom), dtype=np.float32)
+        add_ms(timing, "candidate_build_total_ms", t_candidates)
+        t_mask = time.perf_counter()
         output_mats, _, _, _, _ = apply_mask_safety_rollback_mats(
             candidate_mats,
             width,
@@ -299,6 +466,7 @@ def write_offline_lp_rigid(
             zoom_curve,
             args.mask_safety_max_invalid,
         )
+        add_ms(timing, "mask_safety_total_ms", t_mask)
         return output_mats
 
     if args.matrix_mode == "offline_lp_rigid":
@@ -320,13 +488,25 @@ def write_offline_lp_rigid(
             output_mats.append(window_cache[key][local_index])
     else:
         delay = max(0, int(args.producer_delay_frames))
+        prefix_stride = max(1, int(args.lp_prefix_stride))
         prefix_cache: dict[int, list[np.ndarray]] = {}
+        t_output_matrix = time.perf_counter()
         output_mats = []
         for frame_number in range(1, len(transforms_limited) + 1):
             prefix_len = min(len(transforms_limited), frame_number + delay)
+            if args.matrix_mode == "bounded_delay_lp_rigid" and prefix_stride > 1 and prefix_len < len(transforms_limited):
+                first_prefix = min(len(transforms_limited), 1 + delay)
+                if prefix_len > first_prefix:
+                    offset = prefix_len - first_prefix
+                    prefix_len = first_prefix + (offset // prefix_stride) * prefix_stride
             if prefix_len not in prefix_cache:
-                prefix_cache[prefix_len] = solve_output_mats_for_prefix(prefix_len)
-            output_mats.append(prefix_cache[prefix_len][frame_number - 1])
+                locked = published_solver_mats if lock_published_prefix else None
+                prefix_cache[prefix_len] = solve_output_mats_for_prefix(prefix_len, locked)
+            output_mat = prefix_cache[prefix_len][frame_number - 1]
+            output_mats.append(output_mat)
+            if lock_published_prefix:
+                published_solver_mats.append(output_to_solver_domain(output_mat))
+        add_ms(timing, "output_matrix_total_ms", t_output_matrix)
 
     args.log.parent.mkdir(parents=True, exist_ok=True)
     args.output.parent.mkdir(parents=True, exist_ok=True)
@@ -374,6 +554,7 @@ def write_offline_lp_rigid(
             writer.writerow([idx, *matrix_cells(device_mat)])
             if args.flush_each_row:
                 out.flush()
+            row_elapsed_us = (time.perf_counter() - t_row) * 1_000_000.0
             log_writer.writerow(
                 {
                     "frame_index": idx,
@@ -385,10 +566,15 @@ def write_offline_lp_rigid(
                     "inlier_ratio": f"{details['inlier_ratio']:.6f}",
                     "fallback_reason": details["fallback_reason"],
                     "estimate_ms": f"{estimate_ms:.6f}",
-                    "producer_elapsed_us": f"{(time.perf_counter() - t_row) * 1_000_000.0:.6f}",
+                    "producer_elapsed_us": f"{row_elapsed_us:.6f}",
                     "producer_delay_frames": int(args.producer_delay_frames) if args.matrix_mode in {"bounded_delay_lp_rigid", "local_window_lp_rigid"} else 0,
                 }
             )
+            timing["matrix_write_total_ms"] = float(timing["matrix_write_total_ms"]) + row_elapsed_us / 1000.0
+    timing["motion_rows"] = len(details_rows)
+    timing["frames_written"] = len(output_mats) + 1
+    timing["total_elapsed_ms"] = (time.perf_counter() - total_t0) * 1000.0
+    write_timing_summary(args.timing_summary, timing)
     return len(output_mats) + 1
 
 

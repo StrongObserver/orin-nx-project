@@ -1,0 +1,196 @@
+{
+  "schema_version": 1,
+  "contract_id": "regular05_producer_scheduling_optimization_v1",
+  "status": "active",
+  "loop_type": "producer_compute_scheduling_optimization",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Profile and reduce Regular05 live producer compute/scheduling cost while keeping the accepted C++ EGLImage consumer, FIFO handoff, matrix convention, and quality boundaries fixed.",
+  "accepted_dependency": {
+    "consumer_contract": "regular05_live_eglimage_path_v1",
+    "consumer_result": "Accepted C++ EGLImage consumer and FIFO path are healthy; live_delay90 has rc=0, fallback=0, mismatch=0, black-border p95 below 1%, but 180-frame wall time is about 68.7s.",
+    "quality_reference": "fixed/offline-LP/delay90 source_to_dest Regular05 matrices through the accepted EGLImage path",
+    "matrix_convention": "source_to_dest"
+  },
+  "problem_statement": "The current live_delay90 run is much slower than precomputed CSV replay. Existing producer logs report estimate_ms and row write time, but not the LP smoothing and matrix-generation stages that likely dominate wall time.",
+  "frozen_variables": [
+    "input clip: regular_gate05_regular_6 / regular05_source.h264",
+    "matrix convention: source_to_dest",
+    "producer semantics: bounded_delay_lp_rigid with explicit producer_delay_frames unless this contract declares a single-variable alternative",
+    "consumer path: accepted C++ MMAPI/VPI/NVENC EGLImage-wrapper sample",
+    "do not use rejected pitch-pointer wrapper",
+    "do not use rejected EGLImage image-wrapper reuse",
+    "do not use direct mismatched NvBuffer input",
+    "do not use block-linear VPI scratch pair",
+    "do not use pitch-linear main encoder chain",
+    "do not claim full real-time EIS or zero-copy full chain"
+  ],
+  "allowed_changes": [
+    "optional producer timing instrumentation that does not alter matrix values",
+    "bounded-delay producer compute caching or scheduling changes",
+    "diagnostic timing-summary scripts or CSV outputs",
+    "same-input profiling and review/evidence packaging",
+    "documentation updates after measured progress"
+  ],
+  "candidate_sequence": [
+    {
+      "id": "P0",
+      "title": "Producer timing instrumentation",
+      "success_criteria": [
+        "live_matrix_producer.py can emit a timing-summary CSV",
+        "default matrix output remains unchanged when timing-summary is not used",
+        "timing separates decode, grayscale, motion estimation, LP solve, mask safety, matrix write, and total elapsed time"
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "Full Regular05 producer profiling",
+      "success_criteria": [
+        "Regular05 180-frame bounded-delay profiling produces timing_summary.csv",
+        "LP solve calls and prefix-frame workload are recorded",
+        "the dominant stage is identified before optimization"
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Single-variable producer optimization",
+      "success_criteria": [
+        "one optimization materially reduces producer wall time or dominant-stage time",
+        "output matrix row count stays unchanged",
+        "matrix convention remains source_to_dest",
+        "quality/no-regression checks are run before stronger claims"
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Jetson same-input verification",
+      "success_criteria": [
+        "optimized producer runs on Jetson or a blocker is classified",
+        "consumer/FIFO hard gates remain rc=0, fallback=0, mismatch=0",
+        "black-border p95 remains below 0.01",
+        "review copy is placed under the categorized review tree",
+        "latency table distinguishes producer, handoff, VPI warp, device stage, and wall time"
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "Power/perf and closeout",
+      "success_criteria": [
+        "power/perf evidence is collected if Jetson access is available",
+        "README, one-page summary, evidence map, active contracts, and long-term context are updated only with measured facts",
+        "git status is reviewed and results/raw/review videos remain untracked"
+      ]
+    }
+  ],
+  "initial_evidence": {
+    "dryrun_20_frames": {
+      "path": "results/producer_scheduling_20260720/dryrun_delay5_timing.csv",
+      "matrix_mode": "bounded_delay_lp_rigid",
+      "producer_delay_frames": 5,
+      "frames_written": 20,
+      "lp_solve_calls": 14,
+      "lp_solve_prefix_frames_total": 175,
+      "lp_solve_total_ms": 1276.769,
+      "total_elapsed_ms": 1431.58,
+      "interpretation": "LP prefix solving dominates even in a small dry run; previous producer_elapsed_us did not include this stage."
+    }
+  },
+  "validated_results": {
+    "jetson_producer_baseline_stride1": {
+      "matrix_mode": "bounded_delay_lp_rigid",
+      "producer_delay_frames": 90,
+      "lp_prefix_stride": 1,
+      "frames_written": 180,
+      "lp_solve_calls": 89,
+      "lp_solve_prefix_frames_total": 12015,
+      "lp_solve_total_ms": 57068.381707,
+      "mask_safety_total_ms": 10729.032571,
+      "total_elapsed_ms": 68507.848251,
+      "timing_summary": "results/regular05_producer_scheduling_optimization_20260720/jetson_delay90_stride1_timing.csv"
+    },
+    "jetson_producer_stride5": {
+      "decision": "current_best_candidate_pending_human_review",
+      "matrix_mode": "bounded_delay_lp_rigid",
+      "producer_delay_frames": 90,
+      "lp_prefix_stride": 5,
+      "frames_written": 180,
+      "lp_solve_calls": 19,
+      "lp_solve_prefix_frames_total": 2582,
+      "lp_solve_total_ms": 12756.410206,
+      "mask_safety_total_ms": 2308.349316,
+      "total_elapsed_ms": 15687.399751,
+      "timing_summary": "results/regular05_producer_scheduling_optimization_20260720/jetson_delay90_stride5_timing.csv",
+      "matrix_diff_vs_stride1": {
+        "translation_abs_mean_px": 0.037780322,
+        "translation_abs_p95_px": 0.293390351,
+        "translation_abs_max_px": 1.128080157,
+        "linear_fro_abs_mean": 0.001462113,
+        "summary": "results/regular05_producer_scheduling_optimization_20260720/jetson_diff_stride5_vs_stride1/summary.csv"
+      }
+    },
+    "jetson_stride5_fifo_consumer": {
+      "rc": 0,
+      "fallback_count": 0,
+      "frame_index_mismatch_count": 0,
+      "handoff_elapsed_us_avg": 42.567182,
+      "handoff_elapsed_us_p95": 98.547,
+      "vpi_warp_running_avg_ms_at_frame_100": 1.53082,
+      "black_border_p95": 0.000784288,
+      "black_border_max": 0.003637153,
+      "frames_gt_0p01": 0,
+      "diff_vs_delay90_fifo_mean_abs_center_avg": 7.147095,
+      "diff_vs_delay90_fifo_p95_abs_center_avg": 22.161111,
+      "review_copy": "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular05_producer_scheduling_optimization/20260720_regular05_producer_scheduling_optimization_regular_gate05_regular_6_jetson_source_delay90fifo_stride5fifo_grid.mp4",
+      "report": "docs/regular05_producer_scheduling_optimization_2026-07-20.md"
+    },
+    "jetson_live_stride5_fifo": {
+      "producer_rc": 0,
+      "consumer_rc": 0,
+      "wall_time_ms": 17533,
+      "fallback_count": 0,
+      "frame_index_mismatch_count": 0,
+      "handoff_elapsed_us_avg_excluding_first_wait": 28.504209,
+      "handoff_elapsed_us_p95_excluding_first_wait": 39.025,
+      "vpi_warp_running_avg_ms_at_frame_100": 1.51303,
+      "black_border_p95": 0.000784288,
+      "black_border_max": 0.003637153,
+      "frames_gt_0p01": 0,
+      "diff_vs_precomputed_stride5_mean_abs_center_avg": 0.0,
+      "tegrastats_log": "results/regular05_producer_scheduling_optimization_20260720/live_stride5_tegrastats.log",
+      "review_copy": "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular05_producer_scheduling_optimization/20260720_regular05_producer_scheduling_optimization_regular_gate05_regular_6_jetson_source_stride5csv_livestride5_grid.mp4",
+      "interpretation": "Concurrent live stride5 preserves consumer hard gates and reduces Regular05 180-frame wall time from about 68.7s to 17.5s, but first-frame latency remains high because the producer solves the delayed matrix sequence before frame 1 is delivered."
+    }
+  },
+  "success_criteria": [
+    "producer bottleneck is attributed with stage timing rather than guessed",
+    "optimized producer preserves matrix convention and row alignment",
+    "optimized output passes consumer/FIFO correctness gates on Jetson or a clear blocker is reported",
+    "no rejected device route is revived",
+    "claims remain scoped to Regular05 unless five-clip evidence is collected"
+  ],
+  "stop_reasons": [
+    "Jetson SSH or runtime blocker prevents required same-input verification",
+    "dominant cost requires a broad producer rewrite outside this contract",
+    "optimization changes matrix quality or visual output beyond acceptable no-regression boundary",
+    "producer scheduling cannot improve without an unacceptable latency or quality trade-off",
+    "technical decision requires internal industrial EIS guidance"
+  ],
+  "knowledge_recovery_policy": [
+    "first inspect and fix local code",
+    "then read docs/knowledge_base/routing.md and at most two relevant local source cards",
+    "then search public official/open-source references if the local knowledge base does not resolve the blocker",
+    "if still blocked, stop and report in chat with a focused internal-AI prompt"
+  ],
+  "forbidden_claims": [
+    "full real-time EIS",
+    "zero-latency producer",
+    "zero-copy full chain",
+    "VPI optical-flow acceleration",
+    "all-scene EIS quality",
+    "CPU-output pixel equivalence"
+  ],
+  "evidence_output_directory": "results/regular05_producer_scheduling_optimization_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/performance/<YYYYMMDD>_regular05_producer_scheduling_optimization",
+  "report_path": "docs/regular05_producer_scheduling_optimization_<YYYY-MM-DD>.md"
+}

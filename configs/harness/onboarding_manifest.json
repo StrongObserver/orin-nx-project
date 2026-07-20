@@ -30,7 +30,7 @@
     "Run or read this manifest via: py -3.12 scripts/harness_runner.py onboard",
     "Read AGENTS.md only for dispatch rules and safety boundaries.",
     "Read the active loop contract: configs/harness/contracts/orin_next_engineering_loop_v1.json",
-    "Read the task-specific Done Contract before running or editing: currently configs/harness/contracts/regular05_live_eglimage_path_v1.json",
+    "Read the task-specific Done Contract before running or editing: currently configs/harness/contracts/regular_gate_stabilization_strength_recovery_loop_v1.json",
     "Run harness static checks before experiments: doctor, check-claim, and JSON/schema checks as needed."
   ],
   "load_on_demand": [
@@ -53,7 +53,7 @@
       "trigger": "Need device-side MMAPI/VPI/NVENC handoff details",
       "open": [
         "configs/harness/contracts/regular_gate_inclusion_validation_v1.json",
-        "configs/harness/contracts/regular05_live_eglimage_path_v1.json",
+        "configs/harness/contracts/regular_gate_stride5_viewport_stable_validation_v1.json",
         "configs/harness/contracts/regular05_eglimage_wrapper_reuse_root_cause_v1.json",
         "docs/regular_gate_eglimage_fix_2026-07-20.md",
         "docs/regular05_eglimage_wrapper_reuse_root_cause_2026-07-20.md",
@@ -73,12 +73,13 @@
     }
   ],
   "active_loop_contract": "configs/harness/contracts/orin_next_engineering_loop_v1.json",
-  "active_task_contract": "configs/harness/contracts/regular05_live_eglimage_path_v1.json",
+  "active_task_contract": "configs/harness/contracts/regular_gate_stabilization_strength_recovery_loop_v1.json",
   "hard_rules": [
     "Do not load the full long-term context or full internal reference folders during default startup.",
     "Do not copy internal original text, images, private links, or screenshots into public GitHub outputs.",
     "Do not treat outdoor-car inverse/post_geometry results as Regular05 EIS-quality progress.",
     "Do not claim full real-time EIS, zero-copy full chain, VPI optical-flow acceleration, or all-scene EIS quality until measured evidence supports it.",
+    "If the user has already reviewed and rejected a candidate, update stale pending-review contract/docs before running new experiments.",
     "Keep generated reviewable videos under C:/Users/Admin/Videos/orin nx/review/<category>/<YYYYMMDD>_<loop_or_gate>/ with descriptive filenames."
   ]
 }

@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "contract_id": "regular_gate_pose_jump_root_cause_recovery_v1",
+  "status": "blocked_needs_internal_ai_guidance",
+  "loop_type": "pose_jump_root_cause_knowledge_recovery",
+  "loop_profile": "knowledge_recovery_loop",
+  "autonomy_level": "L2",
+  "required_platform_label": "jetson",
+  "triggered_by": {
+    "latest_user_review": "The user reviewed lim8 and rejected it because abrupt translation/rotation pose jumps are still visible.",
+    "rejected_candidates": [
+      "pose_smooth_r4",
+      "pose_delta_limiter_lim8"
+    ],
+    "process_error_to_prevent": "The prior loop treated lim8 as pending human review and repeated the previous task instead of honoring the latest user rejection and root-cause request."
+  },
+  "objective": "Stop local limiter tuning, identify the first-principles root cause of the remaining pose jumps, search local/internal/public EIS references for an existing principled solution, and only then choose the next implementation direction or produce an internal-AI prompt.",
+  "accepted_dependency": {
+    "viewport_stable_report": "docs/regular_gate_stride5_viewport_stable_validation_2026-07-20.md",
+    "regular05_viewport_decision": "safe103_crop98 was accepted for Regular05 because zooming and brief narrow black edge were removed.",
+    "five_clip_extension": "All five Regular clips ran through the accepted EGLImage FIFO consumer with rc=0, fallback=0, and frame-index mismatch=0.",
+    "current_remaining_failure": "Human review sees abrupt small translation/rotation pose changes, not zooming or scale breathing."
+  },
+  "fresh_prompt_guard": [
+    "The latest user prompt and latest human visual review override any stale active contract or pending review state.",
+    "If a candidate is pending in JSON/docs but the user has already reviewed and rejected it, first update the control plane to rejected before any new experiment.",
+    "Do not generate another neighboring limiter, smoothing radius, or scale/crop candidate until this knowledge-recovery contract has produced one concrete recovery idea, one risk, and one verifier.",
+    "Manual visual veto outranks SR_pose, residual_improve, black-border, handoff, and VPI timing metrics for quality acceptance."
+  ],
+  "claim_boundary": {
+    "allowed": [
+      "safe103_crop98 fixed the prior zooming/brief-black-edge failure for Regular05 and was extended as a five-clip diagnostic path",
+      "R4 and lim8 are diagnostic evidence showing that post-hoc final-matrix smoothing trades off pose continuity against stabilization strength",
+      "the accepted C++ EGLImage FIFO consumer is healthy for these inputs",
+      "the remaining blocker is camera-path or matrix-planning quality, not device handoff health"
+    ],
+    "forbidden": [
+      "treating lim8 as pending or active candidate",
+      "trying lim6, lim7, lim10, another R radius, or a soft limiter before first-principles and knowledge search are complete",
+      "arguing from metrics against human-visible pose jumps",
+      "claiming full Regular 5/5 quality pass",
+      "claiming all-scene or product-grade EIS",
+      "claiming zero-latency real-time EIS, zero-copy full chain, or VPI optical-flow acceleration"
+    ]
+  },
+  "first_principles_frame": {
+    "visual_symptom": "The output camera pose appears to jump abruptly to a nearby translation/rotation state, like a sudden small camera attitude switch.",
+    "system_fact": "The same device consumer reports rc=0, fallback=0, and frame-index mismatch=0, so the dataflow is consuming matrices correctly.",
+    "matrix_fact": "After fixed scale, tx/ty/angle still contain large frame-to-frame stair steps. R4 reduces them but weakens stabilization too much; lim8 caps maxima but does not remove the visible discontinuity.",
+    "root_cause_hypothesis": "The final per-frame warp matrices are being post-processed after the LP/viewport decision instead of solving a temporally continuous camera path with intent, derivative, confidence, and FOV constraints in one model."
+  },
+  "knowledge_base_refs": [
+    "internal:eis_algorithm_topic",
+    "internal:eis_cis_solution",
+    "internal:orb_eis_application",
+    "public:l1_optimal_camera_paths",
+    "public:opencv_videostab",
+    "public:meshflow",
+    "public:bundled_camera_paths"
+  ],
+  "source_search_order": [
+    "Read docs/knowledge_base/routing.md and .local_knowledge/internal_reference_index.md.",
+    "Use internal summaries only as private guidance; do not copy internal original text into public docs.",
+    "Search public web/open-source for L1 optimal camera paths, OpenCV videostab LpMotionStabilizer, and MeshFlow/minimum-latency stabilization implementations.",
+    "If public/local evidence is insufficient for a scoped next implementation, generate a bounded prompt for company-internal AI."
+  ],
+  "success_criteria": [
+    "R4 and lim8 are marked human-rejected/diagnostic in active control-plane files and public-facing summaries.",
+    "A root-cause note explains why final-matrix post-smoothing is likely the wrong abstraction.",
+    "At least one local/internal reference and one public/open-source reference are checked for a principled solution.",
+    "The next action is either a scoped implementation contract for intent-aware camera-path optimization or a copy-paste internal-AI prompt with clear context and boundaries."
+  ],
+  "root_cause_recovery_result": {
+    "report": "docs/regular_gate_pose_jump_root_cause_recovery_2026-07-20.md",
+    "public_code_checked": [
+      "results/external_refs_20260720/L1-optimal-paths-Stabilization",
+      "results/external_refs_20260720/meshflow"
+    ],
+    "local_probe_dir": "results/regular_gate_pose_jump_root_cause_20260720",
+    "published_prefix_probe": "Soft published-prefix continuity did not materially reduce Regular05 pose jumps; hard locking was infeasible on some clips.",
+    "intent_reference_probe": "LP intent-reference soft cost improved Regular05 trans_delta_p95 from 12.263541 to 10.762828 at weight 100, still worse than lim8/R4 and not enough for promotion.",
+    "decision": "Do not continue blind local limiter or LP-weight sweeps. Ask internal AI or mature implementation references for the correct bounded-delay intent-aware camera-path formulation."
+  },
+  "stop_reasons": [
+    "public and local knowledge do not identify a safe scoped implementation route",
+    "the next route requires mesh/rolling-shutter/gyro scope beyond the current pure-visual global path",
+    "internal company references are likely necessary to choose the correct industrial EIS path"
+  ],
+  "rejected_candidate_evidence": {
+    "pose_smooth_r4": {
+      "report": "docs/regular_gate_pose_smooth_r4_validation_2026-07-20.md",
+      "review_dir": "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular_gate_stride5_pose_smooth_r4_validation",
+      "human_decision": "rejected_diagnostic",
+      "reason": "reduced pose jumps but weakened stabilization too much"
+    },
+    "pose_delta_limiter_lim8": {
+      "report": "docs/regular_gate_pose_delta_limiter_validation_2026-07-20.md",
+      "review_dir": "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular_gate_stride5_pose_delta_limiter_validation",
+      "human_decision": "rejected_diagnostic",
+      "reason": "still has visible abrupt pose jumps"
+    }
+  },
+  "evidence_paths": {
+    "safe103crop98_review": "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular_gate_stride5_viewport_stable_validation",
+    "r4_review": "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular_gate_stride5_pose_smooth_r4_validation",
+    "lim8_review": "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular_gate_stride5_pose_delta_limiter_validation",
+    "matrix_stability_summary": "results/regular_gate_stride5_viewport_stable_validation_20260720/pose_delta_limiter_summary.csv"
+  },
+  "next_decision_policy": {
+    "if_actionable_public_solution_found": "Create or update a scoped quality-loop contract before implementing it.",
+    "if_only_broad_mesh_or_gyro_solution_found": "Report it as a model/scope boundary and generate an internal-AI prompt instead of starting a large rewrite.",
+    "if_internal_ai_needed": "Generate the prompt in chat with context, boundaries, requested artifacts, and no copied internal source text in public docs."
+  }
+}

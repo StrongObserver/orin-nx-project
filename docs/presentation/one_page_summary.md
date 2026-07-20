@@ -73,6 +73,65 @@ Regular05 FIFO/live handoff:
   live_delay90 took about 68.7 s for 180 frames, so producer compute/scheduling
   is the next bottleneck.
 
+Producer scheduling optimization:
+  repeated LP prefix solving was the dominant live producer cost.
+  A new optional lp-prefix stride keeps the original stride1 behavior by
+  default. On Jetson Regular05 delay90, stride5 reduced producer-only time from
+  about 68.5 s to about 15.7 s for 180 frames, while the accepted EGLImage FIFO
+  consumer kept rc=0, fallback=0, mismatch=0, and black-border p95 below 1%.
+  Concurrent live stride5 completed in 17.5 s for 180 frames and matched the
+  precomputed stride5 output exactly. This is a bounded-delay Regular05
+  optimization candidate, not zero-latency full real-time EIS.
+
+Regular gate viewport-stable extension:
+  Regular05 safe103_crop98 was accepted by human review as the viewport-stable
+  candidate. The same stride5 bounded-delay producer plus fixed-scale/crop98
+  viewport rule was extended to all five Regular clips. All five device runs
+  have rc=0, fallback=0, and mismatch=0. Four clips pass the gray black-border
+  hard gate; Regular01 is conditional because gray p95 is 0.026323350 while
+  geometry p95 invalid is 0.000003906.
+
+Pose smoothing:
+  Human review then found abrupt translation/rotation jumps. The pose_smooth_r4
+  candidate smooths tx/ty/angle while keeping fixed scale and crop98. It ran
+  5/5 through the accepted EGLImage FIFO path with rc=0, fallback=0, and
+  mismatch=0, and reduces translation p95 on every clip. Human review rejected
+  R4 because it weakens stabilization too much. lim8 then tested local delta
+  limiting, but the user rejected it because abrupt pose jumps remain. The active
+  direction is root-cause recovery for camera-path planning, not another limiter.
+
+Bounded QP camera path:
+  The current selected candidate is `bqp_w90_s15_w2_20_w3_200`, a bounded-delay
+  QP path optimizer that changes matrix/path generation while keeping the
+  accepted C++ EGLImage FIFO consumer fixed. Regular05 matrix metrics improved
+  from safe103crop98 `trans_d1_p95=12.267` to `7.934`, with `trans_d2_max=2.173`
+  and `trans_d3_max=1.834`. Five Regular Jetson FIFO runs all have rc=0,
+  fallback=0, and mismatch=0. Regular02/03/05 pass hard gates; Regular01/04 are
+  visual-review conditional because gray black-border p95 is high while geometry
+  coverage remains safe. This is pending human visual review, not a final 5/5
+  quality claim.
+
+Stabilization-strength recovery:
+  Human review found BQP healthy but too weak. MeshFlowPy was extracted and
+  inspected; it is a dense/mesh flow backend, not a temporal path optimizer. The
+  current enhanced candidate is `spike_mid_t6_b70_r2_i2`, a local D2 pose-spike
+  repair on top of the stronger safe103 correction. On Regular05, residual
+  translation mean improves from BQP `3.915` to spike_mid `2.788`, closer to
+  safe103crop98 `2.103`, while all five Regular clips still run through the
+  accepted Jetson FIFO path with rc=0, fallback=0, and mismatch=0. Regular01/04
+  remain visual-review conditional for gray-threshold dark-edge risk.
+
+Residual closed-loop recovery:
+  Human review then rejected spike_mid. Residual-grid diagnostics did not show a
+  strong local-motion/parallax-only signature, so the mesh route remains closed.
+  The current candidate is `resid_r15_s07`: estimate residual motion from
+  safe103crop98 output, smooth that residual path, and compose it back into the
+  device matrix. It runs five Regular clips through Jetson FIFO with rc=0,
+  fallback=0, and mismatch=0. On Regular05, residual trans mean improves to
+  `1.033`, stronger than safe103crop98 `2.103`, BQP `3.915`, and spike_mid
+  `2.788`. The risk is higher raw matrix D2/D3, so human review must check for
+  reintroduced pose snaps.
+
 Regular gate inclusion viewport:
   safe103_crop98 failed as a general five-clip producer.
   geometry-valid coverage = 5/5, p95/max invalid ratio = 0.
@@ -144,6 +203,26 @@ Concurrent FIFO/live:
   concurrent live delay90 matrices with healthy handoff and black-border gates.
   The live run took about 68.7 s for 180 frames, making producer compute the
   next bottleneck.
+
+Producer scheduling:
+  Profiling showed LP prefix solving, not handoff or VPI warp, was the dominant
+  producer cost. Stride5 reduced LP calls from 89 to 19 and Jetson producer-only
+  total time from about 68.5 s to about 15.7 s for 180 frames. The stride5 FIFO
+  device output kept fallback=0, mismatch=0, VPI warp avg about 1.53 ms, and
+  black-border p95=0.000784288. Concurrent live stride5 wall time was 17.5 s
+  for 180 frames and produced the same device output as precomputed stride5.
+
+Five Regular viewport-stable check:
+  The accepted EGLImage FIFO consumer ran all five stride5 fixed-scale/crop98
+  candidates with rc=0, fallback=0, and mismatch=0. Regular02-05 pass current
+  black-border gates. Regular01 is conditional and needs human visual review.
+
+Pose smoothing check:
+  R4 reduces the visible-risk matrix jumps, for example Regular04 trans p95
+  6.50 px -> 2.71 px and Regular05 trans p95 12.26 px -> 7.24 px, while keeping
+  the device consumer healthy. It is rejected because the stabilization becomes
+  too weak. lim8 caps local deltas but remains visually jumpy, so it is also
+  rejected and kept only as diagnostic evidence.
 ```
 
 Conclusion:
@@ -151,8 +230,15 @@ Conclusion:
 ```text
 Python-in-the-loop GStreamer EIS integration is not the next acceleration path;
 the current acceleration frontier is the C++ device-side MMAPI/VPI/NVENC path.
-The accepted consumer/FIFO path is healthy; the next unresolved issue is live
-producer compute/scheduling, plus same-input power/perf evidence.
+The accepted consumer/FIFO path is healthy; the first producer scheduling
+optimization is now measured on Regular05. The viewport-stable rule has been
+extended to five Regular clips. R4 and lim8 are both diagnostic/rejected:
+R4 is too weak, and lim8 still has abrupt pose jumps. BQP solved continuity but
+was too weak; spike_mid was also rejected. The current review target is
+resid_r15_s07, which strongly suppresses measured residual motion but must be
+checked for possible reintroduced pose snaps. Regular01 and Regular04 remain
+conditional for the dark-edge / gray-threshold question.
+First-frame producer latency remains a separate scheduling topic.
 ```
 
 ## Model Boundary
@@ -199,4 +285,8 @@ docs/regular_gate_vpi_distortion_fix_2026-07-20.md
 docs/regular_gate_eglimage_fix_2026-07-20.md
 docs/regular05_eglimage_wrapper_reuse_root_cause_2026-07-20.md
 docs/regular05_live_eglimage_path_2026-07-20.md
+docs/regular05_producer_scheduling_optimization_2026-07-20.md
+docs/regular_gate_stride5_viewport_stable_validation_2026-07-20.md
+docs/regular_gate_pose_smooth_r4_validation_2026-07-20.md
+docs/regular_gate_pose_delta_limiter_validation_2026-07-20.md
 ```

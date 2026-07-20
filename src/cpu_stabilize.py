@@ -216,6 +216,10 @@ def solve_lp_motion_stabilizer_rigid(
     w3: float = 100.0,
     w4: float = 100.0,
     anchor_first: bool = False,
+    locked_prefix_mats: list[np.ndarray] | None = None,
+    locked_prefix_weight: float = 0.0,
+    reference_mats: list[np.ndarray] | None = None,
+    reference_weight: float = 0.0,
 ) -> list[np.ndarray]:
     """Python port of OpenCV/video-stab LpMotionStabilizer rigid LP.
 
@@ -237,8 +241,27 @@ def solve_lp_motion_stabilizer_rigid(
     n1 = max(0, num_frames - 1)
     n2 = max(0, num_frames - 2)
     n3 = max(0, num_frames - 3)
-    ncols = 4 * num_frames + 6 * n1 + 6 * n2 + 6 * n3
-    nrows = 8 * num_frames + 2 * 6 * n1 + 2 * 6 * n2 + 2 * 6 * n3
+    locked_prefix_params: list[tuple[int, np.ndarray]] = []
+    if locked_prefix_mats:
+        for published_idx, mat in enumerate(locked_prefix_mats):
+            t = published_idx + 1
+            if t >= num_frames:
+                break
+            locked_prefix_params.append((t, rigid_params_from_mat(np.asarray(mat, dtype=np.float32))))
+
+    use_soft_locked_prefix = bool(locked_prefix_params and locked_prefix_weight > 0.0)
+    nlock = len(locked_prefix_params) if use_soft_locked_prefix else 0
+    reference_params: list[tuple[int, np.ndarray]] = []
+    if reference_mats and reference_weight > 0.0:
+        for ref_idx, mat in enumerate(reference_mats):
+            t = ref_idx + 1
+            if t >= num_frames:
+                break
+            reference_params.append((t, rigid_params_from_mat(np.asarray(mat, dtype=np.float32))))
+
+    nref = len(reference_params)
+    ncols = 4 * num_frames + 6 * n1 + 6 * n2 + 6 * n3 + 4 * nlock + 4 * nref
+    nrows = 8 * num_frames + 2 * 6 * n1 + 2 * 6 * n2 + 2 * 6 * n3 + 2 * 4 * nlock + 2 * 4 * nref
     inf = np.inf
 
     obj = np.zeros(ncols, dtype=np.float64)
@@ -249,6 +272,16 @@ def solve_lp_motion_stabilizer_rigid(
         # transform is equally optimal.  Keep it optional because some clips get
         # better FOV/metric behavior from the unanchored OpenCV-style solution.
         bounds[0:4] = [(1.0, 1.0), (0.0, 0.0), (0.0, 0.0), (0.0, 0.0)]
+    if locked_prefix_params and not use_soft_locked_prefix:
+        # Online/bounded-delay prefixes are solved repeatedly as new frames
+        # arrive.  Without this guard a later prefix can reinterpret poses that
+        # have already been sent to the consumer, producing a visible splice in
+        # the camera path even though each individual LP solve is smooth.
+        for t, params in locked_prefix_params:
+            c0 = 4 * t
+            for j, value in enumerate(params):
+                fixed = float(value)
+                bounds[c0 + j] = (fixed, fixed)
     c = 4 * num_frames
     for count, weight in ((n1, w1), (n2, w2), (n3, w3)):
         for _ in range(count):
@@ -395,6 +428,48 @@ def solve_lp_motion_stabilizer_rigid(
             else:
                 rowlb[r : r + 6] = 0.0
             r += 6
+
+    if use_soft_locked_prefix:
+        lock_weight = float(locked_prefix_weight)
+        lock_col = 4 * num_frames + 6 * n1 + 6 * n2 + 6 * n3
+        lock_param_weights = [w4 * lock_weight, w4 * lock_weight, lock_weight, lock_weight]
+        for lock_idx, (t, params) in enumerate(locked_prefix_params):
+            c0 = 4 * t
+            cs = lock_col + 4 * lock_idx
+            for j, target in enumerate(params):
+                obj[cs + j] = lock_param_weights[j]
+                bounds[cs + j] = (0.0, None)
+
+                setv(r, c0 + j, 1.0)
+                setv(r, cs + j, -1.0)
+                rowub[r] = float(target)
+                r += 1
+
+                setv(r, c0 + j, -1.0)
+                setv(r, cs + j, -1.0)
+                rowub[r] = -float(target)
+                r += 1
+
+    if reference_params:
+        ref_weight = float(reference_weight)
+        ref_col = 4 * num_frames + 6 * n1 + 6 * n2 + 6 * n3 + 4 * nlock
+        ref_param_weights = [w4 * ref_weight, w4 * ref_weight, ref_weight, ref_weight]
+        for ref_idx, (t, params) in enumerate(reference_params):
+            c0 = 4 * t
+            cs = ref_col + 4 * ref_idx
+            for j, target in enumerate(params):
+                obj[cs + j] = ref_param_weights[j]
+                bounds[cs + j] = (0.0, None)
+
+                setv(r, c0 + j, 1.0)
+                setv(r, cs + j, -1.0)
+                rowub[r] = float(target)
+                r += 1
+
+                setv(r, c0 + j, -1.0)
+                setv(r, cs + j, -1.0)
+                rowub[r] = -float(target)
+                r += 1
 
     if r != nrows:
         raise RuntimeError(f"LP row construction mismatch: got {r}, expected {nrows}")

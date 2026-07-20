@@ -63,6 +63,9 @@ def main() -> int:
     parser.add_argument("--smooth-angle-radius", type=int, default=0)
     parser.add_argument("--fixed-scale", choices=["none", "median", "mean"], default="median")
     parser.add_argument("--scale-multiplier", type=float, default=1.0)
+    parser.add_argument("--absolute-scale", type=float, default=0.0, help="Use this fixed similarity scale directly when >0.")
+    parser.add_argument("--max-translation-step", type=float, default=0.0, help="Limit per-frame tx/ty step length in pixels when >0.")
+    parser.add_argument("--max-angle-step", type=float, default=0.0, help="Limit per-frame angle step in radians when >0.")
     parser.add_argument("--first-frame-copy-next", action="store_true")
     parser.add_argument("--fade-in-frames", type=int, default=0, help="Blend the first N frames from identity to the original/smoothed matrix.")
     args = parser.parse_args()
@@ -75,7 +78,9 @@ def main() -> int:
     tx = params[:, 2]
     ty = params[:, 3]
 
-    if args.fixed_scale == "median":
+    if args.absolute_scale > 0:
+        scales_out = np.full_like(scales, float(args.absolute_scale))
+    elif args.fixed_scale == "median":
         scales_out = np.full_like(scales, float(np.median(scales)) * args.scale_multiplier)
     elif args.fixed_scale == "mean":
         scales_out = np.full_like(scales, float(np.mean(scales)) * args.scale_multiplier)
@@ -89,6 +94,22 @@ def main() -> int:
         angles_out[0] = angles_out[1]
         tx_out[0] = tx_out[1]
         ty_out[0] = ty_out[1]
+    if args.max_translation_step > 0 and len(tx_out) > 1:
+        max_step = float(args.max_translation_step)
+        for i in range(1, len(tx_out)):
+            dx = float(tx_out[i] - tx_out[i - 1])
+            dy = float(ty_out[i] - ty_out[i - 1])
+            dist = math.hypot(dx, dy)
+            if dist > max_step:
+                scale = max_step / max(1e-12, dist)
+                tx_out[i] = tx_out[i - 1] + dx * scale
+                ty_out[i] = ty_out[i - 1] + dy * scale
+    if args.max_angle_step > 0 and len(angles_out) > 1:
+        max_step = float(args.max_angle_step)
+        for i in range(1, len(angles_out)):
+            delta = float(angles_out[i] - angles_out[i - 1])
+            if abs(delta) > max_step:
+                angles_out[i] = angles_out[i - 1] + math.copysign(max_step, delta)
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     out_rows = []

@@ -303,6 +303,8 @@ as directed by the current contract.
 
 Stop instead of continuing when:
 
+- the latest user prompt or human visual review contradicts the active contract
+  state;
 - a second attempt improves one metric but worsens hard gates or visual review;
 - the same failed action has already been retried once without a new hypothesis;
 - Running improves while Regular gets worse;
@@ -316,6 +318,7 @@ Stop instead of continuing when:
 
 | Failure | Recovery |
 |---|---|
+| Latest user review rejects a candidate that a contract still marks pending | Treat the user review as the newest external observation; update active contract, onboarding manifest, and summaries before any new experiment |
 | Command/runtime failure | Preserve exact error, inspect minimally, retry once after a concrete fix |
 | Metric regression | Compare against frozen baseline; change hypothesis before rerun |
 | Visual veto | Mark run failed/diagnostic; do not argue from metrics |

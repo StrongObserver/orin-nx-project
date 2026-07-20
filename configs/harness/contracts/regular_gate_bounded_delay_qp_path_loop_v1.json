@@ -1,0 +1,340 @@
+{
+  "schema_version": 1,
+  "contract_id": "regular_gate_bounded_delay_qp_path_loop_v1",
+  "status": "pending_human_visual_review",
+  "loop_type": "bounded_delay_camera_path_optimization_loop",
+  "loop_profile": "quality_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Execute the approved P0-P5 task queue for resolving Regular-gate translation/rotation pose jumps by replacing post-hoc limiter/smoothing with camera-path optimization, then validate matrix metrics, bounded-delay behavior, Jetson FIFO output, and mesh-route necessity before documentation closeout.",
+  "entry_context": {
+    "user_approval": "The user approved the P0-P5 task arrangement and requested all priorities be included in one loop until complete or blocked.",
+    "previous_rejections": [
+      "pose_smooth_r4 rejected because stabilization became too weak",
+      "pose_delta_limiter_lim8 rejected because visible pose jumps remained",
+      "lockw100 / intentw20 / intentw100 are matrix-level diagnostic probes only, not accepted candidates"
+    ],
+    "root_cause_report": "docs/regular_gate_pose_jump_root_cause_recovery_2026-07-20.md",
+    "accepted_consumer": "C++ MMAPI/VPI/NVENC EGLImage FIFO consumer remains the accepted device path; this loop initially changes only matrix/path generation."
+  },
+  "fresh_prompt_guard": [
+    "Do not return to lim6/lim7/lim8/lim10, R radius, soft limiter, or blind LP-weight sweeps.",
+    "Do not generate Jetson review videos until matrix-level gates justify the candidate.",
+    "Manual visual veto remains authoritative over SR_pose, residual, black-border, handoff, and timing metrics.",
+    "If local attempts fail, consult docs/knowledge_base routing and public/open-source references before asking the user.",
+    "If the route remains blocked after local and external search, stop the loop and report in chat only."
+  ],
+  "claim_boundary": {
+    "allowed": [
+      "This loop tests whether camera-path optimization can remove Regular-gate pose jumps while preserving stabilization and FOV boundaries.",
+      "Offline full-sequence results are upper-bound quality probes, not real-time claims.",
+      "Bounded-delay sliding-window results are quality/latency trade-off candidates only after matrix metrics pass.",
+      "MeshFlowPy may be inspected as a possible mesh warp backend if global path optimization fails with local-motion evidence."
+    ],
+    "forbidden": [
+      "claiming full Regular 5/5 pass before human review",
+      "claiming full real-time EIS before same-input device evidence",
+      "claiming zero-copy full chain",
+      "claiming VPI optical-flow acceleration",
+      "claiming all-scene or product-grade EIS",
+      "copying internal original text, private links, screenshots, tokens, or credentials into public docs"
+    ]
+  },
+  "global_success_criteria": [
+    "Baseline table clearly marks safe103crop98, R4, lim8, lockw100, intentw20, and intentw100 as accepted/conditional/rejected/diagnostic.",
+    "A unified matrix metric script reports path D1/D2/D3, seam jumps, FOV/coverage, and transform deltas for every candidate.",
+    "Offline full-sequence path optimization is tested on all five Regular clips and either beats lim8/R4 trade-off boundaries or is marked not viable with evidence.",
+    "Bounded-delay sliding-window path optimization is tested only if offline evidence justifies it.",
+    "Jetson FIFO output is produced only for matrix candidates that pass matrix-level gates.",
+    "Mesh route is opened only if global path optimization fails and residual/local-motion diagnostics justify a spatially varying model.",
+    "README, one-page summary, evidence map, long-term context, and active contracts are synchronized at closeout."
+  ],
+  "current_result": {
+    "report": "docs/regular_gate_bounded_qp_path_loop_2026-07-21.md",
+    "selected_candidate": "bqp_w90_s15_w2_20_w3_200",
+    "candidate_summary": "results/regular_gate_bounded_delay_qp_path_loop_20260721/p2_bounded_qp_selected_w90_s15/pose_jump_candidate_summary.csv",
+    "device_summary": "results/regular_gate_bounded_delay_qp_path_loop_20260721/p3_five_regular_fifo/regular_gate_bqp_device_summary.csv",
+    "review_dir": "C:/Users/Admin/Videos/orin nx/review/performance/20260721_regular_gate_bounded_qp_path_loop",
+    "device_result": "5/5 rc=0, fallback=0, frame-index mismatch=0",
+    "hard_gate_summary": "Regular02, Regular03, and Regular05 pass black-border and geometry hard gates. Regular01 and Regular04 are visual-review conditional because gray black-border p95 is high while geometry p95 remains below 1%.",
+    "mesh_route_decision": "Do not open mesh yet; global bounded QP improved matrix metrics and passed device/geometry gates. Open mesh only if human review rejects bounded QP and residual-grid diagnostics justify local motion/parallax."
+  },
+  "target_metrics": {
+    "regular05_trans_delta_p95": "<= 8.0 px, preferably near or below R4 7.243054 without R4-level stabilization loss",
+    "regular05_angle_delta_p95": "<= lim8 baseline",
+    "max_abs_d2_path": "<= 50% of lim8 baseline at known jump frames when possible",
+    "black_border_p95": "<= 0.01 after accepted device output and crop policy",
+    "handoff": "rc=0, fallback=0, frame-index mismatch=0",
+    "regular_gate_visual": "at least 4/5 Regular clips show no hard pose-jump veto after candidate review"
+  },
+  "task_queue": [
+    {
+      "id": "P0-1",
+      "title": "Freeze baseline and rejected candidate table",
+      "priority": "P0",
+      "loop_profile": "documentation_loop",
+      "objective": "Record the current baseline, rejected, and diagnostic candidates in one machine-readable and human-readable table.",
+      "success_criteria": [
+        "safe103crop98, R4, lim8, lockw100, intentw20, and intentw100 statuses are explicit",
+        "no stale pending lim8 state remains",
+        "evidence paths are included"
+      ]
+    },
+    {
+      "id": "P0-2",
+      "title": "Define path parameter domain",
+      "priority": "P0",
+      "loop_profile": "quality_loop",
+      "objective": "Use one consistent parameter domain for camera-path metrics and optimization, starting with tx/ty/theta and fixed scale.",
+      "success_criteria": [
+        "matrix-to-path decomposition is deterministic",
+        "path-to-matrix recomposition is documented",
+        "scale remains fixed for first QP route"
+      ]
+    },
+    {
+      "id": "P0-3",
+      "title": "Build pose-jump metric script",
+      "priority": "P0",
+      "loop_profile": "evaluation_loop",
+      "objective": "Create a script that compares path D1/D2/D3, seam jumps, matrix deltas, and FOV/coverage for candidate matrices.",
+      "success_criteria": [
+        "safe/R4/lim8 diagnostics can be summarized with one command",
+        "outputs are CSV/Markdown under results/",
+        "metrics do not require Jetson"
+      ]
+    },
+    {
+      "id": "P1-1",
+      "title": "Offline full-sequence QP v0",
+      "priority": "P1",
+      "loop_profile": "quality_loop",
+      "objective": "Implement an offline full-sequence QP path optimizer for tx/ty/theta as an upper-bound quality probe.",
+      "success_criteria": [
+        "all five Regular clips produce candidate matrices",
+        "D2/D3 jump metrics improve against safe103crop98",
+        "candidate is not promoted without stabilization/FOV checks"
+      ]
+    },
+    {
+      "id": "P1-2",
+      "title": "Add motion-confidence weighting",
+      "priority": "P1",
+      "loop_profile": "quality_loop",
+      "objective": "Use inliers, inlier ratio, and fallback flags to reduce bad-frame influence in the QP data term.",
+      "success_criteria": [
+        "low-confidence frames are downweighted or coasted",
+        "confidence fields are recorded in metrics",
+        "Regular05 does not regress versus QP v0"
+      ]
+    },
+    {
+      "id": "P1-3",
+      "title": "Add FOV/crop soft-bound check",
+      "priority": "P1",
+      "loop_profile": "quality_loop",
+      "objective": "Add FOV/coverage validation and a first soft-bound strategy before any device video is generated.",
+      "success_criteria": [
+        "candidate invalid coverage is visible",
+        "black-border risk is classified before Jetson runs",
+        "infeasible hard FOV behavior is avoided"
+      ]
+    },
+    {
+      "id": "P1-4",
+      "title": "Matrix-only five-clip offline comparison",
+      "priority": "P1",
+      "loop_profile": "evaluation_loop",
+      "objective": "Compare safe103crop98, R4, lim8, and offline QP on all five Regular clips.",
+      "success_criteria": [
+        "Regular05 trans_delta_p95 target is met or miss is quantified",
+        "at least two additional Regular clips improve without obvious FOV regression",
+        "candidate is classified pass/conditional/fail"
+      ]
+    },
+    {
+      "id": "P1-5",
+      "title": "Optional Windows preview for matrix-passing clips",
+      "priority": "P1",
+      "loop_profile": "quality_loop",
+      "objective": "Generate a minimal source/safe/QP preview only if matrix-level metrics justify visual review.",
+      "success_criteria": [
+        "no preview is generated for metric-failed candidates",
+        "preview copies go to C:/Users/Admin/Videos/orin nx/review/diagnostic/",
+        "visual result is not treated as Jetson device evidence"
+      ]
+    },
+    {
+      "id": "P2-1",
+      "title": "Bounded-delay contract and variables",
+      "priority": "P2",
+      "loop_profile": "documentation_loop",
+      "objective": "Create a scoped bounded-delay QP Done Contract only after offline QP is viable.",
+      "success_criteria": [
+        "delay/window/commit stride choices are frozen",
+        "C0/C1/C2 seam metrics are named",
+        "blind delay sweeps are forbidden"
+      ]
+    },
+    {
+      "id": "P2-2",
+      "title": "Sliding-window QP v0",
+      "priority": "P2",
+      "loop_profile": "quality_loop",
+      "objective": "Implement bounded-delay sliding-window QP with seam C0/C1/C2 continuity in path-parameter domain.",
+      "success_criteria": [
+        "seam jump metrics are near zero",
+        "bounded-delay candidate remains close to offline upper bound",
+        "no final-matrix limiter is used as the fix"
+      ]
+    },
+    {
+      "id": "P2-3",
+      "title": "Delay-quality trade-off table",
+      "priority": "P2",
+      "loop_profile": "evaluation_loop",
+      "objective": "Evaluate a small set of delay/window settings and choose one bounded-delay candidate.",
+      "success_criteria": [
+        "only a small preset set is tested",
+        "latency-quality trade-off is explicit",
+        "candidate slug is frozen before Jetson"
+      ]
+    },
+    {
+      "id": "P3-1",
+      "title": "Device-ready CSV generation",
+      "priority": "P3",
+      "loop_profile": "performance_loop",
+      "objective": "Generate source_to_dest device-ready CSV for a matrix-passing QP candidate.",
+      "success_criteria": [
+        "row count and frame indices match FIFO expectations",
+        "scale/crop policy is declared",
+        "matrix convention remains source_to_dest"
+      ]
+    },
+    {
+      "id": "P3-2",
+      "title": "Regular05 Jetson FIFO run",
+      "priority": "P3",
+      "loop_profile": "performance_loop",
+      "objective": "Run only Regular05 through the accepted EGLImage FIFO consumer first.",
+      "success_criteria": [
+        "rc=0",
+        "fallback=0",
+        "frame-index mismatch=0",
+        "black-border p95 <= 0.01 or failure is classified"
+      ]
+    },
+    {
+      "id": "P3-3",
+      "title": "Regular05 review grid",
+      "priority": "P3",
+      "loop_profile": "quality_loop",
+      "objective": "Produce source/safe/lim8/QP review grid for user visual review only after device gates pass.",
+      "success_criteria": [
+        "review copy uses categorized tree",
+        "panel order is explicit",
+        "visual claim waits for human review"
+      ]
+    },
+    {
+      "id": "P3-4",
+      "title": "Five Regular Jetson extension",
+      "priority": "P3",
+      "loop_profile": "performance_loop",
+      "objective": "Extend the accepted QP device route to five Regular clips only after Regular05 passes.",
+      "success_criteria": [
+        "all outputs readable",
+        "per-clip pass/conditional/fail preserved",
+        "Regular01 remains visible if conditional"
+      ]
+    },
+    {
+      "id": "P4-1",
+      "title": "Global residual grid diagnostic",
+      "priority": "P4",
+      "loop_profile": "evaluation_loop",
+      "objective": "If global QP fails, measure whether residual/local motion justifies a mesh route.",
+      "success_criteria": [
+        "residuals are split by grid/region",
+        "parallax/foreground/local deformation evidence is separated from path-jump evidence",
+        "mesh route is not opened without evidence"
+      ]
+    },
+    {
+      "id": "P4-2",
+      "title": "MeshFlowPy backend inspection",
+      "priority": "P4",
+      "loop_profile": "knowledge_recovery_loop",
+      "objective": "Inspect C:/Users/Admin/Documents/MeshFlowPy-master only if P4-1 justifies mesh.",
+      "success_criteria": [
+        "reusable warp/backend files are identified",
+        "missing temporal smoothing layer is documented",
+        "no broad mesh implementation starts without a new contract"
+      ]
+    },
+    {
+      "id": "P4-3",
+      "title": "Mesh route fork decision",
+      "priority": "P4",
+      "loop_profile": "knowledge_recovery_loop",
+      "objective": "Decide whether mesh/grid warp is necessary or whether global QP should be closed as not viable.",
+      "success_criteria": [
+        "decision is based on residual evidence",
+        "scope and verifier are explicit",
+        "internal-AI prompt is generated if the fork remains ambiguous"
+      ]
+    },
+    {
+      "id": "P5-1",
+      "title": "Contract closeout",
+      "priority": "P5",
+      "loop_profile": "documentation_loop",
+      "objective": "Update active contracts to success, conditional, blocked, or not_viable_with_evidence.",
+      "success_criteria": [
+        "active status is not stale",
+        "next action is explicit",
+        "no local diagnostic candidate is presented as accepted"
+      ]
+    },
+    {
+      "id": "P5-2",
+      "title": "Presentation and long-term context sync",
+      "priority": "P5",
+      "loop_profile": "documentation_loop",
+      "objective": "Update README, one-page summary, evidence map, and long-term context with concise conclusions.",
+      "success_criteria": [
+        "no invented metrics",
+        "no internal original content copied",
+        "stale lim8/R4 wording remains absent"
+      ]
+    },
+    {
+      "id": "P5-3",
+      "title": "Git hygiene checkpoint",
+      "priority": "P5",
+      "loop_profile": "documentation_loop",
+      "objective": "Prepare a coherent source/config/docs checkpoint if the stage is ready.",
+      "success_criteria": [
+        "results/raw/review videos are not staged",
+        "secrets/internal original material are excluded",
+        "commit only when appropriate or requested"
+      ]
+    }
+  ],
+  "stop_policy": {
+    "do_not_exit_until": [
+      "all P0-P5 tasks are complete",
+      "a stop reason is hit after local, knowledge-base, and public-search recovery attempts",
+      "user approval or device-side manual action is required",
+      "the user changes the objective"
+    ],
+    "blocker_report_in_chat_only": [
+      "current problem in plain language",
+      "cause and context",
+      "attempts made and why they failed",
+      "what the user needs to do and exact prompt/command when needed",
+      "important residual risks"
+    ]
+  }
+}

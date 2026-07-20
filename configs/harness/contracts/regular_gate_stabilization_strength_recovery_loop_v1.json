@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "contract_id": "regular_gate_stabilization_strength_recovery_loop_v1",
+  "status": "pending_human_visual_review_residual_closed_loop",
+  "loop_type": "stabilization_strength_recovery_loop",
+  "loop_profile": "quality_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Resolve the human-reviewed bounded-QP weakness: bqp_w90_s15 has no black edge, no zooming, normal color, and some stabilization, but stabilization strength is not obvious enough. Improve stabilization strength without reintroducing pose jumps, black borders, zooming, color shift, or device handoff regressions.",
+  "entry_context": {
+    "latest_user_review": "bqp_w90_s15 has no black border, no zooming, normal color, and has some stabilization, but stabilization is too weak across the five review videos.",
+    "current_candidate": "bqp_w90_s15_w2_20_w3_200",
+    "current_evidence": "results/regular_gate_bounded_delay_qp_path_loop_20260721/",
+    "review_dir": "C:/Users/Admin/Videos/orin nx/review/performance/20260721_regular_gate_bounded_qp_path_loop",
+    "meshflow_zip": "C:/Users/Admin/Documents/MeshFlowPy-master.zip"
+  },
+  "claim_boundary": {
+    "allowed": [
+      "bounded-QP solved or reduced the pose-jump smoothness problem but is visually too weak in stabilization strength",
+      "the next loop may change matrix/path generation only after matrix metrics justify it",
+      "MeshFlowPy may be inspected for motion/warp ideas and future mesh backend boundaries"
+    ],
+    "forbidden": [
+      "claiming final Regular 5/5 pass before human review",
+      "returning to lim6/lim7/lim8/lim10, R radius, or simple final-matrix limiter sweeps",
+      "reintroducing visible black borders, zooming, or color shift",
+      "opening a broad mesh rewrite before global-strength recovery is tested",
+      "copying internal/private source text into public docs",
+      "claiming full real-time EIS, zero-copy full chain, VPI optical-flow acceleration, or all-scene/product-grade EIS"
+    ]
+  },
+  "global_success_criteria": [
+    "A root-cause diagnosis explains why bqp_w90_s15 stabilization appears weak.",
+    "MeshFlowPy source is extracted and inspected at README/main-loop/module level for useful ideas or backend boundaries.",
+    "At least one matrix-level enhanced candidate improves stabilization strength while keeping pose-jump metrics near bounded-QP/R4 range and geometry safe.",
+    "No candidate is promoted to Jetson video unless it passes matrix gates.",
+    "Jetson FIFO evidence is generated only for selected matrix candidates and must preserve rc=0, fallback=0, mismatch=0, color correctness, no zooming, and black/geometry gates.",
+    "Final result is either human-review-ready evidence that materially improves stabilization strength or a blocker report in chat after local/knowledge/public recovery attempts."
+  ],
+  "target_metrics": {
+    "stabilization_strength_proxy": "trans_d1_p95 should move below or near bqp_w90_s15 while residual/correction amplitude should not collapse to R4-style weak output",
+    "pose_jump_proxy": "trans_d2_max and trans_d3_max should remain close to bqp_w90_s15 / R4 range and far below lim8",
+    "regular05_black_border": "p95 <= 0.01 after crop policy or visual/geometry conditional classification",
+    "device_handoff": "rc=0, fallback=0, frame-index mismatch=0",
+    "visual": "human review sees clearly stronger stabilization than bqp_w90_s15 without returning to hard pose jumps"
+  },
+  "current_result": {
+    "report": "docs/regular_gate_residual_closed_loop_2026-07-21.md",
+    "meshflow_source_dir": "results/external_refs_20260721/MeshFlowPy-master-ce3fbe97e66632b73d85b1ad237ff37a7af12d1a",
+    "selected_candidate": "resid_r15_s07",
+    "candidate_summary": "results/regular_gate_stabilization_strength_recovery_20260721/p4_residual_closed_loop_five_full/pose_jump_candidate_summary.csv",
+    "device_summary": "results/regular_gate_stabilization_strength_recovery_20260721/p5_residual_closed_loop_fifo_full/regular_gate_residual_closed_loop_full_device_summary.csv",
+    "review_dir": "C:/Users/Admin/Videos/orin nx/review/performance/20260721_regular_gate_residual_closed_loop_full",
+    "device_result": "5/5 rc=0, fallback=0, frame-index mismatch=0 after full-length matrix rerun",
+    "strength_result": "Regular05 residual trans mean improves from bqp_w90_s15 3.915331140 and spike_mid 2.787707733 to resid_r15_s07 1.032654799, stronger than safe103crop98 2.103411091 in the residual-motion proxy.",
+    "hard_gate_summary": "Regular02, Regular03, and Regular05 pass black-border and geometry hard gates. Regular01 and Regular04 remain visual-review conditional because gray black-border p95 is high while geometry p95 stays below 1%.",
+    "matrix_risk": "resid_r15_s07 has much stronger residual suppression, but higher raw matrix D2/D3 than BQP/R4. Human review must check whether this reintroduces visible pose snaps.",
+    "mesh_route_decision": "MeshFlowPy is a dense/mesh flow backend, not a temporal path optimizer. Residual-grid diagnostics did not justify mesh yet. Do not open mesh unless resid_r15_s07 is visually rejected and residual-grid diagnostics justify local motion/parallax."
+  },
+  "task_queue": [
+    {
+      "id": "P0-1",
+      "priority": "P0",
+      "title": "Control-plane switch and baseline freeze",
+      "objective": "Mark bounded-QP as visually too weak but otherwise healthy, and freeze comparison baselines.",
+      "success_criteria": [
+        "active contract points to this recovery loop",
+        "safe103crop98 / R4 / lim8 / bqp_w90_s15 statuses remain explicit",
+        "no stale final-pass claim exists"
+      ]
+    },
+    {
+      "id": "P0-2",
+      "priority": "P0",
+      "title": "MeshFlowPy unzip and source inspection",
+      "objective": "Extract MeshFlowPy under ignored local evidence and inspect source-level motion/warp/path components.",
+      "success_criteria": [
+        "zip is extracted under results/external_refs_20260721/",
+        "main entry, motion estimation, mesh/warp, and smoothing/path modules are identified",
+        "decision is made whether it helps current global-strength recovery or only future mesh route"
+      ]
+    },
+    {
+      "id": "P1-1",
+      "priority": "P1",
+      "title": "Diagnose bounded-QP weak stabilization",
+      "objective": "Compare source/safe/lim8/R4/bqp path and correction metrics to identify why BQP appears weak.",
+      "success_criteria": [
+        "path/correction amplitude metrics are produced",
+        "weakness is attributed to data term, smoothness weights, correction composition, or FOV/crop pressure",
+        "next candidate family is chosen based on evidence"
+      ]
+    },
+    {
+      "id": "P1-2",
+      "priority": "P1",
+      "title": "Design enhanced global-path candidates",
+      "objective": "Create a small candidate set that increases stabilization strength without reintroducing jumps.",
+      "success_criteria": [
+        "candidate count remains small",
+        "variables are frozen except the chosen stabilization-strength mechanism",
+        "each candidate has a clear expected effect and risk"
+      ]
+    },
+    {
+      "id": "P1-3",
+      "priority": "P1",
+      "title": "Matrix-level enhanced candidate run",
+      "objective": "Run enhanced candidates on all five Regular clips and summarize pose/correction/FOV metrics.",
+      "success_criteria": [
+        "candidate summary CSV/MD exists",
+        "at least one candidate beats bqp_w90_s15 on strength proxy without failing pose/FOV gates",
+        "failed candidates are marked diagnostic"
+      ]
+    },
+    {
+      "id": "P2-1",
+      "priority": "P2",
+      "title": "Diagnostic preview before Jetson",
+      "objective": "Generate Windows preview only for matrix-passing enhanced candidates.",
+      "success_criteria": [
+        "preview is copied to review/diagnostic",
+        "visual review burden is minimized with source/safe/bqp/enhanced panels",
+        "preview is not treated as Jetson evidence"
+      ]
+    },
+    {
+      "id": "P3-1",
+      "priority": "P3",
+      "title": "Regular05 Jetson FIFO validation",
+      "objective": "Run selected enhanced candidate on Regular05 through accepted EGLImage FIFO consumer.",
+      "success_criteria": [
+        "rc=0",
+        "fallback=0",
+        "frame-index mismatch=0",
+        "black/geometry gates pass or are classified",
+        "review copy exists"
+      ]
+    },
+    {
+      "id": "P3-2",
+      "priority": "P3",
+      "title": "Five Regular Jetson extension",
+      "objective": "Extend only a Regular05-passing enhanced candidate to all five Regular clips.",
+      "success_criteria": [
+        "five outputs are readable",
+        "per-clip pass/conditional/fail is preserved",
+        "five-clip review grid is copied to the categorized review tree"
+      ]
+    },
+    {
+      "id": "P4-1",
+      "priority": "P4",
+      "title": "Mesh route decision",
+      "objective": "Open mesh/grid route only if enhanced global path still fails and MeshFlowPy inspection plus residual evidence justifies it.",
+      "success_criteria": [
+        "mesh route remains closed if global route succeeds",
+        "if opened, a new scoped contract is required",
+        "no broad mesh rewrite starts inside this loop without evidence"
+      ]
+    },
+    {
+      "id": "P5-1",
+      "priority": "P5",
+      "title": "Closeout sync",
+      "objective": "Synchronize contracts, README, one-page summary, evidence map, and long-term context after the result is classified.",
+      "success_criteria": [
+        "active status is accurate",
+        "no stale claims remain",
+        "results/review videos remain untracked"
+      ]
+    }
+  ],
+  "stop_policy": {
+    "do_not_exit_until": [
+      "stabilization weakness is resolved without new visual regressions",
+      "or local, MeshFlowPy, knowledge-base, and public-search recovery attempts fail and a chat-only blocker report is given",
+      "or user approval / hardware action is required",
+      "or the user changes the objective"
+    ]
+  }
+}

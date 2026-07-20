@@ -1,0 +1,241 @@
+{
+  "schema_version": 1,
+  "contract_id": "regular_gate_stride5_viewport_stable_validation_v1",
+  "status": "superseded_by_pose_jump_root_cause_recovery",
+  "loop_type": "regular_gate_viewport_stable_extension",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Extend the human-accepted Regular05 stride5 safe103_crop98 viewport-stable candidate to all five NUS Regular gate clips without per-clip manual tuning or reviving rejected device paths.",
+  "accepted_dependency": {
+    "regular05_viewport_fix_report": "docs/regular05_viewport_fix_2026-07-20.md",
+    "regular05_decision": "User accepted safe103_crop98 as the Regular05 viewport-stable candidate: no zooming and no brief left-bottom black edge.",
+    "producer_base": "bounded_delay_lp_rigid, delay90, lp_prefix_stride=5, source_to_dest",
+    "viewport_policy": "fixed scale derived from each clip's median device scale multiplied by 1.03, first-frame-copy-next, postprocess crop98",
+    "consumer": "accepted C++ MMAPI/VPI/NVENC EGLImage FIFO path"
+  },
+  "claim_boundary": {
+    "allowed": [
+      "Regular05 safe103_crop98 is accepted by human review as viewport-stable",
+      "this contract tests whether the same rule generalizes to all five Regular clips",
+      "per-clip results may be pass, conditional, or fail and must stay visible"
+    ],
+    "forbidden": [
+      "per-clip manual scale or crop tuning hidden as one producer",
+      "using old safe103_crop98 failure as this new result without rerunning stride5 viewport-stable path",
+      "using distorted MMAPI pitch-wrapper outputs as quality evidence",
+      "zero-latency real-time EIS",
+      "zero-copy full chain",
+      "VPI optical-flow acceleration",
+      "all-scene EIS quality"
+    ]
+  },
+  "frozen_variables": [
+    "gate: nus_regular_gate_v1",
+    "clips: regular_gate01_regular_10, regular_gate02_regular_19, regular_gate03_regular_13, regular_gate04_regular_8, regular_gate05_regular_6",
+    "matrix convention: source_to_dest",
+    "producer mode: bounded_delay_lp_rigid",
+    "producer delay: 90 frames",
+    "lp prefix stride: 5",
+    "viewport: fixed-scale safe103 style using median scale * 1.03",
+    "first frame: copy next matrix, not identity",
+    "postprocess: crop98 after accepted device output",
+    "consumer: accepted EGLImage FIFO sample",
+    "VPI interpolation: linear",
+    "border mode: VPI_BORDER_ZERO",
+    "do not use rejected pitch-pointer wrapper",
+    "do not use rejected EGLImage image-wrapper reuse",
+    "do not use per-clip manual tuning"
+  ],
+  "success_criteria": [
+    "five device outputs are readable",
+    "each clip has rc=0, fallback_count=0, frame_index_mismatch_count=0",
+    "black_border_p95 below 0.01 for every final crop98 output",
+    "scale_delta_max is approximately zero after fixed-scale candidate generation",
+    "review grids are copied to the categorized review tree",
+    "per-clip failures are preserved and classified instead of hidden"
+  ],
+  "stop_reasons": [
+    "any clip requires manual per-clip tuning to pass",
+    "accepted EGLImage FIFO consumer fails on a clip",
+    "safe103_crop98 removes black edges but FOV loss is visually unacceptable",
+    "zooming remains visible after fixed-scale/crop98 on any key clip",
+    "quality requires a different viewport planner or industrial EIS guidance"
+  ],
+  "candidate_sequence": [
+    "generate stride5 delay90 source_to_dest matrices for all five Regular clips",
+    "derive fixed-scale first-frame-copy-next safe103 matrices using the same rule",
+    "run accepted EGLImage FIFO consumer per clip",
+    "postprocess crop98 per clip",
+    "measure black border, handoff, VPI warp, and scale stability",
+    "make per-clip review grids and one contact grid",
+    "summarize pass/conditional/fail boundaries"
+  ],
+  "validated_results": {
+    "report": "docs/regular_gate_stride5_viewport_stable_validation_2026-07-20.md",
+    "summary_csv": "results/regular_gate_stride5_viewport_stable_validation_20260720/regular_gate_stride5_viewport_summary.csv",
+    "device_path": "accepted C++ EGLImage FIFO consumer",
+    "jetson_rc": "5/5 rc=0",
+    "fallback_count": "0 for every sampled log",
+    "frame_index_mismatch_count": "0 for every sampled log",
+    "final_review_dir": "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular_gate_stride5_viewport_stable_validation",
+    "decision": "viewport-stable extension completed as diagnostic evidence; later human review found pose jumps, and both R4 and lim8 are rejected/diagnostic",
+    "per_clip": [
+      {
+        "clip": "regular_gate01_regular_10",
+        "rc": 0,
+        "fallback_count": 0,
+        "frame_index_mismatch_count": 0,
+        "black_border_p95": 0.02632335,
+        "frames_gt_0p01": 36,
+        "geometry_p95_invalid": 0.000003906,
+        "decision": "conditional_dark_edge_review_required"
+      },
+      {
+        "clip": "regular_gate02_regular_19",
+        "rc": 0,
+        "fallback_count": 0,
+        "frame_index_mismatch_count": 0,
+        "black_border_p95": 0.000291016,
+        "frames_gt_0p01": 0,
+        "geometry_p95_invalid": 0.00122743,
+        "decision": "pass"
+      },
+      {
+        "clip": "regular_gate03_regular_13",
+        "rc": 0,
+        "fallback_count": 0,
+        "frame_index_mismatch_count": 0,
+        "black_border_p95": 0.0003648,
+        "frames_gt_0p01": 0,
+        "geometry_p95_invalid": 0.0,
+        "decision": "pass"
+      },
+      {
+        "clip": "regular_gate04_regular_8",
+        "rc": 0,
+        "fallback_count": 0,
+        "frame_index_mismatch_count": 0,
+        "black_border_p95": 0.002923394,
+        "frames_gt_0p01": 0,
+        "geometry_p95_invalid": 0.00236046,
+        "decision": "pass"
+      },
+      {
+        "clip": "regular_gate05_regular_6",
+        "rc": 0,
+        "fallback_count": 0,
+        "frame_index_mismatch_count": 0,
+        "black_border_p95": 0.0,
+        "frames_gt_0p01": 0,
+        "geometry_p95_invalid": 0.000091363,
+        "decision": "pass"
+      }
+    ]
+    ,
+    "pose_smooth_r4": {
+      "report": "docs/regular_gate_pose_smooth_r4_validation_2026-07-20.md",
+      "summary_csv": "results/regular_gate_stride5_viewport_stable_validation_20260720/pose_smooth_r4_summary.csv",
+      "review_dir": "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular_gate_stride5_pose_smooth_r4_validation",
+      "decision": "rejected_diagnostic",
+      "human_review": "reduced abrupt pose jumps but weakened stabilization too much",
+      "device_path": "accepted C++ EGLImage FIFO consumer",
+      "jetson_rc": "5/5 rc=0",
+      "fallback_count": "0 for every sampled log",
+      "frame_index_mismatch_count": "0 for every sampled log",
+      "matrix_improvement": {
+        "regular_gate01_trans_p95": "8.893594 -> 4.945992",
+        "regular_gate02_trans_p95": "4.192783 -> 3.166811",
+        "regular_gate03_trans_p95": "6.338537 -> 4.689318",
+        "regular_gate04_trans_p95": "6.501285 -> 2.714630",
+        "regular_gate05_trans_p95": "12.263541 -> 7.243054"
+      },
+      "per_clip_black_border": [
+        {
+          "clip": "regular_gate01_regular_10",
+          "black_border_p95": 0.027832031,
+          "frames_gt_0p01": 35,
+          "decision": "conditional_dark_edge_review_required"
+        },
+        {
+          "clip": "regular_gate02_regular_19",
+          "black_border_p95": 0.000278212,
+          "frames_gt_0p01": 0,
+          "decision": "pass"
+        },
+        {
+          "clip": "regular_gate03_regular_13",
+          "black_border_p95": 0.00040408,
+          "frames_gt_0p01": 0,
+          "decision": "pass"
+        },
+        {
+          "clip": "regular_gate04_regular_8",
+          "black_border_p95": 0.002921007,
+          "frames_gt_0p01": 0,
+          "decision": "pass"
+        },
+        {
+          "clip": "regular_gate05_regular_6",
+          "black_border_p95": 0.0,
+          "frames_gt_0p01": 0,
+          "decision": "pass"
+        }
+      ]
+    },
+    "pose_delta_limiter_lim8": {
+      "report": "docs/regular_gate_pose_delta_limiter_validation_2026-07-20.md",
+      "review_dir": "C:/Users/Admin/Videos/orin nx/review/performance/20260720_regular_gate_stride5_pose_delta_limiter_validation",
+      "decision": "rejected_diagnostic",
+      "human_review": "user reviewed lim8 and rejected it because abrupt pose jumps remain visible",
+      "device_path": "accepted C++ EGLImage FIFO consumer",
+      "jetson_rc": "5/5 rc=0",
+      "fallback_count": "0 for every sampled log",
+      "frame_index_mismatch_count": "0 for every sampled log",
+      "interpretation": "lim8 is diagnostic evidence only. It shows that hard local delta limiting can cap maxima without solving the first-principles camera-path continuity problem.",
+      "representative_probe": {
+        "regular05_safe_sr_pose": 4.151,
+        "regular05_r4_sr_pose": 2.955,
+        "regular05_lim8_sr_pose": 3.629,
+        "regular05_safe_residual_improve": 0.516,
+        "regular05_r4_residual_improve": 0.410,
+        "regular05_lim8_residual_improve": 0.376
+      },
+      "per_clip_black_border": [
+        {
+          "clip": "regular_gate01_regular_10",
+          "black_border_p95": 0.028801216,
+          "frames_gt_0p01": 26,
+          "decision": "conditional_dark_edge_review_required"
+        },
+        {
+          "clip": "regular_gate02_regular_19",
+          "black_border_p95": 0.000290798,
+          "frames_gt_0p01": 0,
+          "decision": "pass"
+        },
+        {
+          "clip": "regular_gate03_regular_13",
+          "black_border_p95": 0.000331163,
+          "frames_gt_0p01": 0,
+          "decision": "pass"
+        },
+        {
+          "clip": "regular_gate04_regular_8",
+          "black_border_p95": 0.002923394,
+          "frames_gt_0p01": 0,
+          "decision": "pass"
+        },
+        {
+          "clip": "regular_gate05_regular_6",
+          "black_border_p95": 0.0,
+          "frames_gt_0p01": 0,
+          "decision": "pass"
+        }
+      ]
+    }
+  },
+  "evidence_output_directory": "results/regular_gate_stride5_viewport_stable_validation_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/performance/<YYYYMMDD>_regular_gate_stride5_viewport_stable_validation",
+  "report_path": "docs/regular_gate_stride5_viewport_stable_validation_<YYYY-MM-DD>.md"
+}
