@@ -99,10 +99,10 @@ EGLImage timing boundary:
   avg was about 1.55 ms, while the larger EGLImage scratch-buffer stage averaged
   about 10.5 ms. The next performance target is dataflow, not the warp kernel.
 
-Wrapper reuse probe:
-  Reusing VPI stream and EGLImage wrappers reduced Regular05 wall time to about
-  1573 ms for 180 frames and reduced the measured EGLImage stage to about
-  7.87 ms. Direct NvBuffer input wrapping failed due to a VPI format mismatch.
+Wrapper reuse boundary:
+  Full wrapper reuse reduced timing but was rejected because it reintroduced
+  visible block tearing. Stream-only reuse avoids the observed tearing but has
+  limited performance value. The next target is NvBufSurfTransform/dataflow cost.
 ```
 
 Conclusion:

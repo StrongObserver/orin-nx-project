@@ -80,12 +80,12 @@ EGLImage timing boundary:
   10.5 ms. The next performance target is the memory/dataflow around VPI, not
   the PerspectiveWarp kernel alone.
 
-Wrapper reuse probe:
-  Reusing VPI stream and EGLImage wrappers reduced Regular05 same-input wall
-  time from about 2002 ms to 1573 ms for 180 frames, and reduced the measured
-  EGLImage stage from about 10.5 ms to 7.87 ms. Direct NvBuffer input wrapping
-  was rejected because VPI required input and output images to have the same
-  format.
+Wrapper reuse boundary:
+  Full VPI stream + EGLImage wrapper reuse reduced timing on Regular05, but was
+  rejected because it caused visible block tearing on Regular clips. Stream-only
+  reuse avoids the observed tearing, but its performance value is limited. The
+  next performance target is NvBufSurfTransform cost or format-matched NvBuffer
+  input/output, not full wrapper reuse.
 ```
 
 ## Current Stage

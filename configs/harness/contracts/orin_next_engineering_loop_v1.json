@@ -15,8 +15,8 @@
   "current_loop_state": {
     "last_completed_task": "regular_gate_inclusion_validation_v1/human_review_regular_gate_bgr8_color_fix",
     "current_task": "regular05_eglimage_dataflow_cost_v1",
-    "latest_result": "Regular gate inclusion visual correctness is frozen through the VPI Python allocated-image BGR8 path. The accepted C++ MMAPI/VPI/NVENC EGLImage-wrapper path ran all five Regular inclusion matrices with rc=0, fallback=0, and frame-index mismatch=0. Regular05 timing showed 2002 ms wall time for 180 frames, about 1.55 ms VPI warp-only, and about 10.5 ms EGLImage stage cost. Reusing VPI stream and EGLImage wrappers reduced Regular05 wall time to 1573 ms and EGLImage stage cost to about 7.87 ms. Direct NvBuffer input wrapping was rejected because VPI required input and output images to have the same format.",
-    "current_blocker": "No blocker. The next scoped task is to decide whether to promote wrapper reuse into the accepted C++ path after visual no-regression, or continue isolating NvBufSurfTransform cost with a copied sample.",
+    "latest_result": "Regular gate inclusion visual correctness is frozen through the VPI Python allocated-image BGR8 path. The accepted C++ MMAPI/VPI/NVENC EGLImage-wrapper path ran all five Regular inclusion matrices with rc=0, fallback=0, and frame-index mismatch=0. Full wrapper reuse was rejected after user review and frame-sheet diagnosis because it caused visible block tearing. Stream-only reuse avoids the observed tearing and ran all five Regular clips with rc=0, fallback=0, and mismatch=0, but its performance value is limited; the next meaningful performance target is NvBufSurfTransform cost or format-matched NvBuffer input/output.",
+    "current_blocker": "No blocker on the frozen Regular gate C++ path. Full wrapper reuse is rejected; stream-only reuse is a safe but low-value variant. Continue dataflow optimization from the accepted EGLImage path without using full wrapper reuse.",
     "recommended_next_contract": "regular05_eglimage_dataflow_cost_v1"
   },
   "global_claim_boundary": {
