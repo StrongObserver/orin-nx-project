@@ -94,6 +94,14 @@
       "full_range_blocklinear_rc": 139,
       "full_range_error": "Unsupported image format for BT601_ER BLOCK16_LINEAR",
       "interpretation": "VPI PerspectiveWarp does not accept the tested block-linear scratch pairs; pitch-linear NV12_ER scratch remains required for VPI compatibility."
+    },
+    "pitch_encoder_probe": {
+      "report": "docs/regular05_pitch_encoder_probe_2026-07-20.md",
+      "rc": 0,
+      "output_visual_status": "invalid_near_solid_green",
+      "frame_90_mean": 79.062973,
+      "frame_90_std": 0.472845,
+      "interpretation": "NVENC command returns success but pitch-linear main-chain output is visually invalid; block-linear main chain remains required."
     }
   },
   "allowed_experiments": [

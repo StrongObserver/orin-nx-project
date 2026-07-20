@@ -119,6 +119,12 @@ Block-linear probe:
   VPI PerspectiveWarp rejected both tested block-linear scratch pairs: limited
   range NV12 failed because full range is required, and block-linear NV12_ER was
   unsupported. The pitch-linear NV12_ER scratch pair remains required for VPI.
+
+Pitch encoder probe:
+  Changing the transcode main path to pitch-linear returned success but produced
+  near-solid green video. NVENC/main-chain output must stay block-linear in this
+  path, so the block-linear main chain plus pitch-linear VPI scratch transform
+  sandwich is a current hard boundary.
 ```
 
 ## Current Stage

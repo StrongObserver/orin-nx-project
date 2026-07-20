@@ -132,6 +132,11 @@ Block-linear probe:
   VPI rejected the tested block-linear scratch pairs, including full-range
   NV12_ER. The current VPI-compatible scratch format remains pitch-linear
   NV12_ER.
+
+Pitch encoder probe:
+  Pitch-linear main-chain encoding returned success but produced near-solid
+  green output. The current block-linear main chain plus pitch-linear VPI scratch
+  sandwich is a hard boundary for this stage.
 ```
 
 Conclusion:
