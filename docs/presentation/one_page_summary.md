@@ -142,6 +142,12 @@ Producer matrices on C++ path:
   Fixed replay, offline-LP, and delay90 Regular05 matrices all ran through the
   accepted C++ EGLImage consumer with rc=0, fallback=0, mismatch=0, and
   black-border p95 below 1%. Next step is concurrent FIFO/live streaming.
+
+Concurrent FIFO/live:
+  The FIFO-enabled accepted consumer also handled fixed CSV, delay90 CSV, and
+  concurrent live delay90 matrices with healthy handoff and black-border gates.
+  The live run took about 68.7 s for 180 frames, making producer compute the
+  next bottleneck.
 ```
 
 Conclusion:

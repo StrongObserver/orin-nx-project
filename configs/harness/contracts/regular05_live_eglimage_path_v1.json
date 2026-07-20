@@ -54,6 +54,34 @@
       "frame_index_mismatch_count": 0,
       "vpi_warp_avg_ms": 1.54907,
       "black_border_p95": 0.000639106
+    },
+    "fixed_fifo": {
+      "rc": 0,
+      "wall_time_ms": 1916,
+      "fallback_count": 0,
+      "frame_index_mismatch_count": 0,
+      "handoff_avg_us": 69.360818,
+      "vpi_warp_avg_ms": 1.51565,
+      "black_border_p95": 0.000951823
+    },
+    "delay90_fifo": {
+      "rc": 0,
+      "wall_time_ms": 1994,
+      "fallback_count": 0,
+      "frame_index_mismatch_count": 0,
+      "handoff_avg_us": 59.839,
+      "vpi_warp_avg_ms": 1.57779,
+      "black_border_p95": 0.000639106
+    },
+    "live_delay90": {
+      "rc": 0,
+      "wall_time_ms": 68696,
+      "fallback_count": 0,
+      "frame_index_mismatch_count": 0,
+      "handoff_avg_us": 31.440898,
+      "vpi_warp_avg_ms": 1.55495,
+      "black_border_p95": 0.000583333,
+      "interpretation": "Consumer/FIFO path is healthy; live producer compute dominates wall time."
     }
   },
   "success_criteria": [

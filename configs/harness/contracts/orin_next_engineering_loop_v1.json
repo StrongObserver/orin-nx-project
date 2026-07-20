@@ -15,8 +15,8 @@
   "current_loop_state": {
     "last_completed_task": "regular_gate_inclusion_validation_v1/human_review_regular_gate_bgr8_color_fix",
     "current_task": "regular05_live_eglimage_path_v1",
-    "latest_result": "Regular gate inclusion visual correctness is frozen through the VPI Python allocated-image BGR8 path. The accepted C++ MMAPI/VPI/NVENC EGLImage-wrapper path ran all five Regular inclusion matrices with rc=0, fallback=0, and frame-index mismatch=0. Dataflow probing closed the current zero-copy route: VPI needs pitch-linear NV12_ER scratch while NVENC/main chain needs block-linear. The accepted C++ path also consumed Regular05 fixed, offline-LP, and delay90 matrix CSVs with rc=0, fallback=0, mismatch=0, and black-border p95 below 1%.",
-    "current_blocker": "No blocker on the frozen Regular gate C++ path. The next step is concurrent FIFO/live producer streaming through the accepted EGLImage consumer.",
+    "latest_result": "Regular gate inclusion visual correctness is frozen through the VPI Python allocated-image BGR8 path. The accepted C++ MMAPI/VPI/NVENC EGLImage-wrapper path ran all five Regular inclusion matrices with rc=0, fallback=0, and frame-index mismatch=0. Dataflow probing closed the current zero-copy route: VPI needs pitch-linear NV12_ER scratch while NVENC/main chain needs block-linear. The accepted C++ path consumed Regular05 fixed, offline-LP, delay90 CSV, fixed FIFO, delay90 FIFO, and concurrent live delay90 matrices with rc=0, fallback=0, mismatch=0, and black-border p95 below 1%.",
+    "current_blocker": "No blocker on the frozen Regular gate C++ path. The accepted C++ consumer and FIFO path are healthy; the current live bottleneck is producer compute/scheduling.",
     "recommended_next_contract": "regular05_live_eglimage_path_v1"
   },
   "global_claim_boundary": {

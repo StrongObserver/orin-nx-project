@@ -131,6 +131,13 @@ Regular05 producer matrices on C++ path:
   Regular05 matrices with rc=0, fallback=0, frame-index mismatch=0, and
   black-border p95 below 1%. This validates the accepted device consumer for
   existing producer CSVs; the next step is concurrent FIFO/live streaming.
+
+Concurrent FIFO/live producer:
+  The FIFO-enabled accepted EGLImage consumer also ran fixed CSV, delay90 CSV,
+  and concurrent live delay90 producer inputs with rc=0, fallback=0, mismatch=0,
+  and black-border p95 below 1%. The concurrent live run took about 68.7 s for
+  180 frames, so the live bottleneck is producer compute/scheduling rather than
+  the C++ consumer.
 ```
 
 ## Current Stage
