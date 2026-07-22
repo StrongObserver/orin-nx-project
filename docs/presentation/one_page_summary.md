@@ -180,6 +180,17 @@ First-frame amortization:
   180-frame run to about 9.41 ms/frame, but steady dataflow still remains around
   7.5-8.5 ms/frame.
 
+NvBuffer pair follow-up:
+  The current quality anchor is `resid_r15_s07`, not the earlier inclusion or
+  safe103 matrices. After the weaker inclusion-matrix review, `resid_r15_s07`
+  was run through the format-matched NvBuffer pair path on all five Regular
+  clips with rc=0 and fallback=0. Same-source Regular05 EGLImage vs NvBuffer
+  comparison aligned exactly in time and geometry after crop98. NvBuffer pair
+  preserves the accepted quality anchor and gives a small dataflow-stage gain:
+  frame100 stage 7.535 ms -> 7.230 ms, and running average 9.589 ms -> 9.401 ms.
+  This is a quality-preserving dataflow improvement, not zero-copy or full
+  pipeline acceleration.
+
 Identity warp:
   Identity PerspectiveWarp is only slightly faster than the inclusion matrix
   path, so matrix complexity is not the current bottleneck.
@@ -275,8 +286,10 @@ This is not just a stabilizer demo. I built a measurement loop: Regular is the
 in-domain success case, Challenge sets define the model boundary, VPI shows where
 hardware acceleration helps, GStreamer/NVMM measurements explain why direct
 Python dataflow integration is not currently worthwhile, and the MMAPI/VPI/NVENC
-path now has an accepted Regular gate EGLImage device path plus a Regular05
-FIFO/live handoff checkpoint.
+path now has an accepted Regular gate EGLImage device path, a Regular05
+FIFO/live handoff checkpoint, and a format-matched NvBuffer pair follow-up that
+keeps the `resid_r15_s07` quality anchor while shaving a small measured portion
+of the device-side stage cost.
 ```
 
 ## Evidence
@@ -302,4 +315,6 @@ results/vpi_warp_module_rerun_20260722/
 results/power_probe_20260722_sudo/
 results/pyr_lk_opencv_vpi_compare_20260722_v2/
 results/regular05_submit_sync_probe_20260722/
+results/regular_gate_nvbuffer_pair_resid_20260723/
+results/regular05_eglimage_timing_resid_compare_20260723/
 ```

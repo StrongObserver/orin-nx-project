@@ -213,6 +213,47 @@ With a three-iteration long run, wall time drops from about 12.69 ms/frame for a
 single run to about 9.41 ms/frame. The spike can be amortized, but steady-state
 dataflow still remains around 7.5-8.5 ms.
 
+## NvBuffer Pair Follow-Up
+
+Format-matched pitch-linear NV12_ER input/output scratch buffers can also be
+wrapped with `VPI_IMAGE_BUFFER_NVBUFFER`. The important quality correction is
+that the current comparison baseline is `resid_r15_s07`, not the older
+`inclusion_source_to_dest` or `safe103_crop98` matrices.
+
+Five Regular clips were run through NvBuffer pair with `resid_r15_s07`:
+
+| Clip | rc | fallback | trans_mean | trans_p95 | black_p95 |
+|---|---:|---:|---:|---:|---:|
+| regular_gate01_regular_10 | 0 | 0 | 0.973 | 2.211 | 0.027436 |
+| regular_gate02_regular_19 | 0 | 0 | 0.787 | 2.006 | 0.000422 |
+| regular_gate03_regular_13 | 0 | 0 | 0.751 | 1.646 | 0.000343 |
+| regular_gate04_regular_8 | 0 | 0 | 0.490 | 0.893 | 0.003435 |
+| regular_gate05_regular_6 | 0 | 0 | 1.025 | 3.042 | 0.000000 |
+
+Regular01 remains visual-conditional because the gray-threshold black-border
+metric is sensitive to dark edges. The 5-clip review asset is:
+
+```text
+C:\Users\Admin\Videos\orin nx\review\performance\20260723_regular_gate_nvbuffer_pair_resid_r15_s07_5clip\20260723_regular_gate_nvbuffer_resid_r15_s07_5clip_overview_grid.mp4
+```
+
+Same-source Regular05 timing, `resid_r15_s07`:
+
+| Metric | EGLImage | NvBuffer pair | Improvement |
+|---|---:|---:|---:|
+| VPI warp avg | 1.518510 ms | 1.491370 ms | 1.79% |
+| stage frame100 | 7.535330 ms | 7.230350 ms | 4.05% |
+| stage running avg | 9.588980 ms | 9.401090 ms | 1.96% |
+
+Interpretation:
+
+```text
+NvBuffer pair preserves the accepted resid_r15_s07 quality anchor and gives a
+small but measurable device-side dataflow-stage gain. It is not a zero-copy
+full chain: block-linear main surfaces, pitch-linear scratch buffers,
+NvBufSurfTransform, VPI wrapper creation, and sync costs still remain.
+```
+
 ## Interview Wording
 
 ```text
@@ -244,4 +285,6 @@ results/vpi_warp_correctness_20260722/
 results/power_probe_20260722_sudo/
 results/regular05_submit_sync_probe_20260722/
 results/regular05_submit_sync_longrun_20260722/
+results/regular_gate_nvbuffer_pair_resid_20260723/
+results/regular05_eglimage_timing_resid_compare_20260723/
 ```
