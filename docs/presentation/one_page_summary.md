@@ -100,26 +100,15 @@ Pose smoothing:
   limiting, but the user rejected it because abrupt pose jumps remain. The active
   direction is root-cause recovery for camera-path planning, not another limiter.
 
-Bounded QP camera path:
-  The current selected candidate is `bqp_w90_s15_w2_20_w3_200`, a bounded-delay
-  QP path optimizer that changes matrix/path generation while keeping the
-  accepted C++ EGLImage FIFO consumer fixed. Regular05 matrix metrics improved
-  from safe103crop98 `trans_d1_p95=12.267` to `7.934`, with `trans_d2_max=2.173`
-  and `trans_d3_max=1.834`. Five Regular Jetson FIFO runs all have rc=0,
-  fallback=0, and mismatch=0. Regular02/03/05 pass hard gates; Regular01/04 are
-  visual-review conditional because gray black-border p95 is high while geometry
-  coverage remains safe. This is pending human visual review, not a final 5/5
-  quality claim.
-
-Stabilization-strength recovery:
-  Human review found BQP healthy but too weak. MeshFlowPy was extracted and
-  inspected; it is a dense/mesh flow backend, not a temporal path optimizer. The
-  current enhanced candidate is `spike_mid_t6_b70_r2_i2`, a local D2 pose-spike
-  repair on top of the stronger safe103 correction. On Regular05, residual
-  translation mean improves from BQP `3.915` to spike_mid `2.788`, closer to
-  safe103crop98 `2.103`, while all five Regular clips still run through the
-  accepted Jetson FIFO path with rc=0, fallback=0, and mismatch=0. Regular01/04
-  remain visual-review conditional for gray-threshold dark-edge risk.
+Bounded QP and spike-repair history:
+  `bqp_w90_s15_w2_20_w3_200` changed only matrix/path generation while keeping
+  the accepted C++ EGLImage FIFO consumer fixed. It improved Regular05 matrix
+  continuity, but human review found the stabilization too weak. The next
+  `spike_mid_t6_b70_r2_i2` candidate preserved 5/5 Jetson FIFO
+  rc/fallback/mismatch health and improved Regular05 residual translation mean
+  from BQP `3.915` to `2.788`, but it was also rejected as insufficient for the
+  current quality target. These candidates are retained as diagnostic history,
+  not current review targets.
 
 Residual closed-loop recovery:
   Human review then rejected spike_mid. Residual-grid diagnostics did not show a
@@ -129,8 +118,9 @@ Residual closed-loop recovery:
   device matrix. It runs five Regular clips through Jetson FIFO with rc=0,
   fallback=0, and mismatch=0. On Regular05, residual trans mean improves to
   `1.033`, stronger than safe103crop98 `2.103`, BQP `3.915`, and spike_mid
-  `2.788`. The risk is higher raw matrix D2/D3, so human review must check for
-  reintroduced pose snaps.
+  `2.788`. Human review accepted it as visibly stronger than BQP/spike_mid,
+  with no hard pose snaps and no visible black borders. This closes the current
+  Regular gate stabilization-strength recovery loop.
 
 Regular gate inclusion viewport:
   safe103_crop98 failed as a general five-clip producer.
@@ -231,13 +221,12 @@ Conclusion:
 Python-in-the-loop GStreamer EIS integration is not the next acceleration path;
 the current acceleration frontier is the C++ device-side MMAPI/VPI/NVENC path.
 The accepted consumer/FIFO path is healthy; the first producer scheduling
-optimization is now measured on Regular05. The viewport-stable rule has been
+optimization is measured on Regular05. The viewport-stable rule has been
 extended to five Regular clips. R4 and lim8 are both diagnostic/rejected:
 R4 is too weak, and lim8 still has abrupt pose jumps. BQP solved continuity but
-was too weak; spike_mid was also rejected. The current review target is
-resid_r15_s07, which strongly suppresses measured residual motion but must be
-checked for possible reintroduced pose snaps. Regular01 and Regular04 remain
-conditional for the dark-edge / gray-threshold question.
+was too weak; spike_mid was also rejected. The accepted recovery result is
+resid_r15_s07, which strongly suppresses measured residual motion and passed
+human review for visible stability, pose-snap, and black-border checks.
 First-frame producer latency remains a separate scheduling topic.
 ```
 

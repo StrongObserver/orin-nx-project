@@ -78,10 +78,10 @@ Regular gate pose smoothing:
   Human review found R4 too weak. The next lim8 diagnostic used a local delta
   limiter instead of whole-sequence averaging; it also ran 5/5 through the
   accepted consumer, but the user rejected it because abrupt pose jumps remain.
-  The active loop is now root-cause / knowledge recovery for camera-path
-  planning, not another limiter sweep. Matrix-level probes for published-prefix
-  continuity and intent-reference LP costs were added as default-off diagnostics,
-  but they are not accepted quality fixes.
+  This moved the project into camera-path root-cause recovery rather than
+  another limiter sweep. Matrix-level probes for published-prefix continuity and
+  intent-reference LP costs were added as default-off diagnostics, but they are
+  not accepted quality fixes.
 
 Bounded QP camera-path candidate:
   The approved recovery loop replaced post-hoc limiter/smoothing with a
@@ -93,21 +93,20 @@ Bounded QP camera-path candidate:
   whole-sequence averaging. The candidate ran all five Regular clips through
   the accepted Jetson FIFO consumer with rc=0, fallback=0, and mismatch=0.
   Regular02, Regular03, and Regular05 pass current black/geometry hard gates;
-  Regular01 and Regular04 are visual-review conditional because gray
-  black-border p95 is high while geometry p95 remains below 1%. Human review is
-  still required before claiming a Regular 5/5 quality pass.
+  Regular01 and Regular04 are metric-conditional because gray black-border p95
+  is high while geometry p95 remains below 1%. Human review later found the
+  BQP output too weak, so this candidate remains diagnostic history.
 
-Stabilization-strength recovery:
+Stabilization-strength recovery history:
   Human review found `bqp_w90_s15` geometrically healthy but visually too weak.
   MeshFlowPy was extracted and inspected; it is a dense/mesh flow backend, not a
   temporal camera-path optimizer, so it is deferred unless global-path recovery
-  fails. The current enhanced candidate is `spike_mid_t6_b70_r2_i2`, a local
-  D2 pose-spike repair on top of the stronger `safe103crop98` correction. On
-  Regular05, residual translation mean improves from `bqp_w90_s15=3.915` to
+  fails. The first enhanced candidate, `spike_mid_t6_b70_r2_i2`, was a local D2
+  pose-spike repair on top of the stronger `safe103crop98` correction. On
+  Regular05 it improved residual translation mean from `bqp_w90_s15=3.915` to
   `spike_mid=2.788`, closer to `safe103crop98=2.103`, while preserving 5/5
-  Jetson FIFO rc/fallback/mismatch health. Regular02/03/05 pass current hard
-  gates; Regular01/04 remain visual-review conditional for gray-threshold dark
-  edge risk.
+  Jetson FIFO rc/fallback/mismatch health, but human review still rejected it as
+  insufficient for the current quality target.
 
 Residual closed-loop recovery:
   After `spike_mid` was also rejected, residual-grid diagnostics did not show a
@@ -117,9 +116,10 @@ Residual closed-loop recovery:
   matrices. Full-length matrices ran all five Regular clips through the accepted
   Jetson FIFO consumer with rc=0, fallback=0, and mismatch=0. On Regular05,
   residual translation mean improves to `1.033`, stronger than safe103crop98
-  `2.103`, bqp `3.915`, and spike_mid `2.788`. The trade-off is higher raw
-  matrix D2/D3, so human review must check whether it reintroduces visible pose
-  snaps.
+  `2.103`, bqp `3.915`, and spike_mid `2.788`. Human review accepted the
+  candidate: it is visibly stronger than bqp/spike_mid and shows no hard pose
+  snaps or visible black borders in the review videos. The result is accepted
+  inside the Regular gate boundary, not as all-scene or product-grade EIS.
 
 Regular gate inclusion viewport validation:
   safe103_crop98 is accepted only for Regular05 and failed as a general
@@ -524,8 +524,7 @@ Current active contracts:
 
 ```text
 configs/harness/contracts/orin_next_engineering_loop_v1.json
-configs/harness/contracts/regular_gate_stride5_viewport_stable_validation_v1.json
-configs/harness/contracts/regular05_producer_scheduling_optimization_v1.json
+configs/harness/contracts/regular_gate_stabilization_strength_recovery_loop_v1.json
 configs/harness/contracts/regular05_live_eglimage_path_v1.json
 configs/harness/contracts/regular05_eglimage_wrapper_reuse_root_cause_v1.json
 ```
@@ -579,26 +578,8 @@ C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular_gate_stride5_p
 Regular05 stride5 producer scheduling reduces producer-only time from about
 68.5s to about 15.7s and concurrent live wall time from about 68.7s to 17.5s
 for 180 frames while the accepted FIFO consumer remains healthy. The viewport
-stable rule has now been extended to five Regular clips, but Regular01 remains
-conditional pending human review. R4 and lim8 are now rejected/diagnostic:
-R4 weakens stabilization too much, while lim8 still has visible abrupt pose
-jumps. The active quality loop is camera-path root-cause recovery.
-
-Next technical direction:
-
-```text
-1. keep the accepted C++ consumer fixed;
-2. treat safe103crop98, R4, and lim8 as diagnostic evidence for the pose-jump
-   root cause;
-3. stop local limiter tuning until first-principles analysis and reference
-   search produce a scoped camera-path planning fix;
-4. prefer intent-aware path optimization with derivative, confidence, and FOV
-   constraints over post-hoc final-matrix smoothing;
-5. review the bounded-QP five-clip grids before opening mesh/grid warp;
-6. review the spike_mid stabilization-strength grids before opening mesh/grid
-   warp;
-7. separately decide whether to reduce first-frame producer latency;
-8. only if global candidates are visually rejected and residual diagnostics prove local
-   motion/parallax, consider mesh/grid warp or a different motion-estimation
-   route.
-```
+stable rule has now been extended to five Regular clips. R4 and lim8 are now
+rejected/diagnostic: R4 weakens stabilization too much, while lim8 still has
+visible abrupt pose jumps. BQP and spike_mid are also rejected for insufficient
+stabilization or remaining visual issues. The accepted quality recovery result
+for this stage is `resid_r15_s07`.

@@ -1,27 +1,28 @@
 {
   "schema_version": 1,
   "contract_id": "regular_gate_stabilization_strength_recovery_loop_v1",
-  "status": "pending_human_visual_review_residual_closed_loop",
+  "status": "accepted_human_visual_review_residual_closed_loop",
   "loop_type": "stabilization_strength_recovery_loop",
   "loop_profile": "quality_loop",
   "autonomy_level": "L3",
   "required_platform_label": "jetson",
   "objective": "Resolve the human-reviewed bounded-QP weakness: bqp_w90_s15 has no black edge, no zooming, normal color, and some stabilization, but stabilization strength is not obvious enough. Improve stabilization strength without reintroducing pose jumps, black borders, zooming, color shift, or device handoff regressions.",
   "entry_context": {
-    "latest_user_review": "bqp_w90_s15 has no black border, no zooming, normal color, and has some stabilization, but stabilization is too weak across the five review videos.",
-    "current_candidate": "bqp_w90_s15_w2_20_w3_200",
-    "current_evidence": "results/regular_gate_bounded_delay_qp_path_loop_20260721/",
-    "review_dir": "C:/Users/Admin/Videos/orin nx/review/performance/20260721_regular_gate_bounded_qp_path_loop",
+    "previous_user_review": "bqp_w90_s15 has no black border, no zooming, normal color, and has some stabilization, but stabilization is too weak across the five review videos.",
+    "latest_user_review": "User reviewed resid_r15_s07 on 2026-07-22 and accepted it: visibly more stable than bqp_w90_s15/spike_mid, with no hard pose snaps and no visible black border.",
+    "current_candidate": "resid_r15_s07",
+    "current_evidence": "results/regular_gate_stabilization_strength_recovery_20260721/p5_residual_closed_loop_fifo_full/",
+    "review_dir": "C:/Users/Admin/Videos/orin nx/review/performance/20260721_regular_gate_residual_closed_loop_full",
     "meshflow_zip": "C:/Users/Admin/Documents/MeshFlowPy-master.zip"
   },
   "claim_boundary": {
     "allowed": [
       "bounded-QP solved or reduced the pose-jump smoothness problem but is visually too weak in stabilization strength",
-      "the next loop may change matrix/path generation only after matrix metrics justify it",
+      "resid_r15_s07 is the accepted Regular gate stabilization-strength recovery candidate after human review",
       "MeshFlowPy may be inspected for motion/warp ideas and future mesh backend boundaries"
     ],
     "forbidden": [
-      "claiming final Regular 5/5 pass before human review",
+      "claiming all-scene or product-grade EIS quality from this Regular gate result",
       "returning to lim6/lim7/lim8/lim10, R radius, or simple final-matrix limiter sweeps",
       "reintroducing visible black borders, zooming, or color shift",
       "opening a broad mesh rewrite before global-strength recovery is tested",
@@ -53,9 +54,10 @@
     "review_dir": "C:/Users/Admin/Videos/orin nx/review/performance/20260721_regular_gate_residual_closed_loop_full",
     "device_result": "5/5 rc=0, fallback=0, frame-index mismatch=0 after full-length matrix rerun",
     "strength_result": "Regular05 residual trans mean improves from bqp_w90_s15 3.915331140 and spike_mid 2.787707733 to resid_r15_s07 1.032654799, stronger than safe103crop98 2.103411091 in the residual-motion proxy.",
-    "hard_gate_summary": "Regular02, Regular03, and Regular05 pass black-border and geometry hard gates. Regular01 and Regular04 remain visual-review conditional because gray black-border p95 is high while geometry p95 stays below 1%.",
-    "matrix_risk": "resid_r15_s07 has much stronger residual suppression, but higher raw matrix D2/D3 than BQP/R4. Human review must check whether this reintroduces visible pose snaps.",
-    "mesh_route_decision": "MeshFlowPy is a dense/mesh flow backend, not a temporal path optimizer. Residual-grid diagnostics did not justify mesh yet. Do not open mesh unless resid_r15_s07 is visually rejected and residual-grid diagnostics justify local motion/parallax."
+    "hard_gate_summary": "Regular02, Regular03, and Regular05 pass black-border and geometry hard gates. Regular01 and Regular04 remain metric-conditional because gray black-border p95 is high while geometry p95 stays below 1%; user visual review found no visible black border in the accepted resid_r15_s07 review.",
+    "human_review_result": "accepted_on_2026_07_22: visibly stronger stabilization than bqp_w90_s15/spike_mid, no hard pose snaps, and no visible black border.",
+    "matrix_risk": "resid_r15_s07 has higher raw matrix D2/D3 than BQP/R4, but this risk was checked by human review and no hard pose snap was observed in the accepted review videos.",
+    "mesh_route_decision": "MeshFlowPy is a dense/mesh flow backend, not a temporal path optimizer. Residual-grid diagnostics did not justify mesh, and the accepted residual closed-loop result closes this recovery loop without opening mesh."
   },
   "task_queue": [
     {

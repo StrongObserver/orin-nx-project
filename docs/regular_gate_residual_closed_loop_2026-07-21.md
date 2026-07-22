@@ -60,7 +60,15 @@ Matrix jump risk:
 ```text
 resid_r15_s07 improves video residual motion strongly, but raw matrix D2/D3
 metrics are higher than BQP/R4 because residual closed-loop correction is more
-aggressive. Human review must check whether it reintroduces visible pose snaps.
+aggressive. This was the main visual-review risk before acceptance.
+```
+
+Human review result, 2026-07-22:
+
+```text
+Accepted. The user confirmed that resid_r15_s07 is visibly more stable than
+bqp_w90_s15 / spike_mid, and that it does not show hard pose snaps or visible
+black borders in the review videos.
 ```
 
 ## Jetson Device Result
@@ -93,8 +101,9 @@ Per-clip summary:
 | regular_gate05_regular_6 | 0 | 0 | 0 | 0.000008681 | 0.000664930 | pass hard gates |
 
 Regular01 and Regular04 retain the known gray-threshold / dark-edge conditional
-pattern. Geometry remains below 1%, so they require visual review rather than
-automatic rejection.
+pattern in automated metrics. Geometry remains below 1%, and the user visual
+review accepted the result with no visible black border, so these are treated as
+metric-conditionals rather than visual failures.
 
 ## Review Evidence
 
@@ -116,18 +125,20 @@ Panel order:
 source / safe103crop98 / spike_mid / resid_r15_s07
 ```
 
-## Decision Boundary
+## Decision
 
-Human review should decide:
+Human review has accepted `resid_r15_s07`:
 
 ```text
-1. Does resid_r15_s07 finally provide obvious stabilization?
-2. Does it avoid the hard pose snaps that made safe103crop98 / lim8 unacceptable?
-3. Are Regular01 and Regular04 real black-border failures or gray-threshold dark-edge false positives?
+1. It provides stronger visible stabilization than bqp_w90_s15 / spike_mid.
+2. It avoids the hard pose snaps that made safe103crop98 / lim8 unacceptable.
+3. The Regular01 / Regular04 gray black-border flags are not visible black-border
+   failures in the accepted review.
 ```
 
-If `resid_r15_s07` is rejected because it reintroduces pose snaps, the next step
-should not be another blind smoother. The next recovery should ask for internal
-AI guidance specifically on residual closed-loop EIS with snap-safe temporal
-constraints, or open mesh only if residual-grid evidence shows local motion.
+This closes the stabilization-strength recovery loop for the current Regular
+gate. Do not continue blind limiter, R-radius, LP-weight, or residual-strength
+sweeps on this same issue. Mesh/grid warp remains deferred because the accepted
+global residual closed-loop result is sufficient for this stage and the
+residual-grid diagnostics did not justify local-motion/parallax escalation.
 

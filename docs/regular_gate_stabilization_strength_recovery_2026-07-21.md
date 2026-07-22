@@ -145,16 +145,19 @@ Panel order:
 source / safe103crop98 / bqp_w90_s15 / spike_mid
 ```
 
-## Decision Boundary
+## Follow-Up Decision
 
-Human review should answer:
+Human review later rejected `spike_mid` as still insufficient for the current
+quality target. It is retained as diagnostic evidence only.
+
+The accepted follow-up is documented in:
 
 ```text
-1. Is spike_mid visibly stronger than bqp_w90_s15?
-2. Does spike_mid avoid the hard pose jumps that made safe103crop98/lim8 unacceptable?
-3. Do Regular01 and Regular04 show real black-border artifacts, or are they gray-threshold / dark-edge false positives?
+docs/regular_gate_residual_closed_loop_2026-07-21.md
 ```
 
-Do not open MeshFlow/grid warp unless `spike_mid` is rejected and residual-grid
-diagnostics show local motion/parallax rather than global path discontinuity.
+`resid_r15_s07` supersedes `spike_mid` for the current Regular gate
+stabilization-strength recovery result. The user accepted `resid_r15_s07` on
+2026-07-22 as visibly stronger than BQP/spike_mid, with no hard pose snaps and
+no visible black borders.
 
