@@ -20,9 +20,12 @@ full pipeline.
 
 ## VPI Module-Level Result
 
-High-resolution warp-heavy benchmark:
+High-resolution warp-heavy benchmark. Two timing modes now exist:
 
-![VPI resolution scaling](assets/vpi_resolution_scaling.svg)
+- earlier scaling probe, used for the trend chart;
+- 2026-07-22 rerun, used as the current checkpoint evidence.
+
+Earlier scaling probe:
 
 | Resolution | OpenCV CPU ms | VPI CUDA ms | Speedup |
 |---|---:|---:|---:|
@@ -31,12 +34,58 @@ High-resolution warp-heavy benchmark:
 | 2560x1440 | 22.920 | 10.651 | 2.15x |
 | 3840x2160 | 48.452 | 20.836 | 2.33x |
 
+2026-07-22 module rerun, no video output:
+
+| Resolution | OpenCV CPU ms | VPI CUDA ms | Speedup |
+|---|---:|---:|---:|
+| 1920x1080 | 36.926 | 18.426 | 2.00x |
+| 2560x1440 | 29.045 | 15.778 | 1.84x |
+| 3840x2160 | 69.742 | 27.617 | 2.53x |
+
+2026-07-22 video-output sanity path:
+
+| Resolution | OpenCV CPU ms | VPI CUDA ms | Speedup | center mean abs diff | center p95 abs diff |
+|---|---:|---:|---:|---:|---:|
+| 1920x1080 | 27.177 | 14.040 | 1.94x | 12.459 | 34.283 |
+| 3840x2160 | 60.776 | 23.895 | 2.54x | 12.469 | 35.133 |
+
 Conclusion:
 
 ```text
 VPI CUDA helps when the warp workload is large enough to amortize conversion and
-readback costs.
+readback costs. The output is not pixel-equivalent to OpenCV CPU; the observed
+differences are consistent with color conversion, interpolation, border handling,
+and encoding differences.
 ```
+
+## VPI Power / Perf-Per-Watt
+
+4K PerspectiveWarp stable workload, 600 frames, INA3221 `VDD_IN` board-input
+power:
+
+| Path | Avg ms | FPS | VDD_IN avg | FPS/W | CPU avg | GR3D avg |
+|---|---:|---:|---:|---:|---:|---:|
+| OpenCV CPU | 48.995 | 20.410 | 12.136 W | 1.682 | 77.74% | 1.31% |
+| VPI CUDA | 20.514 | 48.747 | 11.118 W | 4.385 | 32.06% | 18.96% |
+
+Interpretation:
+
+```text
+For this 4K warp-heavy workload, VPI CUDA is about 2.39x faster and about 2.61x
+better in FPS/W. This is module-level perf/watt evidence, not full EIS pipeline
+power evidence.
+```
+
+## VPI Operator Boundary
+
+Current Jetson VPI 2.2.7 Python backend probe:
+
+| Operator | CPU | CUDA | PVA | VIC | OFA | Decision |
+|---|---|---|---|---|---|---|
+| PerspectiveWarp | pass | pass | not current Python path | not current Python path | n/a | Main module-level acceleration result |
+| PyrLK | pass | pass | fail | fail | fail | Not a current OpenCV replacement; OpenCV was faster and kept more valid points |
+| Dense Optical Flow | fail | fail | fail | fail | fail | Python binding path unavailable |
+| Remap | native abort | native abort | native abort | native abort | native abort | Future C++/official sample route only |
 
 ## GStreamer / NVMM Readiness
 
@@ -133,18 +182,48 @@ Regular05 source_to_dest convention:
 Catmull-Rom interpolation remains rejected because it was slower and worse than
 linear on the outdoor-car smoke test.
 
+## EGLImage Dataflow Breakdown
+
+The accepted C++ EGLImage-wrapper path has now been decomposed beyond
+"VPI warp time". Regular05 submit/sync probe, frame 100:
+
+| Stage | Time |
+|---|---:|
+| input transform | 0.914 ms |
+| EGL map | 0.080 ms |
+| stream create | 0.465 ms |
+| wrapper create | 3.289 ms |
+| VPI submit | 0.019 ms |
+| VPI sync | 1.513 ms |
+| destroy | 0.527 ms |
+| unmap | 0.046 ms |
+| output transform | 0.943 ms |
+| total | 7.798 ms |
+
+Cost grouping:
+
+```text
+wrapper lifecycle: about 3.82 ms
+submit + sync:     about 1.53 ms
+input/output xform: about 1.86 ms
+```
+
+The first frame has a large initialization spike, about 245 ms in this probe.
+With a three-iteration long run, wall time drops from about 12.69 ms/frame for a
+single run to about 9.41 ms/frame. The spike can be amortized, but steady-state
+dataflow still remains around 7.5-8.5 ms.
+
 ## Interview Wording
 
 ```text
-I measured both where hardware acceleration fails and where it starts to help.
-In the small Python EIS pipeline, VPI was slower because conversion and
-synchronization dominated. In a high-resolution warp module, VPI CUDA scaled well
-and reached 2.33x at 4K. I then moved away from Python appsink/appsrc and
-validated a C++ MMAPI/VPI/NVENC device-side warp path. The outdoor-car tests
-were dataflow smoke. On the real Regular05 EIS clip, source_to_dest matrix
-convention fixed the device replay black-border problem. The honest claim is
-device-side warp/encode readiness plus Regular05 replay correctness, not full
-real-time EIS.
+I measured both where hardware acceleration fails and where it helps. In the
+small Python EIS pipeline, a simple VPI backend swap was slower because
+conversion, sync, and readback dominated. In a high-resolution PerspectiveWarp
+module, VPI CUDA reached about 2.0x at 1080p and about 2.5x at 4K, and the 4K
+workload improved FPS/W from 1.68 to 4.39. I then moved away from Python
+appsink/appsrc and validated a C++ MMAPI/VPI/NVENC device-side path. The honest
+claim is module-level VPI acceleration plus measured device dataflow boundaries,
+not full real-time EIS or zero-copy.
 ```
 
 ## Evidence
@@ -160,4 +239,9 @@ results/perf_backend_compare_20260718/backend_compare_summary.md
 results/vpi_resolution_scaling_benchmark/vpi_module_summary.md
 results/gst_nvmm_probe_20260718_summary.md
 results/device_matrix_warp_demo_20260719/triptych_cpu_vs_device/summary.md
+results/vpi_warp_module_rerun_20260722/
+results/vpi_warp_correctness_20260722/
+results/power_probe_20260722_sudo/
+results/regular05_submit_sync_probe_20260722/
+results/regular05_submit_sync_longrun_20260722/
 ```

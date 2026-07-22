@@ -19,6 +19,10 @@ feature_grid_size=16
 It passes objective gates on all five Regular clips and was accepted by human
 review.
 
+For the later device-side Regular-gate recovery loop, `resid_r15_s07` is the
+accepted result. It was visibly stronger than BQP/spike_mid and did not show hard
+pose snaps or visible black borders in review.
+
 ## Q: What improved after optimization?
 
 On `regular_gate05_regular_6`:
@@ -50,16 +54,23 @@ for Regular-gate performance.
 
 Not the current full pipeline. A simple VPI backend swap was slower at 640x360.
 
-But VPI CUDA did accelerate high-resolution warp-heavy modules:
+But VPI CUDA did accelerate high-resolution warp-heavy modules. Current
+checkpoint numbers:
 
 ```text
-720p: 1.35x
-1080p: 1.83x
-1440p: 2.15x
-4K: 2.33x
+1080p: 36.926 ms -> 18.426 ms, 2.00x
+1440p: 29.045 ms -> 15.778 ms, 1.84x
+4K:    69.742 ms -> 27.617 ms, 2.53x
 ```
 
 So the lesson is placement and dataflow matter.
+
+On a 4K 600-frame stable workload with INA3221 board-input power:
+
+```text
+OpenCV CPU: 48.995 ms, 20.410 FPS, 12.136 W, 1.682 FPS/W
+VPI CUDA:   20.514 ms, 48.747 FPS, 11.118 W, 4.385 FPS/W
+```
 
 ## Q: What are the remaining limitations?
 
@@ -67,28 +78,30 @@ So the lesson is placement and dataflow matter.
 - Running and other challenge sets are not claimed as solved.
 - GStreamer/NVMM dataflow is only probed, not integrated into the EIS pipeline.
 - VPI module speedup is not the same as full-pipeline speedup.
+- VPI PyrLK and Remap are not current replacement wins: PyrLK can run but is not
+  better than OpenCV in the current same-keypoint probe, and Python Remap hits a
+  native binding abort.
 
 ## Q: What would you do next?
 
 The next implementation direction is not another baseline tuning loop. The
-current frontier is the device-side MMAPI/VPI/NVENC path:
+current frontier is explaining and reducing the device-side dataflow cost:
 
 ```text
-Step 1:
-  use Regular05 source_to_dest as the current EIS-quality device replay
-  convention.
+current accepted path:
+  block-linear main chain
+  -> pitch-linear NV12_ER scratch
+  -> VPI CUDA warp through EGLImage wrappers
+  -> block-linear NV12 encode
 
-Step 2:
-  treat raw pixel diff carefully because identity transcode already creates a
-  large codec/colorspace baseline.
-
-Step 3:
-  only continue parity work if the next change has a clear target, such as a
-  border workaround or colorspace/encoding baseline.
+measured bottlenecks:
+  wrapper lifecycle
+  vpiStreamSync
+  NvBufSurfTransform sandwich
 ```
 
-I would not move to real-time online motion estimation until that decision is
-closed.
+I would not claim zero-copy until a format-stable path removes or reduces those
+costs without reintroducing tearing, green output, or format mismatch failures.
 
 ## Q: Why not continue tuning Regular05?
 
@@ -114,6 +127,9 @@ dynamic foreground contamination.
 It shows engineering judgment. The full pipeline result prevented a false claim.
 The high-resolution module benchmark still proves that VPI CUDA is useful when
 the warp workload is large enough. The next question is dataflow placement.
+
+The later power probe makes this stronger: on the 4K warp-heavy workload, VPI
+CUDA was both faster and better in FPS/W.
 
 ## Q: Why stop Python GStreamer integration?
 
@@ -181,6 +197,60 @@ estimation is not running online inside the MMAPI path yet, and the device path
 does not yet reproduce CPU post-processing such as crop, dynamic zoom, Lanczos
 resize, and sharpen.
 
+## Q: Where is the C++ dataflow bottleneck now?
+
+The accepted C++ EGLImage-wrapper path was decomposed with a submit/sync probe.
+At frame 100 on Regular05:
+
+```text
+total stage:          7.798 ms
+wrapper lifecycle:    3.816 ms
+VPI submit + sync:    1.532 ms
+input/output xforms:  1.857 ms
+vpiSubmit alone:      0.019 ms
+```
+
+So the bottleneck is not the PerspectiveWarp kernel or the submit call. It is
+wrapper lifecycle, sync, and the transform sandwich around the VPI call.
+
+## Q: Did you implement zero-copy?
+
+No. The project has a measured non-zero-copy boundary:
+
+```text
+block-linear main chain
+pitch-linear NV12_ER VPI scratch
+NvBufSurfTransform sandwich
+per-frame EGLImage wrappers
+```
+
+Several shortcuts were rejected: pitch-linear main encode produced green output,
+block-linear VPI scratch pairs were rejected by VPI, direct mismatched NvBuffer
+input failed, and EGLImage image-wrapper reuse caused tearing. The honest claim
+is that the dataflow cost is measured and localized, not that zero-copy is done.
+
+## Q: Why not use VPI PyrLK for motion estimation?
+
+I tested it because it matches the original project design. It can run on CPU
+and CUDA in the Python binding, but in the current same-keypoint probe it is not
+a good replacement:
+
+```text
+OpenCV PyrLK: 1.378 ms, avg valid points 111
+VPI CUDA:     1.672 ms, avg valid points 37
+```
+
+That means the first useful VPI replacement is PerspectiveWarp, not PyrLK.
+
+## Q: Why not use VPI Remap?
+
+The Python Remap path is not stable on this setup. The minimal WarpMap/Image.remap
+probe aborts in the native binding with `double free or corruption`.
+
+That does not prove C++ Remap is impossible. It means the future route should be
+a C++/official-sample probe, using `Remap.h` or the VPI fisheye sample as a
+reference, instead of continuing to force the Python binding.
+
 ## Q: Is the device output equivalent to the CPU stabilized output?
 
 Not yet. A 120-frame local panel comparison of the review video showed:
@@ -207,5 +277,9 @@ docs/stage_result_regular_performance_baseline_2026-07-18.md
 docs/vpi_warp_module_report_2026-07-18.md
 docs/gstreamer_nvmm_latency_plan_2026-07-18.md
 docs/device_matrix_warp_demo_2026-07-19.md
+results/vpi_warp_module_rerun_20260722/
+results/power_probe_20260722_sudo/
+results/pyr_lk_opencv_vpi_compare_20260722_v2/
+results/regular05_submit_sync_probe_20260722/
 results/regular_gate_est0p5_grid16_validation_20260718/regular_gate_validation_summary.md
 ```

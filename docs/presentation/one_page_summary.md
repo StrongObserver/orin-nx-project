@@ -44,8 +44,14 @@ VPI:
 640x360 full Python EIS pipeline:
   VPI backend swap is slower than OpenCV CPU.
 
-720p -> 4K warp-heavy module:
-  VPI CUDA speedup grows from 1.35x to 2.33x.
+High-resolution PerspectiveWarp module:
+  1080p: 36.926 ms -> 18.426 ms, 2.00x
+  1440p: 29.045 ms -> 15.778 ms, 1.84x
+  4K:    69.742 ms -> 27.617 ms, 2.53x
+
+4K stable workload with INA3221 board-input power:
+  OpenCV CPU: 48.995 ms, 20.410 FPS, 12.136 W, 1.682 FPS/W
+  VPI CUDA:   20.514 ms, 48.747 FPS, 11.118 W, 4.385 FPS/W
 ```
 
 GStreamer / NVMM:
@@ -142,7 +148,11 @@ C++ EGLImage-wrapper candidate:
 EGLImage timing boundary:
   Regular05 C++ path wall time was about 2002 ms for 180 frames. VPI warp-only
   avg was about 1.55 ms, while the larger EGLImage scratch-buffer stage averaged
-  about 10.5 ms. The next performance target is dataflow, not the warp kernel.
+  about 10.5 ms. A later submit/sync probe split the stage further: frame100
+  total was about 7.80 ms, with wrapper lifecycle about 3.82 ms, submit+sync
+  about 1.53 ms, and input/output transforms about 1.86 ms. VPI submit itself
+  was only about 0.02 ms, so the target is wrapper/sync/transform dataflow, not
+  the PerspectiveWarp kernel.
 
 Wrapper reuse boundary:
   VPI stream reuse is safe, but EGLImage image-wrapper reuse is closed for this
@@ -163,6 +173,12 @@ Wrapper lifecycle:
   Creating and destroying the input/output VPI EGLImage wrappers costs about
   3.7 ms at frame 100, with a large first-frame initialization spike. This is a
   real cost, but image-wrapper reuse was unsafe in this MMAPI path.
+
+First-frame amortization:
+  The submit/sync probe showed a roughly 245 ms first-frame initialization spike.
+  A three-iteration long run reduced wall time from about 12.69 ms/frame for one
+  180-frame run to about 9.41 ms/frame, but steady dataflow still remains around
+  7.5-8.5 ms/frame.
 
 Identity warp:
   Identity PerspectiveWarp is only slightly faster than the inclusion matrix
@@ -213,21 +229,25 @@ Pose smoothing check:
   the device consumer healthy. It is rejected because the stabilization becomes
   too weak. lim8 caps local deltas but remains visually jumpy, so it is also
   rejected and kept only as diagnostic evidence.
+
+PyrLK / Remap backend boundary:
+  VPI PyrLK CPU/CUDA can run, but in the current same-keypoint probe OpenCV is
+  the better motion-estimation path: OpenCV PyrLK averaged 1.378 ms with about
+  111 valid points, while VPI CUDA averaged 1.672 ms with about 37 valid points.
+  Dense Optical Flow is not implemented in the current Python probe. VPI Remap
+  exists as an API, but the Python WarpMap/Image.remap path aborts in the native
+  binding; future Remap work should use a C++/official sample route.
 ```
 
 Conclusion:
 
 ```text
-Python-in-the-loop GStreamer EIS integration is not the next acceleration path;
-the current acceleration frontier is the C++ device-side MMAPI/VPI/NVENC path.
-The accepted consumer/FIFO path is healthy; the first producer scheduling
-optimization is measured on Regular05. The viewport-stable rule has been
-extended to five Regular clips. R4 and lim8 are both diagnostic/rejected:
-R4 is too weak, and lim8 still has abrupt pose jumps. BQP solved continuity but
-was too weak; spike_mid was also rejected. The accepted recovery result is
-resid_r15_s07, which strongly suppresses measured residual motion and passed
-human review for visible stability, pose-snap, and black-border checks.
-First-frame producer latency remains a separate scheduling topic.
+Python-in-the-loop GStreamer EIS integration is not the next acceleration path.
+The strongest acceleration evidence is now PerspectiveWarp module-level
+latency/perf-watt, while the C++ MMAPI/VPI/NVENC path explains the device
+dataflow boundary. The accepted consumer/FIFO path is healthy, but it is not
+zero-copy: wrapper lifecycle, sync, and transform sandwich costs are still
+measured. The accepted quality recovery result is resid_r15_s07.
 ```
 
 ## Model Boundary
@@ -278,4 +298,8 @@ docs/regular05_producer_scheduling_optimization_2026-07-20.md
 docs/regular_gate_stride5_viewport_stable_validation_2026-07-20.md
 docs/regular_gate_pose_smooth_r4_validation_2026-07-20.md
 docs/regular_gate_pose_delta_limiter_validation_2026-07-20.md
+results/vpi_warp_module_rerun_20260722/
+results/power_probe_20260722_sudo/
+results/pyr_lk_opencv_vpi_compare_20260722_v2/
+results/regular05_submit_sync_probe_20260722/
 ```
