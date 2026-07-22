@@ -25,10 +25,12 @@
       "MMAPI/VPI/NVENC device-side handoff is the active acceleration frontier",
       "Regular performance baseline is accepted only inside the Regular gate boundary",
       "resid_r15_s07 is the accepted Regular gate stabilization-strength recovery candidate",
+      "NvBuffer pair quality comparisons must use resid_r15_s07 when judging stabilization strength",
       "Challenge and diagnostic sets explain model boundaries"
     ],
     "forbidden": [
       "outdoor-car inverse/post_geometry as Regular05 EIS-quality progress",
+      "using inclusion_source_to_dest or safe103_crop98 as a substitute for the current resid_r15_s07 stabilization-strength baseline",
       "full real-time EIS without live same-input evidence",
       "zero-copy full chain without measured proof",
       "VPI optical-flow acceleration without backend support and timing evidence",

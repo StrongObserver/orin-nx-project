@@ -12,12 +12,15 @@
     "quality_reference": "VPI Python allocated-image + explicit BGR8 correctness path",
     "clip": "regular_gate05_regular_6",
     "matrix": "inclusion_source_to_dest.csv",
-    "claim_boundary": "Regular gate C++ path is frozen for inclusion replay; this contract only studies dataflow cost."
+    "matrix_role": "performance/dataflow diagnostic matrix only; not the strongest stabilization-quality baseline",
+    "quality_anchor": "resid_r15_s07 is the accepted stabilization-strength baseline for Regular05 and must be used for quality comparison",
+    "claim_boundary": "Regular gate C++ path is frozen for inclusion replay only when studying dataflow cost. Do not use inclusion replay to judge current stabilization strength."
   },
   "frozen_variables": [
     "input clip: regular_gate05_regular_6 source.h264",
     "matrix convention: source_to_dest",
-    "matrix file: inclusion_source_to_dest.csv",
+    "matrix file for this dataflow contract: inclusion_source_to_dest.csv",
+    "quality baseline for stabilization-strength checks: resid_r15_s07, not inclusion_source_to_dest.csv",
     "VPI interpolation: linear",
     "border mode: VPI_BORDER_ZERO",
     "do not change stabilization matrices",
