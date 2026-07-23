@@ -12,7 +12,10 @@ C:\Users\Admin\Desktop\orin nx project\orin nx 项目口播模板.txt
 
 This `.txt` file is the current authoritative oral-template entrypoint. Do not
 look for or create an `.md` oral-template replacement unless the user explicitly
-changes this rule.
+changes this rule. It is exempt from progressive-disclosure shortcuts: read the
+real file from the path above in full, from the first line, before planning or
+execution. Do not substitute git history, cached text, memory summaries, manifest
+text, or partial excerpts.
 
 2. Progressive onboarding manifest:
 
@@ -25,6 +28,12 @@ Use the manifest to keep startup lightweight. The default startup path is:
 ```powershell
 py -3.12 scripts\harness_runner.py onboard
 ```
+
+This command must itself print and full-read the real oral-template TXT with
+UTF-8, validate the required sections, print byte/character counts and a SHA256
+proof, and fail if the gate cannot prove the read. Treat a failed `onboard` as a
+startup blocker. Do not use `--no-print-oral-template` for ordinary agent
+startup.
 
 Do not full-read the long-term context document, full internal reference folders,
 or all evidence directories during default startup. First read the manifest,

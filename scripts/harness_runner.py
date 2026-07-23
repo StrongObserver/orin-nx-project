@@ -1,6 +1,8 @@
 import argparse
 import csv
+import hashlib
 import json
+import re
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -12,6 +14,16 @@ DEFAULT_LOOP_PROFILES = REPO_ROOT / "configs" / "harness" / "loop_profiles.json"
 DEFAULT_EVALUATION_DATASETS = REPO_ROOT / "configs" / "harness" / "evaluation_datasets.json"
 DEFAULT_METRIC_SCHEMA = REPO_ROOT / "configs" / "harness" / "metric_schema.json"
 DEFAULT_ONBOARDING_MANIFEST = REPO_ROOT / "configs" / "harness" / "onboarding_manifest.json"
+DEFAULT_ORAL_TEMPLATE = REPO_ROOT / "orin nx 项目口播模板.txt"
+
+DEFAULT_ORAL_TEMPLATE_REQUIRED_SECTIONS = [
+    "## 规则",
+    "## 参考资料",
+    "## 我需要你做【模块/功能】",
+    "## 目标是【要实现什么】",
+    "## 约束是【不能动的点/必须兼容的点】",
+    "## 是否需要你先复述你的理解和计划，我们对齐后再开始具体做？",
+]
 
 
 def repo_rel(path: Path | str) -> Path:
@@ -31,6 +43,146 @@ def display_path(path: Path) -> str:
 def load_json(path: Path) -> dict:
     with path.open("r", encoding="utf-8-sig") as f:
         return json.load(f)
+
+
+def heading_matches(actual: str, required: str) -> bool:
+    return actual == required or actual.startswith(required)
+
+
+def extract_markdown_headings(text: str) -> list[str]:
+    return [line.strip() for line in text.splitlines() if line.startswith("## ")]
+
+
+def extract_section_body(text: str, required_heading: str) -> str:
+    headings = extract_markdown_headings(text)
+    matched_heading = next((heading for heading in headings if heading_matches(heading, required_heading)), "")
+    if not matched_heading:
+        return ""
+    pattern = re.compile(
+        rf"(?ms)^{re.escape(matched_heading)}\s*\n?(.*?)(?=^##\s+|\Z)"
+    )
+    match = pattern.search(text)
+    return match.group(1) if match else ""
+
+
+def extract_code_block_text(text: str) -> str:
+    match = re.search(r"```[^\n]*\n(.*?)\n```", text, flags=re.DOTALL)
+    if not match:
+        return ""
+    return match.group(1).strip()
+
+
+def classify_alignment_mode(alignment_text: str) -> tuple[str, str]:
+    normalized = " ".join(alignment_text.split())
+    if not normalized:
+        return "unknown", "alignment_mode_not_declared"
+    if "暂时不需要" in normalized or "不需要" in normalized:
+        return "direct_execute", "false"
+    if "需要" in normalized or "先复述" in normalized or "对齐" in normalized:
+        return "align_before_execution", "true"
+    return "unknown", "unknown"
+
+
+def validate_oral_template(manifest: dict) -> tuple[bool, dict]:
+    gate = manifest.get("oral_template_gate", {})
+    if not gate.get("enabled", True):
+        return True, {"enabled": False}
+
+    path = Path(gate.get("path") or DEFAULT_ORAL_TEMPLATE)
+    if not path.is_absolute():
+        path = repo_rel(path)
+
+    required_sections = gate.get("required_sections") or DEFAULT_ORAL_TEMPLATE_REQUIRED_SECTIONS
+    rules_section = gate.get("rules_section") or "## 规则"
+    alignment_section = (
+        gate.get("alignment_section")
+        or "## 是否需要你先复述你的理解和计划，我们对齐后再开始具体做？"
+    )
+
+    status = {
+        "enabled": True,
+        "path": path,
+        "exists": path.exists(),
+        "full_read": False,
+        "read_encoding": "utf-8",
+        "byte_count": 0,
+        "char_count": 0,
+        "sha256": "",
+        "rules_first": False,
+        "required_sections_pass": False,
+        "missing_sections": [],
+        "execution_mode": "unknown",
+        "alignment_required": "unknown",
+        "text": "",
+    }
+
+    if not path.exists():
+        status["missing_sections"] = list(required_sections)
+        return False, status
+
+    raw_bytes = path.read_bytes()
+    text = raw_bytes.decode("utf-8")
+    status["full_read"] = True
+    status["byte_count"] = len(raw_bytes)
+    status["char_count"] = len(text)
+    status["sha256"] = hashlib.sha256(raw_bytes).hexdigest()
+    status["text"] = text
+
+    headings = extract_markdown_headings(text)
+    first_heading = headings[0] if headings else ""
+    status["rules_first"] = heading_matches(first_heading, rules_section)
+
+    missing_sections = []
+    for required in required_sections:
+        if not any(heading_matches(heading, required) for heading in headings):
+            missing_sections.append(required)
+    status["missing_sections"] = missing_sections
+    status["required_sections_pass"] = not missing_sections
+
+    alignment_body = extract_section_body(text, alignment_section)
+    alignment_text = extract_code_block_text(alignment_body) or alignment_body.strip()
+    execution_mode, alignment_required = classify_alignment_mode(alignment_text)
+    status["execution_mode"] = execution_mode
+    status["alignment_required"] = alignment_required
+
+    ok = (
+        status["exists"]
+        and status["full_read"]
+        and status["rules_first"]
+        and status["required_sections_pass"]
+    )
+    return ok, status
+
+
+def print_oral_template_status(status: dict) -> None:
+    print("oral_template_gate:")
+    print(f"  enabled: {status.get('enabled', False)}")
+    if not status.get("enabled", False):
+        return
+    print(f"  oral_template_path: {status.get('path', '')}")
+    print(f"  oral_template_exists: {status.get('exists', False)}")
+    print(f"  oral_template_full_read: {status.get('full_read', False)}")
+    print(f"  read_encoding: {status.get('read_encoding', '')}")
+    print(f"  byte_count: {status.get('byte_count', 0)}")
+    print(f"  char_count: {status.get('char_count', 0)}")
+    print(f"  sha256: {status.get('sha256', '')}")
+    print(f"  rules_first: {status.get('rules_first', False)}")
+    print(f"  required_sections: {'pass' if status.get('required_sections_pass', False) else 'fail'}")
+    missing = status.get("missing_sections", [])
+    if missing:
+        print(f"  missing_sections: {', '.join(missing)}")
+    print(f"  execution_mode: {status.get('execution_mode', 'unknown')}")
+    print(f"  alignment_required: {status.get('alignment_required', 'unknown')}")
+
+
+def print_oral_template_text(status: dict) -> None:
+    text = status.get("text", "")
+    if not text:
+        return
+    print("oral_template_full_text_begin")
+    print(text.rstrip())
+    print("oral_template_full_text_end")
+    print()
 
 
 def load_gates(path: Path) -> dict:
@@ -127,6 +279,11 @@ def command_print_contract(args: argparse.Namespace) -> int:
 
 def command_onboard(args: argparse.Namespace) -> int:
     manifest = load_json(args.manifest)
+    oral_template_ok, oral_template_status = validate_oral_template(manifest)
+    if args.print_oral_template:
+        print_oral_template_text(oral_template_status)
+    print_oral_template_status(oral_template_status)
+    print()
     print(f"manifest_id: {manifest.get('manifest_id', '')}")
     print(f"mode: {manifest.get('default_onboarding_mode', '')}")
     print(f"active_loop_contract: {manifest.get('active_loop_contract', '')}")
@@ -149,6 +306,11 @@ def command_onboard(args: argparse.Namespace) -> int:
     print("\nhard_rules:")
     for item in manifest.get("hard_rules", []):
         print(f"- {item}")
+    fatal_on_failure = manifest.get("oral_template_gate", {}).get("fatal_on_failure", True)
+    if fatal_on_failure and not oral_template_ok:
+        print("\nonboard_status: fail")
+        return 1
+    print("\nonboard_status: pass")
     return 0
 
 
@@ -178,6 +340,9 @@ def command_print_loop_profile(args: argparse.Namespace) -> int:
 
 def command_check_loop_rules(args: argparse.Namespace) -> int:
     data = load_json(args.loop_profiles)
+    manifest_path = repo_rel(data.get("default_rules", {}).get("onboarding_manifest", DEFAULT_ONBOARDING_MANIFEST))
+    manifest = load_json(manifest_path) if manifest_path.exists() else {}
+    oral_gate = manifest.get("oral_template_gate", {})
     ok = True
     default_rules = data.get("default_rules", {})
     negative_policy = default_rules.get("negative_result_policy", {})
@@ -190,12 +355,45 @@ def command_check_loop_rules(args: argparse.Namespace) -> int:
             default_rules.get("default_onboarding_mode") == "progressive_disclosure",
         ),
         (
+            "oral_template_full_read_required",
+            bool(default_rules.get("oral_template_full_read_required", False)),
+        ),
+        (
+            "oral_template_exempt_from_progressive_disclosure",
+            bool(default_rules.get("oral_template_exempt_from_progressive_disclosure", False)),
+        ),
+        (
+            "oral_template_gate_command_declared",
+            bool(default_rules.get("oral_template_gate_command")),
+        ),
+        (
             "full_context_preload_forbidden",
             bool(default_rules.get("full_context_preload_forbidden", False)),
         ),
         (
             "onboarding_manifest_declared",
             bool(default_rules.get("onboarding_manifest")),
+        ),
+        (
+            "onboarding_manifest_exists",
+            manifest_path.exists(),
+        ),
+        (
+            "manifest_oral_template_gate_enabled",
+            bool(oral_gate.get("enabled", False)),
+        ),
+        (
+            "manifest_oral_template_gate_fatal",
+            bool(oral_gate.get("fatal_on_failure", False)),
+        ),
+        (
+            "manifest_oral_template_path_declared",
+            bool(oral_gate.get("path")),
+        ),
+        (
+            "manifest_oral_template_full_text_proof_declared",
+            "oral_template_full_text_begin" in set(oral_gate.get("onboard_expected_proof", []))
+            and "oral_template_full_text_end" in set(oral_gate.get("onboard_expected_proof", [])),
         ),
         (
             "stable_checkpoint_is_not_terminal_goal",
@@ -547,8 +745,15 @@ def main() -> int:
     print_contract.add_argument("--contract", type=Path, default=DEFAULT_CONTRACT)
     print_contract.set_defaults(func=command_print_contract)
 
-    onboard = subparsers.add_parser("onboard", help="Print lightweight progressive onboarding instructions.")
+    onboard = subparsers.add_parser("onboard", help="Read the oral-template gate and print progressive onboarding instructions.")
     onboard.add_argument("--manifest", type=Path, default=DEFAULT_ONBOARDING_MANIFEST)
+    onboard.add_argument(
+        "--no-print-oral-template",
+        dest="print_oral_template",
+        action="store_false",
+        help="Suppress full oral-template echo; gate still reads and validates the real TXT.",
+    )
+    onboard.set_defaults(print_oral_template=True)
     onboard.set_defaults(func=command_onboard)
 
     list_loop_profiles = subparsers.add_parser("list-loop-profiles", help="List Loop Engineering V2 profiles.")

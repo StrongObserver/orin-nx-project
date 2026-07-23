@@ -8,7 +8,22 @@
   "objective": "Run the current Orin NX heterogeneous-video-compute engineering sequence without exiting early unless all tasks are complete, a stop rule is hit, or user/hardware approval is required.",
   "progressive_onboarding": {
     "manifest": "configs/harness/onboarding_manifest.json",
-    "default_rule": "Use progressive disclosure. Read lightweight routing and active contracts first; load long project context, internal references, and external knowledge only when the active task or blocker requires them.",
+    "default_rule": "Use progressive disclosure for long project context, internal references, and evidence folders only. The oral-template TXT is exempt and must be full-read from the real filesystem path through the onboarding gate before planning or execution.",
+    "mandatory_startup_gate": "py -3.12 scripts/harness_runner.py onboard",
+    "oral_template_read_contract": "full_file_utf8_real_path",
+    "oral_template_required_proof": [
+      "oral_template_full_text_begin",
+      "oral_template_full_text_end",
+      "oral_template_path",
+      "oral_template_exists",
+      "oral_template_full_read",
+      "byte_count",
+      "char_count",
+      "sha256",
+      "rules_first",
+      "required_sections",
+      "execution_mode"
+    ],
     "token_budget_intent": "Reduce repeated startup token cost while preserving enough current-state evidence to avoid stale decisions."
   },
   "active_task_contract": "none",

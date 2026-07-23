@@ -72,6 +72,10 @@ py -3.12 scripts\harness_runner.py doctor
 py -3.12 scripts\harness_runner.py check-claim --gate-id nus_running_gate_v1 --claim main_gate_success_rate
 ```
 
+`onboard` is a required startup gate, not just a manifest printer. It prints and
+full-reads the real oral-template TXT, validates the required sections, and
+reports the current section-4 execution mode before other control-plane checks.
+
 Then follow the layered guide:
 
 ```text

@@ -1,8 +1,45 @@
 {
   "schema_version": 1,
   "manifest_id": "orin_eis_progressive_onboarding_v1",
-  "purpose": "Reduce repeated AI onboarding token cost by replacing full-context preloads with a lightweight routing manifest and on-demand document loading.",
+  "purpose": "Reduce repeated AI onboarding token cost while making the real oral-template TXT a mandatory rule-first startup gate.",
   "default_onboarding_mode": "progressive_disclosure",
+  "oral_template_gate": {
+    "enabled": true,
+    "fatal_on_failure": true,
+    "path": "C:/Users/Admin/Desktop/orin nx project/orin nx 项目口播模板.txt",
+    "read_contract": "full_file_utf8_real_path",
+    "required_read_command": "Get-Content -LiteralPath 'C:\\Users\\Admin\\Desktop\\orin nx project\\orin nx 项目口播模板.txt' -Raw -Encoding UTF8",
+    "rules_section": "## 规则",
+    "rules_must_be_first_heading": true,
+    "alignment_section": "## 是否需要你先复述你的理解和计划，我们对齐后再开始具体做？",
+    "required_sections": [
+      "## 规则",
+      "## 参考资料",
+      "## 我需要你做【模块/功能】",
+      "## 目标是【要实现什么】",
+      "## 约束是【不能动的点/必须兼容的点】",
+      "## 是否需要你先复述你的理解和计划，我们对齐后再开始具体做？"
+    ],
+    "forbidden_shortcuts": [
+      "git_show_or_cached_template_read",
+      "partial_read_TotalCount_or_excerpt_only",
+      "manifest_only_without_opening_txt",
+      "older_memory_summary_as_substitute_for_current_txt"
+    ],
+    "onboard_expected_proof": [
+      "oral_template_full_text_begin",
+      "oral_template_full_text_end",
+      "oral_template_path",
+      "oral_template_exists",
+      "oral_template_full_read",
+      "byte_count",
+      "char_count",
+      "sha256",
+      "rules_first",
+      "required_sections",
+      "execution_mode"
+    ]
+  },
   "token_hotspots_observed": [
     {
       "source": "C:/Users/Admin/Nutstore/1/Typora_save/自己的项目/jetson orin nx project_AI上下文.md",
@@ -26,8 +63,8 @@
     }
   ],
   "startup_sequence": [
-    "Read C:/Users/Admin/Desktop/orin nx project/orin nx 项目口播模板.txt from the first line, including the rules section.",
-    "Run or read this manifest via: py -3.12 scripts/harness_runner.py onboard",
+    "Run py -3.12 scripts/harness_runner.py onboard. This command must print the full real oral-template TXT, full-read it from C:/Users/Admin/Desktop/orin nx project/orin nx 项目口播模板.txt, and fail if the gate cannot prove the read.",
+    "Independently keep the full oral-template content in view before planning or execution; do not substitute git, cache, memory, manifest text, or partial excerpts for the real TXT.",
     "Read AGENTS.md only for dispatch rules and safety boundaries.",
     "Read the active loop contract: configs/harness/contracts/orin_next_engineering_loop_v1.json",
     "Read the latest task-specific Done Contract before new engineering: currently configs/harness/contracts/cuda_dynamic_warp_probe_v1.json. It is completed; choose a new scoped contract before more experiments.",
@@ -96,6 +133,9 @@
   "active_task_contract": "none",
   "latest_completed_task_contract": "configs/harness/contracts/cuda_dynamic_warp_probe_v1.json",
   "hard_rules": [
+    "The oral-template TXT is exempt from progressive-disclosure shortcuts: it must be full-read from the real path at every startup before planning or execution.",
+    "If the live user prompt conflicts with generated handoff files, the live user prompt and the current oral-template TXT win.",
+    "Do not redirect or commit onboard output because the full oral-template echo may contain local secrets.",
     "Do not load the full long-term context or full internal reference folders during default startup.",
     "Do not copy internal original text, images, private links, or screenshots into public GitHub outputs.",
     "Do not treat outdoor-car inverse/post_geometry results as Regular05 EIS-quality progress.",

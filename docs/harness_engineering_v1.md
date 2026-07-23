@@ -41,7 +41,9 @@ Each real experiment starts from a Done Contract under
 
 ## Progressive Onboarding
 
-Default startup should not load every long document and reference folder.
+Default startup should not load every long document and reference folder. The
+oral-template TXT is the exception: it is the current task source of truth and
+must be full-read from the real filesystem path before planning or execution.
 
 Use the lightweight onboarding manifest first:
 
@@ -55,11 +57,16 @@ Command:
 py -3.12 scripts\harness_runner.py onboard
 ```
 
-This command names the active overall loop contract and the current task-specific
-contract. It also lists which long documents are on-demand only. The long-term
-context document and internal camera-reference folders are not default preflight
-loads; open them only when the current loop, blocker, or manifest trigger points
-to a specific section or source.
+This command prints and full-reads the real oral-template TXT with UTF-8,
+validates the required sections, prints a byte/character count and SHA256 proof,
+names the active overall loop contract and current task-specific contract, and
+lists which long documents are on-demand only. `--no-print-oral-template` is not
+for ordinary agent startup. If the oral-template gate fails, onboarding fails.
+The long-term context document and internal camera-reference folders are not
+default preflight loads; open them only when the current loop, blocker, or
+manifest trigger points to a specific section or source. Do not redirect or
+commit `onboard` output because the full oral-template echo may contain local
+secrets.
 
 Loop Engineering V2 adds a decision layer above this harness:
 

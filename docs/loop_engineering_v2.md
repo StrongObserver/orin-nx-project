@@ -280,21 +280,27 @@ If more than two sources seem necessary, the task is not scoped tightly enough.
 ## Progressive Disclosure Startup
 
 Startup itself is now part of the loop design. Future agents should avoid a
-large default context load and follow this order:
+large default context load, but the oral-template TXT is not optional and is not
+covered by the full-context-preload ban. Follow this order:
 
 ```text
-1. Read the oral template from the first line, including its rules.
-2. Read configs/harness/onboarding_manifest.json, or run:
+1. Run the startup gate:
    py -3.12 scripts\harness_runner.py onboard
+   It must print and full-read the real oral-template TXT, validate required
+   sections, and report the section-4 execution mode.
+2. Keep the full oral-template content in view before planning or execution.
 3. Read configs/harness/contracts/orin_next_engineering_loop_v1.json.
-4. Read the current task contract, currently:
-   configs/harness/contracts/nsight_device_stage_profile_v1.json.
+4. Read the current task contract printed by `onboard`. If `onboard` reports
+   `active_task_contract: none`, choose or create a new scoped Done Contract
+   before running new experiments.
 5. Open long-term context sections or reference folders only when a manifest
    trigger, contract stop/recovery rule, or real blocker requires them.
 ```
 
 The largest avoidable token costs are:
 
+- replacing the real oral-template full read with manifest text, git history,
+  cache, memory, or partial excerpts;
 - full-reading the long-term context when only the latest milestone sections are
   needed;
 - broad-scanning internal camera-reference folders at startup;
