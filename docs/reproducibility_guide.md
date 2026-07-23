@@ -203,7 +203,107 @@ NvBuffer pair and stream-only reuse are small device-stage improvements. They do
 not prove zero-copy, queue-depth benefits, or full-pipeline acceleration.
 ```
 
-## L5 - Public / Interview Package
+## L5 - Remap Operator And Native-Size Pad/Crop
+
+Purpose: reproduce the current Remap operator/dataflow boundary without opening
+a new quality loop.
+
+Primary docs:
+
+```text
+docs/vpi_remap_cpp_probe_2026-07-23.md
+docs/remap_mmapi_integration_probe_2026-07-23.md
+docs/remap_native_size_pad_crop_probe_2026-07-23.md
+```
+
+Tracked implementation:
+
+```text
+experiments/vpi_cpp_remap_probe/remap_probe.cpp
+scripts/patch_mmapi_vpi_transcode_eglimage_remap_probe.py
+scripts/patch_mmapi_vpi_transcode_eglimage_remap_pad_crop_probe.py
+```
+
+Primary ignored evidence:
+
+```text
+results/vpi_remap_cpp_probe_20260723/
+results/remap_mmapi_integration_probe_20260723/
+results/remap_native_size_pad_crop_probe_20260723/
+```
+
+Review assets live outside the repo:
+
+```text
+C:\Users\Admin\Videos\orin nx\review\diagnostic\20260723_vpi_remap_cpp_probe\
+C:\Users\Admin\Videos\orin nx\review\diagnostic\20260723_remap_mmapi_integration_probe\
+C:\Users\Admin\Videos\orin nx\review\diagnostic\20260723_remap_native_size_pad_crop_probe\
+```
+
+Native-size pad/crop reproduction outline:
+
+```powershell
+# Windows side: upload the tracked patch script if needed.
+scp scripts\patch_mmapi_vpi_transcode_eglimage_remap_pad_crop_probe.py nvidia@192.168.55.1:/home/nvidia/orin-nx-project/scripts/
+```
+
+```bash
+# Jetson side: copy a fresh MMAPI sample, patch, and build.
+cd /home/nvidia/orin-nx-project/_mmapi_work/jetson_multimedia_api/samples
+cp -a 16_multivideo_transcode 99_vpi_transcode_matrix_eglimage_remap_pad_crop_probe
+cd /home/nvidia/orin-nx-project
+python3 scripts/patch_mmapi_vpi_transcode_eglimage_remap_pad_crop_probe.py \
+  --sample-dir /home/nvidia/orin-nx-project/_mmapi_work/jetson_multimedia_api/samples/99_vpi_transcode_matrix_eglimage_remap_pad_crop_probe
+cd /home/nvidia/orin-nx-project/_mmapi_work/jetson_multimedia_api/samples/99_vpi_transcode_matrix_eglimage_remap_pad_crop_probe
+make -j2
+```
+
+```bash
+# Jetson side: run identity and wave_safe diagnostics.
+ROOT=/home/nvidia/orin-nx-project
+OUT=$ROOT/results/remap_native_size_pad_crop_probe_20260723
+INPUT=$ROOT/results/regular_gate_safe103_crop98_validation_20260720/regular_gate05_regular_6/source.h264
+mkdir -p "$OUT"
+
+VPI_REMAP_MODE=identity ./multivideo_transcode num_files 1 \
+  "$INPUT" H264 "$OUT/remap_identity_native_pad_crop.h264" H264 \
+  > "$OUT/remap_identity_native_pad_crop.log" 2>&1
+
+VPI_REMAP_MODE=wave_safe ./multivideo_transcode num_files 1 \
+  "$INPUT" H264 "$OUT/remap_wave_safe_native_pad_crop.h264" H264 \
+  > "$OUT/remap_wave_safe_native_pad_crop.log" 2>&1
+```
+
+Expected result summary:
+
+```text
+main chain remains 640x360
+VPI scratch and Remap payload are 640x368
+identity and wave_safe return rc=0
+both outputs are readable
+black-border p95 is 0 in the recorded validation
+```
+
+Optional local log summary:
+
+```powershell
+py -3.12 scripts\summarize_remap_pad_crop_log.py `
+  --log results\remap_native_size_pad_crop_probe_20260723\remap_identity_native_pad_crop.log `
+  --out-dir results\remap_native_size_pad_crop_probe_20260723\summary_identity
+
+py -3.12 scripts\summarize_remap_pad_crop_log.py `
+  --log results\remap_native_size_pad_crop_probe_20260723\remap_wave_safe_native_pad_crop.log `
+  --out-dir results\remap_native_size_pad_crop_probe_20260723\summary_wave_safe
+```
+
+Claim boundary:
+
+```text
+This reproduces a Remap operator/dataflow size-layout boundary. It does not
+prove EIS quality improvement, zero-copy, or full-pipeline acceleration.
+```
+
+## L6 - Public / Interview Package
 
 Purpose: read the project as a portfolio.
 

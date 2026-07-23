@@ -415,6 +415,81 @@ wave 3840x2160:     31.064200 ms -> 9.516820 ms, 3.264x
 The correct claim is module/operator-level C++ Remap acceleration. It is not
 yet MMAPI integration and not full EIS pipeline acceleration.
 
+## Q: Why do source, identity_pad_crop, and wave_safe_pad_crop not show stabilization?
+
+Because that review video is not a stabilization-quality candidate. It is a
+device-stage dataflow diagnostic.
+
+Panel roles:
+
+```text
+source:
+  original input, no stabilization expected
+
+identity_pad_crop:
+  dataflow sanity check
+  640x360 main chain -> 640x368 VPI scratch -> identity Remap
+  -> crop/transform back to 640x360 -> NVENC
+
+wave_safe_pad_crop:
+  operator diagnostic
+  proves the Remap map is active and stays inside a safe FOV envelope
+```
+
+Expected result:
+
+```text
+No stabilization is expected.
+The expected pass condition is readable output without black bands, block
+tearing, wrong colors, or size/layout corruption.
+```
+
+## Q: What did the native-size Remap pad/crop loop actually buy?
+
+It closed a concrete MMAPI/VPI/NVENC integration risk.
+
+The blocker was:
+
+```text
+Regular05 source is 640x360.
+VPI Remap WarpGrid aligns the height to 368.
+Remap requires output image dimensions to match the warp map.
+Direct native 640x360 Remap therefore fails.
+```
+
+The fix was:
+
+```text
+Keep the main decode/encode chain at 640x360.
+Pad only the pitch-linear VPI scratch stage to 640x368.
+Run VPI Remap at 640x368.
+Crop/transform back to 640x360 before NVENC.
+```
+
+Measured result:
+
+```text
+identity:  rc=0, readable, black-border p95=0
+wave_safe: rc=0, readable, black-border p95=0
+```
+
+Engineering value:
+
+```text
+This does not improve EIS quality by itself.
+It proves that future spatial operators such as dynamic mesh/local warp can be
+wired into the current native-size MMAPI/VPI/NVENC device path without changing
+the encoder-facing video size.
+```
+
+Forbidden wording:
+
+```text
+Do not say Remap solved stabilization quality.
+Do not call it zero-copy.
+Do not present it as full-pipeline acceleration.
+```
+
 ## Q: Did local Remap improve parallax or local-warp EIS quality?
 
 No. I tested that bridge explicitly and it did not improve the chosen parallax

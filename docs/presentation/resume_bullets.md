@@ -35,6 +35,13 @@ vpiSubmitPerspectiveWarp, and stream-only reuse reduced same-source Regular05
 stage average from 10.336 ms to 9.680 ms without changing output semantics.
 ```
 
+```text
+Closed a VPI Remap/MMAPI size-layout boundary on Jetson Orin NX: kept the
+encoder-facing video chain at native 640x360 while padding only the VPI scratch
+stage to 640x368 for Remap, then cropping back before NVENC with rc=0 and no
+black-border regression in diagnostic checks.
+```
+
 ## Long Version
 
 ```text
@@ -64,6 +71,14 @@ submit call alone. A stream-only reuse follow-up improved same-source Regular05
 wall mean by 5.303% while preserving rc=0 and fallback=0 across 10 runs.
 ```
 
+```text
+Extended the VPI operator boundary beyond PerspectiveWarp by validating C++
+Remap and closing a native-size MMAPI integration issue: VPI WarpGrid required a
+640x368 Remap payload for a 640x360 source, so the device path pads only the VPI
+scratch stage and returns to the native 640x360 main chain before encode. This
+is a dataflow/operator integration result, not an EIS quality or zero-copy claim.
+```
+
 ## Interview One-Liner
 
 ```text
@@ -81,6 +96,7 @@ representative real-time workload
 Regular-gate quality
 module-level VPI acceleration
 device-stage dataflow
+native-size VPI Remap scratch-stage pad/crop
 quality-preserving NvBuffer pair follow-up
 stream-only lifecycle optimization
 Nsight-backed bottleneck attribution

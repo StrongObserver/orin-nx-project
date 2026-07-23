@@ -25,6 +25,7 @@ wrapper lifecycle, sync, transform cost, and perf/watt trade-offs.
 | NvBuffer pair preserves `resid_r15_s07` and gives a small stage gain | Five Regular runs and same-source Regular05 timing |
 | Nsight shows wrapper/sync/transform/lifecycle cost dominates | `nsight_device_stage_profile_result_2026-07-23.md` |
 | Stream-only reuse gives a small lifecycle gain | 10-run same-source Regular05 repeat: wall mean `1.947 -> 1.844 s`, stage avg `10.336 -> 9.680 ms` |
+| VPI Remap can be wired into the native-size MMAPI scratch stage | `remap_native_size_pad_crop_probe_2026-07-23.md`: 640x360 main chain, 640x368 VPI scratch, identity/wave_safe `rc=0` |
 
 ## Forbidden Claims
 
@@ -42,6 +43,7 @@ Running / Parallax / Crowd are solved.
 The result is product-grade or all-scene EIS quality.
 Outdoor-car inverse/post-geometry is Regular05 EIS-quality evidence.
 safe103_crop98 or inclusion_source_to_dest is the current quality anchor.
+Remap proves EIS quality improvement or mesh/local-warp stabilization.
 ```
 
 ## Precise Wording
@@ -109,6 +111,22 @@ Bad:
 The stabilizer works on all scenes.
 ```
 
+### VPI Remap
+
+Good:
+
+```text
+VPI C++ Remap is a positive module/operator result, and the native-size MMAPI
+pad/crop probe shows that a 640x360 main chain can use a 640x368 VPI scratch
+stage for Remap and return to 640x360 before NVENC.
+```
+
+Bad:
+
+```text
+Remap improved my EIS quality.
+```
+
 ## Current Stage Status
 
 ```text
@@ -116,6 +134,7 @@ Quality recovery: sealed around resid_r15_s07.
 NvBuffer pair correctness: sealed as quality-preserving small dataflow gain.
 Nsight/NVTX profiling: completed first capture and lifecycle follow-up.
 Stream-only reuse: promoted as a small accepted lifecycle optimization.
+Remap native-size pad/crop: completed as a diagnostic operator/dataflow closure.
 P6/P7 scheduler or double-buffering work: still not triggered.
 Current best next action: use the final evidence package plus lifecycle result
 for README, interview, and presentation. Start broader engineering only through

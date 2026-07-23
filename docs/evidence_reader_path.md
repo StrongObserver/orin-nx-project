@@ -84,6 +84,8 @@ Read:
 docs/presentation/hardware_acceleration_boundary.md
 docs/vpi_warp_module_report_2026-07-18.md
 docs/vpi_remap_cpp_probe_2026-07-23.md
+docs/remap_mmapi_integration_probe_2026-07-23.md
+docs/remap_native_size_pad_crop_probe_2026-07-23.md
 ```
 
 Evidence:
@@ -107,6 +109,8 @@ Claim:
 ```text
 VPI CUDA helps on high-resolution PerspectiveWarp modules.
 VPI C++ Remap works on CPU/CUDA and accelerates tested identity/wave remap maps.
+Remap can be inserted into the MMAPI/VPI/NVENC scratch stage as a diagnostic
+operator, including native 640x360 main-chain pad/crop handling.
 ```
 
 Do not claim:
@@ -115,7 +119,7 @@ Do not claim:
 full EIS pipeline acceleration
 VPI optical-flow acceleration
 pixel-equivalent output
-MMAPI Remap integration complete
+Regular EIS quality improved by Remap
 ```
 
 ## I Want Device-Side Dataflow Evidence
@@ -230,12 +234,14 @@ image-wrapper reuse
 queue-depth or double-buffering proven useful
 ```
 
-## I Want The Latest Operator Extension
+## I Want Remap / Operator Extension Evidence
 
 Read:
 
 ```text
 docs/vpi_remap_cpp_probe_2026-07-23.md
+docs/remap_mmapi_integration_probe_2026-07-23.md
+docs/remap_native_size_pad_crop_probe_2026-07-23.md
 experiments/vpi_cpp_remap_probe/remap_probe.cpp
 ```
 
@@ -243,10 +249,14 @@ Evidence:
 
 ```text
 results/vpi_remap_cpp_probe_20260723/
+results/remap_mmapi_integration_probe_20260723/
+results/remap_native_size_pad_crop_probe_20260723/
 C:\Users\Admin\Videos\orin nx\review\diagnostic\20260723_vpi_remap_cpp_probe\
+C:\Users\Admin\Videos\orin nx\review\diagnostic\20260723_remap_mmapi_integration_probe\
+C:\Users\Admin\Videos\orin nx\review\diagnostic\20260723_remap_native_size_pad_crop_probe\
 ```
 
-Key result:
+Key results:
 
 ```text
 Python VPI Remap:
@@ -256,6 +266,16 @@ C++ VPI Remap:
   CPU/CUDA pass
   CUDA speedup vs OpenCV CPU: about 2.5x-3.4x on tested maps
   NV12_ER CPU/CUDA pass at 640x368
+
+Remap-MMAPI padded diagnostic:
+  640x360 source fails because WarpGrid aligns height to 368
+  640x368 padded diagnostic source runs identity/wave/wave_safe with rc=0
+
+Remap native-size pad/crop closure:
+  main decode/encode chain remains native 640x360
+  only the VPI scratch stage is padded to 640x368
+  identity and wave_safe both rc=0 and readable
+  black-border p95 is 0 in the recorded checks
 ```
 
 Claim:
@@ -263,6 +283,8 @@ Claim:
 ```text
 VPI C++ Remap is a valid module/operator-level route for future local warp or
 pitch-linear scratch probing.
+The native 640x360 MMAPI main chain can use a padded 640x368 VPI Remap scratch
+stage and crop/transform back before NVENC.
 ```
 
 Do not claim:
@@ -271,7 +293,8 @@ Do not claim:
 full-pipeline EIS acceleration
 mesh EIS quality solved
 VIC validated for this pipeline
-MMAPI Remap integration complete
+Regular EIS quality improved by Remap
+zero-copy
 ```
 
 ## I Want Failure Boundaries

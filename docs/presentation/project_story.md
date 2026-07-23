@@ -56,6 +56,9 @@ The strongest project story is heterogeneous-system measurement discipline:
 - VPI PyrLK was tested and rejected as a short-term motion-estimation
   replacement, while C++ Remap became a positive module/operator result after
   the Python binding abort was isolated;
+- Remap was then carried one step into the MMAPI/VPI/NVENC scratch stage,
+  including a native 640x360 main-chain pad/crop closure for the 640x368
+  WarpGrid alignment boundary;
 - MMAPI/EGLImage/NvBuffer dataflow was decomposed into wrapper, sync, transform,
   and memory-format costs;
 - NVTX/Nsight profiling confirmed that wrapper, sync, transform, and lifecycle
@@ -92,6 +95,16 @@ run on CPU/CUDA but is not a good OpenCV replacement under the current probe.
 Python Remap hits a native binding abort, but the C++ Remap probe works on
 CPU/CUDA and shows about 2.5x-3.4x CUDA speedup over OpenCV CPU on tested
 identity/wave maps.
+
+I then used Remap to close a real device-side integration boundary. Directly
+running Remap on the native 640x360 Regular05 source failed because VPI aligned
+the WarpGrid height to 368 and requires the output image to match the warp map
+size. The follow-up pad/crop probe kept the MMAPI/NVENC main chain at 640x360,
+padded only the pitch-linear VPI scratch stage to 640x368, ran Remap, and then
+cropped/transformed back to 640x360 before encode. Identity and wave_safe both
+returned rc=0 and readable output with p95 black-border equal to 0. This is not
+a stabilization-quality result; it proves that Remap can be safely wired into
+the native-size device-stage dataflow for future spatial warp experiments.
 
 On the device-side path, I moved away from Python appsink/appsrc and used the
 C++ MMAPI/VPI/NVENC path as the performance frontier. The latest submit/sync
@@ -131,5 +144,9 @@ docs/device_stage_lifecycle_budget_2026-07-23.md
 docs/device_stage_lifecycle_perf_result_2026-07-23.md
 results/device_stage_lifecycle_perf_20260723/
 docs/vpi_remap_cpp_probe_2026-07-23.md
+docs/remap_mmapi_integration_probe_2026-07-23.md
+docs/remap_native_size_pad_crop_probe_2026-07-23.md
 results/vpi_remap_cpp_probe_20260723/
+results/remap_mmapi_integration_probe_20260723/
+results/remap_native_size_pad_crop_probe_20260723/
 ```

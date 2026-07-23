@@ -265,8 +265,12 @@ PyrLK / Remap backend boundary:
   Dense Optical Flow is not implemented in the current Python probe. Python VPI
   Remap aborts in the native binding, but C++ Remap now runs on CPU/CUDA. CUDA
   Remap is about 2.5x-3.4x faster than OpenCV CPU on tested identity/wave module
-  maps, and NV12_ER CPU/CUDA works at 640x368. This is module/operator evidence,
-  not MMAPI integration or full EIS acceleration.
+  maps, and NV12_ER CPU/CUDA works at 640x368. Remap was then inserted into the
+  MMAPI/VPI/NVENC scratch stage as a diagnostic operator. The latest native-size
+  pad/crop probe keeps the main chain at 640x360, pads only the VPI scratch
+  stage to 640x368, then returns to 640x360 before NVENC; identity and wave_safe
+  both ran with rc=0 and black-border p95=0. This is module/operator and
+  dataflow evidence, not EIS quality or full pipeline acceleration.
 ```
 
 Conclusion:
@@ -351,5 +355,9 @@ docs/device_stage_lifecycle_budget_2026-07-23.md
 docs/device_stage_lifecycle_perf_result_2026-07-23.md
 results/device_stage_lifecycle_perf_20260723/
 docs/vpi_remap_cpp_probe_2026-07-23.md
+docs/remap_mmapi_integration_probe_2026-07-23.md
+docs/remap_native_size_pad_crop_probe_2026-07-23.md
 results/vpi_remap_cpp_probe_20260723/
+results/remap_mmapi_integration_probe_20260723/
+results/remap_native_size_pad_crop_probe_20260723/
 ```
