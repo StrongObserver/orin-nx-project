@@ -148,7 +148,7 @@ smoke path:
 | Matrix direction | Sampled black-border behavior | Decision |
 |---|---:|---|
 | forward CPU matrix | about 30% black area | reject |
-| inverse CPU matrix | about 2.8-2.9% black area | current default |
+| inverse CPU matrix | about 2.8-2.9% black area | outdoor-car dataflow smoke default only |
 
 Boundary: this outdoor-car result is an offline CPU-matrix-driven device
 warp/encode smoke milestone. It is not real-time full EIS, not CPU-output
@@ -186,6 +186,9 @@ optimization boundaries:
 - GStreamer/NVMM is available for a future real dataflow optimization loop.
 - MMAPI/VPI/NVENC device-side warp is now validated as a stage boundary.
 - Regular05 source_to_dest replay is the current EIS-quality device checkpoint.
+- `resid_r15_s07` is the accepted Regular-gate stabilization-strength recovery result.
+- Format-matched NvBuffer pair preserves that quality anchor and gives a small
+  measured device-stage gain.
 
 This is stronger than claiming one fake speedup. It shows measurement discipline:
 the project separates algorithm quality, module acceleration, and data movement.
@@ -205,6 +208,10 @@ docs/stage_result_regular_performance_baseline_2026-07-18.md
 docs/gstreamer_nvmm_latency_plan_2026-07-18.md
 docs/device_matrix_warp_demo_2026-07-19.md
 docs/layered_artifact_diagnosis_2026-07-19.md
+docs/regular_gate_residual_closed_loop_2026-07-21.md
+docs/regular_gate_nvbuffer_pair_resid_2026-07-23.md
+results/regular_gate_nvbuffer_pair_resid_20260723/
+results/regular05_eglimage_timing_resid_compare_20260723/
 ```
 
 Review videos:
@@ -217,6 +224,8 @@ C:\Users\Admin\Videos\orin nx\review\performance\20260718_estimate_scale_regular
 C:\Users\Admin\Videos\orin nx\review\performance\20260718_estimate_scale_quality_perf\
 C:\Users\Admin\Videos\orin nx\review\performance\20260718_regular_gate_est0p5_grid16_validation\
 C:\Users\Admin\Videos\orin nx\review\performance\20260719_regular05_device_replay\
+C:\Users\Admin\Videos\orin nx\review\performance\20260721_regular_gate_residual_closed_loop_full\
+C:\Users\Admin\Videos\orin nx\review\performance\20260723_regular_gate_nvbuffer_pair_resid_r15_s07_5clip\
 ```
 
 ## Next Best Step
@@ -225,10 +234,13 @@ The next most valuable loop is not another global LP parameter sweep.
 
 Use one of these scoped directions:
 
-1. Use Regular05 `source_to_dest` as the current device-side replay convention.
-2. Start future handoff/live-producer work from
-   `regular05_hybrid_matrix_handoff_v1`.
-3. Do not use outdoor-car inverse/post_geometry results as EIS-quality progress.
+1. Keep `resid_r15_s07` as the current Regular-gate quality anchor.
+2. Use `presentation_closeout_v1` for current interview-facing synchronization.
+3. If a future engineering loop starts, scope it to same-source/same-matrix
+   dataflow A/B around the format-matched NvBuffer pair path.
+4. Do not use outdoor-car inverse/post_geometry results as EIS-quality progress.
+5. Do not reopen limiter/R/LP/residual-strength/safe103/inclusion sweeps for
+   the accepted quality issue.
 
 Active next contracts:
 
@@ -238,4 +250,6 @@ configs/harness/contracts/regular05_estimate_scale_quality_perf.json
 configs/harness/contracts/regular_gate_est0p5_grid16_validation_v1.json
 configs/harness/contracts/gst_nvmm_decode_convert_latency_v1.json
 configs/harness/contracts/device_matrix_warp_demo_v1.json
+configs/harness/contracts/orin_next_engineering_loop_v1.json
+configs/harness/contracts/presentation_closeout_v1.json
 ```

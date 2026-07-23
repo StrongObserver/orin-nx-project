@@ -11,13 +11,13 @@
     "default_rule": "Use progressive disclosure. Read lightweight routing and active contracts first; load long project context, internal references, and external knowledge only when the active task or blocker requires them.",
     "token_budget_intent": "Reduce repeated startup token cost while preserving enough current-state evidence to avoid stale decisions."
   },
-  "active_task_contract": "configs/harness/contracts/regular_gate_stabilization_strength_recovery_loop_v1.json",
+  "active_task_contract": "configs/harness/contracts/presentation_closeout_v1.json",
   "current_loop_state": {
-    "last_completed_task": "regular_gate_inclusion_validation_v1/human_review_regular_gate_bgr8_color_fix",
-    "current_task": "regular_gate_stabilization_strength_recovery_loop_v1",
+    "last_completed_task": "regular_gate_nvbuffer_pair_resid_r15_s07_closeout",
+    "current_task": "presentation_closeout_v1",
     "latest_result": "After spike_mid was rejected, residual-grid diagnostics did not justify opening mesh. The accepted residual closed-loop candidate resid_r15_s07 remains the current quality anchor. On 2026-07-23, resid_r15_s07 was also run through the format-matched NvBuffer pair path on all five Regular clips with rc=0 and fallback=0. Regular05 same-source EGLImage vs NvBuffer comparison aligned exactly in time/geometry; NvBuffer retained the quality anchor and gave a small dataflow-stage gain, about 7.535 ms -> 7.230 ms at frame100 and 9.589 ms -> 9.401 ms running average.",
     "current_blocker": "No current stabilization-strength or NvBuffer-pair correctness blocker. The project should move to presentation/closeout or a new explicitly scoped dataflow optimization contract; do not continue limiter/R/LP/residual/safe103/inclusion sweeps.",
-    "recommended_next_contract": "presentation_closeout_or_scoped_nvbuffer_dataflow_followup"
+    "recommended_next_contract": "presentation_closeout_v1"
   },
   "global_claim_boundary": {
     "allowed": [

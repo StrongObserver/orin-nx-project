@@ -2,12 +2,25 @@
 
 ## Decision
 
-Wrapper reuse is a valid first optimization for the accepted C++ EGLImage-wrapper
-path. It reduces Regular05 same-input wall time and the measured EGLImage stage
-cost without changing the accepted stabilization matrix or the C++ device path
-claim boundary.
+This note is superseded by the later wrapper-reuse root-cause investigation.
+The timing observation below remains useful as historical negative evidence, but
+EGLImage image-wrapper reuse is not safe to promote in the accepted C++
+MMAPI/NvBufSurface/VPI path.
 
-This is still a Regular05 dataflow result, not a full real-time EIS claim.
+Current accepted policy:
+
+```text
+reuse VPI stream: allowed
+recreate VPI EGLImage image wrappers per frame: required for correctness
+```
+
+The wrapper-reuse probe reduced Regular05 same-input wall time and measured
+stage cost, but later variants showed visible tearing or VPI failures when image
+wrappers were reused over changing EGLImage/NvBuffer-backed surfaces. See
+`docs/regular05_eglimage_wrapper_reuse_root_cause_2026-07-20.md`.
+
+This is a Regular05 dataflow diagnostic, not a current optimization claim and
+not a full real-time EIS claim.
 
 ## Baseline
 
@@ -65,15 +78,17 @@ Delta:
 | EGLImage stage avg | 10.504100 ms | 7.868660 ms | -2.635440 ms |
 | VPI warp-only avg | 1.554940 ms | 1.832560 ms | +0.277620 ms |
 
-## Interpretation
+## Historical Interpretation
 
-Reusing VPI stream and EGLImage wrappers reduces the dataflow stage, but the
-first frame has a large initialization spike. After frame 1, sampled frames show
-the stage often in the 4-6 ms range instead of the previous 10.5 ms average.
+Reusing VPI stream and EGLImage wrappers appeared to reduce the dataflow stage,
+but that route was later rejected because image-wrapper reuse is not correctness
+safe in this pipeline. After frame 1, sampled frames showed the stage often in
+the 4-6 ms range instead of the previous 10.5 ms average, which helped motivate
+the later wrapper lifecycle, submit/sync, and NvBuffer pair probes.
 
-The next performance question is no longer whether wrapper reuse helps; it does.
-The next question is how to remove or amortize remaining transform/synchronization
-cost while keeping the same output semantics.
+The current performance question is how to reduce wrapper/sync/transform
+overhead while keeping the accepted per-frame-wrapper output semantics, or by
+using an explicitly format-matched NvBuffer pair path.
 
 ## Rejected Shortcut
 
@@ -91,8 +106,9 @@ Do not retry that exact path without first making input and output formats match
 Allowed:
 
 ```text
-Wrapper reuse reduces Regular05 C++ EGLImage dataflow cost under the same input
-and matrix semantics.
+Wrapper reuse was a useful diagnostic that exposed wrapper lifecycle cost.
+VPI stream reuse is safe in this path.
+EGLImage image-wrapper reuse is rejected for correctness-critical Regular gate evidence.
 Regular05 output remains readable and black-border hard-gate sanity remains
 below 1%.
 ```
@@ -100,6 +116,7 @@ below 1%.
 Forbidden:
 
 ```text
+Promoting EGLImage image-wrapper reuse as the current optimization path.
 Full real-time EIS.
 Zero-copy full chain.
 All-scene EIS quality.
@@ -111,9 +128,9 @@ VPI optical-flow acceleration.
 The next useful experiment is one of:
 
 ```text
-1. reuse wrappers and stream in the accepted path if the code remains stable;
-2. isolate NvBufSurfTransform cost with transform-only timing;
-3. test format-matched NvBuffer input/output pairs;
-4. run five-clip timing only after Regular05 reuse is visually accepted or at
-   least no-regression checked.
+1. keep using the accepted per-frame-wrapper EGLImage path for correctness;
+2. use the later format-matched NvBuffer pair result as the current follow-up
+   when the source, matrix, crop/postprocess, and review boundary are identical;
+3. only open a new dataflow A/B contract if it keeps `resid_r15_s07` as the
+   quality anchor and does not mix matrix-quality changes with transport changes.
 ```

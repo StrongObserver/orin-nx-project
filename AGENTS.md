@@ -44,14 +44,24 @@ or a declared stop reason is hit.
 4. Current task-specific Done Contract:
 
 ```text
+C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\presentation_closeout_v1.json
+```
+
+This is the current closeout entry. It starts from the accepted
+`resid_r15_s07` Regular-gate quality anchor and the format-matched NvBuffer pair
+follow-up, then synchronizes control-plane and interview-facing materials. It
+does not reopen limiter/R/LP/residual/safe103/inclusion sweeps.
+
+The latest device-consumer technical contract remains:
+
+```text
 C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\regular05_live_eglimage_path_v1.json
 ```
 
-This is the current Regular05 device-consumer / FIFO-live entry. It starts from
-the accepted C++ MMAPI/VPI/NVENC EGLImage-wrapper path, explicit
+It records the accepted C++ MMAPI/VPI/NVENC EGLImage-wrapper path, explicit
 `source_to_dest` matrices, and the frozen BGR8 visual correctness reference. The
 old MMAPI pitch-pointer path and EGLImage image-wrapper reuse path are
-diagnostic/rejected only because they caused visible block tearing.
+diagnostic/rejected because they caused visible block tearing.
 
 5. High-level project target reference, especially "项目二：Jetson Orin NX 视频稳像（EIS）与异构加速":
 

@@ -365,14 +365,17 @@ H264 input -> decode/NvBufSurface -> pitch-linear NV12_ER scratch
 -> VPI CUDA warp -> block-linear NV12 -> NVENC
 ```
 
-Same-source matrix tests showed that the forward CPU matrix creates excessive
-black border on the device path, while the inverse matrix gives normal sampled
-black-border sanity:
+Historical outdoor-car same-source matrix tests showed that the forward CPU
+matrix creates excessive black border on that smoke source, while the inverse
+matrix gives normal sampled black-border sanity:
 
 | Output | Black ratio | Decision |
 |---|---:|---|
 | device forward matrix | about 0.303 | reject |
-| device inverse matrix | about 0.028 to 0.029 | current default |
+| device inverse matrix | about 0.028 to 0.029 | outdoor-car dataflow smoke default only |
+
+That inverse convention is not the Regular05 EIS-quality convention. Regular05
+device replay uses `source_to_dest`.
 
 The device path is still a scoped stage boundary. A local 120-frame panel
 comparison between CPU stabilized and device inverse output has
@@ -524,6 +527,7 @@ Current active contracts:
 
 ```text
 configs/harness/contracts/orin_next_engineering_loop_v1.json
+configs/harness/contracts/presentation_closeout_v1.json
 configs/harness/contracts/regular_gate_stabilization_strength_recovery_loop_v1.json
 configs/harness/contracts/regular05_live_eglimage_path_v1.json
 configs/harness/contracts/regular05_eglimage_wrapper_reuse_root_cause_v1.json

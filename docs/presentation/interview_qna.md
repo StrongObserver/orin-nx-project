@@ -229,6 +229,25 @@ block-linear VPI scratch pairs were rejected by VPI, direct mismatched NvBuffer
 input failed, and EGLImage image-wrapper reuse caused tearing. The honest claim
 is that the dataflow cost is measured and localized, not that zero-copy is done.
 
+## Q: What did the NvBuffer pair follow-up improve?
+
+It improved the device-side dataflow path without changing the quality anchor.
+The important correction was to compare against `resid_r15_s07`, not the older
+inclusion or safe103 matrices.
+
+On all five Regular clips, the format-matched NvBuffer pair path ran with
+`rc=0` and `fallback=0`. On same-source Regular05, it aligned with the EGLImage
+result in time and geometry, preserved the accepted quality anchor, and reduced
+the measured device stage slightly:
+
+```text
+stage frame100:   7.535 ms -> 7.230 ms
+stage running avg: 9.589 ms -> 9.401 ms
+```
+
+So the claim is quality-preserving dataflow improvement. It is not zero-copy,
+and it is not full-pipeline acceleration.
+
 ## Q: Why not use VPI PyrLK for motion estimation?
 
 I tested it because it matches the original project design. It can run on CPU

@@ -82,6 +82,10 @@ This map points to local evidence. Most evidence files are ignored by Git.
 | Regular gate stabilization-strength recovery review videos | `C:\Users\Admin\Videos\orin nx\review\performance\20260721_regular_gate_stabilization_strength_recovery\` | Five per-clip source / safe103crop98 / BQP / spike_mid review grids plus five-clip overview grid | outside repo |
 | Regular gate residual closed-loop report | `docs/regular_gate_residual_closed_loop_2026-07-21.md` | Residual closed-loop candidate after spike_mid rejection; records residual-motion improvement, full-length Jetson FIFO rerun, and 2026-07-22 human acceptance | tracked |
 | Regular gate residual closed-loop review videos | `C:\Users\Admin\Videos\orin nx\review\performance\20260721_regular_gate_residual_closed_loop_full\` | Human-accepted five per-clip source / safe103crop98 / spike_mid / resid_r15_s07 review grids plus five-clip overview grid | outside repo |
+| Regular gate NvBuffer pair resid closeout | `docs/regular_gate_nvbuffer_pair_resid_2026-07-23.md` | Format-matched NvBuffer pair rerun using the accepted `resid_r15_s07` quality anchor; records five-clip rc/fallback health and small Regular05 device-stage gain | tracked |
+| Regular gate NvBuffer pair resid evidence | `results/regular_gate_nvbuffer_pair_resid_20260723/` | Per-clip NvBuffer pair outputs, summaries, and timing evidence for `resid_r15_s07` | ignored |
+| Regular gate NvBuffer pair resid review video | `C:\Users\Admin\Videos\orin nx\review\performance\20260723_regular_gate_nvbuffer_pair_resid_r15_s07_5clip\20260723_regular_gate_nvbuffer_resid_r15_s07_5clip_overview_grid.mp4` | Five-clip overview for source vs NvBuffer pair with the accepted quality anchor | outside repo |
+| Regular05 EGLImage vs NvBuffer resid timing | `results/regular05_eglimage_timing_resid_compare_20260723/` | Same-source Regular05 timing comparison: EGLImage vs format-matched NvBuffer pair under `resid_r15_s07` | ignored |
 
 Do not commit ignored evidence unless a future task explicitly selects a small
 representative artifact.
