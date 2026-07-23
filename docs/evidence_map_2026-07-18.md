@@ -92,6 +92,7 @@ This map points to local evidence. Most evidence files are ignored by Git.
 | RK3588 idea first probe evidence | `results/rk3588_idea_probe_20260723/repeat/` | Five alternating runs for accepted EGLImage path vs format-matched NvBuffer pair under the same Regular05 source and `resid_r15_s07` matrix | ignored |
 | Nsight device-stage profile result | `docs/nsight_device_stage_profile_result_2026-07-23.md` | NVTX/Nsight result for EGLImage and NvBuffer pair paths; shows wrapper/sync/transform/lifecycle cost dominates and P6/P7 scheduling A/B is not yet justified | tracked |
 | Nsight device-stage raw reports | `results/nsight_device_stage_profile_20260723/` | Local `.nsys-rep`, exported NVTX/CUDA CSV stats, logs, and H264 outputs for the first Nsight capture | ignored |
+| RK3588 lifecycle follow-up evidence | `results/rk3588_lifecycle_probe_20260723/repeat/` | Five-run same-source comparison of accepted EGLImage, EGLImage stream-only reuse, and format-matched NvBuffer pair under `resid_r15_s07`; used to decide that P6/P7 scheduling work is not triggered | ignored |
 
 Do not commit ignored evidence unless a future task explicitly selects a small
 representative artifact.

@@ -141,6 +141,65 @@ It must not revive EGLImage image-wrapper reuse, pitch-linear main encode,
 block-linear VPI scratch, or any known rejected route.
 ```
 
+## Stream-Only Reuse Follow-Up
+
+To avoid stopping too early, a same-source lifecycle follow-up was also run after
+the Nsight capture.
+
+Evidence:
+
+```text
+results/rk3588_lifecycle_probe_20260723/repeat/
+```
+
+Compared paths:
+
+```text
+accepted EGLImage path
+EGLImage stream-only reuse path
+format-matched NvBuffer pair path
+```
+
+All paths used the same Regular05 source and the same `resid_r15_s07` matrix.
+Each path ran five alternating runs.
+
+Summary:
+
+| Metric | EGLImage | Stream-only reuse | NvBuffer pair |
+|---|---:|---:|---:|
+| Runs | 5 | 5 | 5 |
+| rc=0 | 5/5 | 5/5 | 5/5 |
+| Fallback total | 0 | 0 | 0 |
+| Wall mean | 1.928150 s | 1.882484 s | 1.906174 s |
+| Wall median | 1.940980 s | 1.811826 s | 1.911762 s |
+| Stage frame100 mean | 7.840122 ms | 7.502906 ms | 7.916916 ms |
+| Stage running avg mean | 10.176194 ms | 10.045934 ms | 10.083822 ms |
+| Wrapper mean | 5.864166 ms | 5.503740 ms | 6.058994 ms |
+| VPI warp mean | 1.520012 ms | 1.746708 ms | 1.507266 ms |
+
+Benefit vs accepted EGLImage:
+
+| Candidate | Wall mean | Stage frame100 | Stage avg | Wrapper | VPI warp |
+|---|---:|---:|---:|---:|---:|
+| Stream-only reuse | +2.368% | +4.301% | +1.280% | +6.146% | -14.914% |
+| NvBuffer pair | +1.140% | -0.980% | +0.908% | -3.322% | +0.839% |
+
+Interpretation:
+
+```text
+Stream-only reuse is safe in this repeat test and gives small wall/stage gains,
+but the gain is still below the threshold for a larger scheduling rewrite.
+NvBuffer pair remains a small and variable dataflow alternative rather than a
+clear next optimization route.
+```
+
+Updated decision:
+
+```text
+P6/P7 remains not triggered. The safe lifecycle experiments show low-single-digit
+wall/stage gains, not a strong queue-depth or double-buffering opportunity.
+```
+
 ## Current Best Claim
 
 Allowed:

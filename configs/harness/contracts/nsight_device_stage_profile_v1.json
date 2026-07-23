@@ -72,6 +72,30 @@
     ],
     "p6_p7_decision": "Do not open queue-depth or double-buffering A/B yet. Nsight supports wrapper/sync/transform/lifecycle attribution, not a large RK3588-style scheduler win."
   },
+  "stream_reuse_followup": {
+    "evidence_dir": "results/rk3588_lifecycle_probe_20260723/repeat/",
+    "runs_per_path": 5,
+    "paths": [
+      "accepted EGLImage path",
+      "EGLImage stream-only reuse path",
+      "format-matched NvBuffer pair path"
+    ],
+    "stream_only_reuse_vs_eglimage": {
+      "wall_mean_improvement_pct": 2.368,
+      "stage_frame100_improvement_pct": 4.301,
+      "stage_avg_improvement_pct": 1.28,
+      "wrapper_improvement_pct": 6.146,
+      "vpi_warp_improvement_pct": -14.914
+    },
+    "nvbuffer_pair_vs_eglimage": {
+      "wall_mean_improvement_pct": 1.14,
+      "stage_frame100_improvement_pct": -0.98,
+      "stage_avg_improvement_pct": 0.908,
+      "wrapper_improvement_pct": -3.322,
+      "vpi_warp_improvement_pct": 0.839
+    },
+    "decision": "Safe lifecycle variants show only low-single-digit wall/stage gains under the current source and matrix. Keep them as bounded dataflow evidence; do not open a broad scheduler or double-buffering implementation loop."
+  },
   "profiling_questions": [
     "Is VPI/CUDA/NVENC idle while CPU-side wrapper, transform, or sync work is happening?",
     "Is the measured wall-clock gap dominated by host scheduling rather than VPI PerspectiveWarp execution?",
