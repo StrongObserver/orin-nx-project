@@ -35,6 +35,8 @@ Quality boundary -> CPU baseline -> VPI module evidence
 | VPI C++ Remap | CUDA Remap is `2.5x-3.4x` faster than OpenCV CPU on tested BGR8 identity/wave maps | Module/operator evidence; Python Remap still failed |
 | Remap-MMAPI diagnostic | 640x368 padded source runs Remap identity/wave through MMAPI/VPI/NVENC scratch stage with `rc=0` | Device-stage operator integration evidence; not Regular EIS quality |
 | Remap native-size pad/crop | Native 640x360 main chain can use a 640x368 padded Remap scratch stage and crop back before NVENC with `rc=0` | Size/layout diagnostic; not EIS quality or full-pipeline acceleration |
+| Dynamic Remap payload | Dynamic per-frame Remap payload rebuild works but raises MMAPI stage avg to about `13.14-13.16 ms` | Future mesh/local-warp cost boundary, not quality or acceleration |
+| CUDA dynamic warp | Standalone 640x368 CUDA affine warp: RGBA dynamic `0.194 ms`, Y8 dynamic `0.138 ms` | Standalone operator evidence; MMAPI integration still needs safety verifier |
 | Local-warp quality bridge | Static single-cell local Remap correction on `parallax10` did not improve local residual metrics | Negative diagnostic result; richer dynamic mesh/depth/RS model needed |
 | Python dataflow boundary | appsink readback about `7.93 ms/frame`; appsink -> appsrc -> encode about `15.81 ms/frame` | Explains why Python-in-loop is not the acceleration path |
 | C++ device stage | MMAPI/NVDEC -> block-linear NV12 -> pitch-linear NV12_ER scratch -> VPI CUDA warp -> NVENC | Device-stage evidence, not full real-time EIS |
@@ -128,6 +130,8 @@ Current sealed stage:
   Static single-cell local Remap correction did not improve parallax residuals.
   Queue-depth or double-buffering work is not triggered by current evidence.
   The native-size Remap pad/crop diagnostic is complete.
+  Dynamic Remap payload cost and standalone CUDA dynamic warp probes are complete.
+  CUDA/MMAPI scratch interop safety verification is complete.
 
 Regular performance baseline:
   lp_rigid_strength080_dynzoom106 + estimate_scale=0.5 + feature_grid_size=16
@@ -600,8 +604,11 @@ The current device-side acceleration path should stay scoped:
 8. treat stream-only reuse as a small lifecycle optimization only, not
    image-wrapper reuse or zero-copy;
 9. do not return to Python appsink/appsrc EIS integration;
-10. use the final evidence package, architecture table, Nsight/NVTX result, and
-   lifecycle repeat result as the current presentation closeout.
+10. treat dynamic Remap payload rebuild as a measured future-mesh cost boundary;
+11. treat standalone CUDA dynamic warp as an operator candidate only until
+    MMAPI scratch interop safety is verified;
+12. use the final evidence package, architecture table, Nsight/NVTX result, and
+    lifecycle repeat result as the current presentation closeout.
 ```
 
 Current accepted Regular05 device path:
@@ -625,6 +632,9 @@ none
 Important completed or supporting contracts:
 
 ```text
+configs/harness/contracts/cuda_dynamic_warp_probe_v1.json
+configs/harness/contracts/vpi_dynamic_remap_payload_probe_v1.json
+configs/harness/contracts/device_stage_lifecycle_dataflow_v2.json
 configs/harness/contracts/remap_native_size_pad_crop_probe_v1.json
 configs/harness/contracts/final_evidence_package_closeout_v1.json
 configs/harness/contracts/final_portfolio_and_reproducibility_loop_v1.json
@@ -639,6 +649,21 @@ configs/harness/contracts/regular05_live_eglimage_path_v1.json
 configs/harness/contracts/regular05_eglimage_wrapper_reuse_root_cause_v1.json
 ```
 
+Current active verifier:
+
+```text
+configs/harness/contracts/cuda_mmapi_interop_safety_verifier_v1.json
+```
+
+This verifier is now complete. It started from the standalone CUDA dynamic warp
+result and checked only whether CUDA can safely write through the current MMAPI
+scratch boundary. Identity, shift, and dynamic_shift diagnostics all returned
+rc=0 with readable 640x360 outputs; identity is the primary safety gate and had
+p95 black-border ratio 0. Shift/dynamic_shift use zero fill, so their high black
+border is expected diagnostic behavior, not a quality result. This remains a
+safety/dataflow verifier, not a quality loop, not zero-copy, and not a
+full-pipeline acceleration claim.
+
 Final evidence package docs:
 
 ```text
@@ -649,6 +674,7 @@ docs/nsight_device_stage_profile_result_2026-07-23.md
 docs/device_stage_lifecycle_budget_2026-07-23.md
 docs/device_stage_lifecycle_perf_result_2026-07-23.md
 docs/regular_gate_nvbuffer_pair_resid_2026-07-23.md
+docs/cuda_mmapi_interop_safety_verifier_2026-07-24.md
 ```
 
 Rejected or diagnostic-only routes:

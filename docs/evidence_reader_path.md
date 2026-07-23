@@ -242,6 +242,7 @@ Read:
 docs/vpi_remap_cpp_probe_2026-07-23.md
 docs/remap_mmapi_integration_probe_2026-07-23.md
 docs/remap_native_size_pad_crop_probe_2026-07-23.md
+docs/cuda_mmapi_interop_safety_verifier_2026-07-24.md
 experiments/vpi_cpp_remap_probe/remap_probe.cpp
 ```
 
@@ -251,9 +252,11 @@ Evidence:
 results/vpi_remap_cpp_probe_20260723/
 results/remap_mmapi_integration_probe_20260723/
 results/remap_native_size_pad_crop_probe_20260723/
+results/cuda_mmapi_interop_safety_verifier_20260724/
 C:\Users\Admin\Videos\orin nx\review\diagnostic\20260723_vpi_remap_cpp_probe\
 C:\Users\Admin\Videos\orin nx\review\diagnostic\20260723_remap_mmapi_integration_probe\
 C:\Users\Admin\Videos\orin nx\review\diagnostic\20260723_remap_native_size_pad_crop_probe\
+C:\Users\Admin\Videos\orin nx\review\diagnostic\20260724_cuda_mmapi_interop_safety_verifier\
 ```
 
 Key results:
@@ -276,6 +279,13 @@ Remap native-size pad/crop closure:
   only the VPI scratch stage is padded to 640x368
   identity and wave_safe both rc=0 and readable
   black-border p95 is 0 in the recorded checks
+
+CUDA/MMAPI interop safety verifier:
+  CUDA driver API EGL interop can read/write the pitch-linear NV12_ER scratch
+  stage and encode readable 640x360 output
+  identity, shift_dx8, and dynamic_shift all rc=0
+  identity black-border p95 is 0
+  shift modes have high black border by design because they use zero fill
 ```
 
 Claim:
@@ -295,6 +305,7 @@ mesh EIS quality solved
 VIC validated for this pipeline
 Regular EIS quality improved by Remap
 zero-copy
+accepted MMAPI CUDA acceleration from the safety verifier alone
 ```
 
 ## I Want Failure Boundaries

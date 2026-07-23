@@ -18,6 +18,7 @@ separate.
 | Remap NvBuffer wrapper | Native 640x360 main chain, 640x368 pitch-linear NV12_ER scratch | identity/wave_safe `rc=0`, p95 black border `0`, stage avg improves about `3-6%` vs EGLImage baseline in diagnostic timing | Small diagnostic dataflow gain; not zero-copy or quality improvement |
 | Dynamic Remap payload | 640x368 standalone and MMAPI pad/crop diagnostics | dynamic payload rebuild works; MMAPI stage avg about `13.14-13.16 ms` | Viability and cost boundary; not quality or acceleration claim |
 | CUDA dynamic warp | Standalone 640x368 affine warp kernel | RGBA dynamic `0.194 ms`; Y8 dynamic `0.138 ms` | Standalone execution evidence; not MMAPI integration or quality claim |
+| CUDA/MMAPI interop safety | Regular05 MMAPI scratch diagnostic | identity/shift/dynamic_shift `rc=0`; identity black-border p95 `0` | Safety/dataflow verifier only; not accepted acceleration |
 | Local-warp quality bridge | Parallax10 static local correction prototype | No residual improvement; baseline `global_residual_p95_avg=2.196`, best attempted local corrections stayed about `2.199-2.216` | Negative diagnostic result; static local offset is not enough |
 | Python dataflow boundary | GStreamer appsink/appsrc | appsink readback `7.93 ms/frame`; appsrc encode pass-through `15.81 ms/frame` | Explains why Python-in-loop is not the next acceleration path |
 | C++ device path | MMAPI/VPI/NVENC Regular05 stage | Accepted EGLImage wrapper path; stage around `7.5-10.5 ms/frame` depending probe/capture | Device-stage evidence, not full real-time EIS |
@@ -201,6 +202,21 @@ CUDA is much faster in this standalone affine diagnostic, but it is not yet an
 accepted MMAPI path. Direct MMAPI CUDA scratch writeback needs a separate safety
 verifier because earlier low-level CUDA/pitch-wrapper routes caused tearing.
 
+## CUDA / MMAPI Interop Safety
+
+The follow-up safety verifier tested CUDA driver API EGL interop on the current
+MMAPI scratch boundary before opening any custom CUDA warp integration.
+
+| Mode | rc | Frame100 CUDA elapsed | Frame100 process | Frame100 total stage | Avg total stage | Black-border p95 | Meaning |
+|---|---:|---:|---:|---:|---:|---:|---|
+| identity | 0 | 1.353660 ms | 0.844692 ms | 3.354930 ms | 4.095380 ms | 0.000000000 | Primary safety gate passed |
+| shift_dx8 | 0 | 1.452710 ms | 0.836533 ms | 3.432850 ms | 4.096300 ms | 0.191930556 | Non-identity write path active; expected zero-fill border |
+| dynamic_shift | 0 | 1.290720 ms | 0.841781 ms | 3.210320 ms | 4.445920 ms | 0.237383898 | Per-frame CUDA write parameters active; expected zero-fill border |
+
+This proves the scratch interop path can produce readable output. It does not
+prove an accepted CUDA warp kernel, zero-copy, full-pipeline acceleration, or
+EIS quality improvement.
+
 ## Local-Warp Quality Bridge
 
 The next diagnostic question was whether a constrained local Remap correction can
@@ -296,6 +312,7 @@ docs/remap_native_size_pad_crop_probe_2026-07-23.md
 docs/device_stage_lifecycle_dataflow_v2_2026-07-23.md
 docs/vpi_dynamic_remap_payload_probe_2026-07-23.md
 docs/cuda_dynamic_warp_probe_2026-07-23.md
+docs/cuda_mmapi_interop_safety_verifier_2026-07-24.md
 docs/local_warp_quality_bridge_2026-07-23.md
 docs/presentation/hardware_acceleration_boundary.md
 results/regular_gate_est0p5_grid16_validation_20260718/
@@ -311,5 +328,6 @@ results/remap_native_size_pad_crop_probe_20260723/
 results/device_stage_lifecycle_dataflow_v2_20260723/
 results/vpi_dynamic_remap_payload_probe_20260723/
 results/cuda_dynamic_warp_probe_20260723/
+results/cuda_mmapi_interop_safety_verifier_20260724/
 results/local_warp_quality_bridge_20260723/
 ```

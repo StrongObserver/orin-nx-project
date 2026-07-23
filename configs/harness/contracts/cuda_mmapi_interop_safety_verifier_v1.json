@@ -1,0 +1,214 @@
+{
+  "schema_version": 1,
+  "contract_id": "cuda_mmapi_interop_safety_verifier_v1",
+  "status": "completed",
+  "loop_type": "cuda_mmapi_interop_safety_verifier",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Verify the minimum safe MMAPI/NvBufSurface/EGLImage/CUDA scratch interop boundary before any CUDA dynamic warp integration or performance claim.",
+  "entry_context": {
+    "project_positioning": "Jetson Orin NX heterogeneous video compute and device-side dataflow optimization, with EIS as the representative workload.",
+    "quality_anchor": "resid_r15_s07 remains the accepted Regular-gate stabilization-strength anchor and is not changed in this loop.",
+    "previous_positive_result": "Standalone CUDA dynamic affine warp is much faster than VPI dynamic Remap payload rebuild in the 640x368 RGBA/Y8 diagnostics.",
+    "previous_risk": "Earlier unsafe low-level CUDA/pitch-wrapper routes caused non-identity tearing, so standalone CUDA speed is not enough to accept MMAPI CUDA scratch writeback.",
+    "current_question": "Can a minimal CUDA path safely write through the current MMAPI scratch boundary with identity first, then bounded non-identity diagnostics?",
+    "claim_boundary": "Safety verifier only. No EIS quality improvement, no zero-copy, no full real-time EIS, and no accepted MMAPI CUDA acceleration claim unless later measured by a separate contract."
+  },
+  "frozen_variables": [
+    "No EIS quality tuning",
+    "No change to resid_r15_s07",
+    "No live producer or matrix-generation rewrite",
+    "Start from identity before translate or dynamic affine",
+    "Use the existing accepted MMAPI main-chain boundary: block-linear NV12 main chain plus pitch-linear NV12_ER scratch semantics",
+    "Do not revive rejected pitch-pointer tearing paths as accepted evidence",
+    "No zero-copy claim",
+    "No full-pipeline acceleration claim",
+    "No quality improvement claim from diagnostic output"
+  ],
+  "planned_evidence": {
+    "report": "docs/cuda_mmapi_interop_safety_verifier_2026-07-24.md",
+    "evidence_dir": "results/cuda_mmapi_interop_safety_verifier_20260724/",
+    "review_dir": "C:/Users/Admin/Videos/orin nx/review/diagnostic/20260724_cuda_mmapi_interop_safety_verifier/",
+    "patch_script": "scripts/patch_mmapi_cuda_interop_safety_verifier.py"
+  },
+  "result": {
+    "report": "docs/cuda_mmapi_interop_safety_verifier_2026-07-24.md",
+    "evidence_dir": "results/cuda_mmapi_interop_safety_verifier_20260724/",
+    "review_video": "C:/Users/Admin/Videos/orin nx/review/diagnostic/20260724_cuda_mmapi_interop_safety_verifier/20260724_cuda_mmapi_interop_regular05_jetson_identity_shift_dynamic_grid.mp4",
+    "decision": "The minimum CUDA/NvBufSurface/EGLImage scratch interop safety verifier passed identity, shift, and dynamic_shift diagnostic runs with rc=0 and readable 640x360 outputs. Identity is the safety gate and had p95 black-border ratio 0.",
+    "sample_dir": "/home/nvidia/orin-nx-project/_mmapi_work/jetson_multimedia_api/samples/99_vpi_transcode_cuda_interop_safety_verifier_20260724_02",
+    "modes": {
+      "identity": {
+        "rc": 0,
+        "frames": 180,
+        "frame100_cuda_elapsed_ms": 1.35366,
+        "frame100_cuda_process_ms": 0.844692,
+        "frame100_total_stage_ms": 3.35493,
+        "avg_total_stage_ms": 4.09538,
+        "black_border_p95": 0.0,
+        "decision": "primary safety gate passed"
+      },
+      "shift_dx8": {
+        "rc": 0,
+        "frames": 180,
+        "frame100_cuda_elapsed_ms": 1.45271,
+        "frame100_cuda_process_ms": 0.836533,
+        "frame100_total_stage_ms": 3.43285,
+        "avg_total_stage_ms": 4.0963,
+        "black_border_p95": 0.191930556,
+        "decision": "diagnostic output proves non-identity write path is active; high black border is expected zero-fill shift behavior, not a quality candidate"
+      },
+      "dynamic_shift": {
+        "rc": 0,
+        "frames": 180,
+        "frame100_cuda_elapsed_ms": 1.29072,
+        "frame100_cuda_process_ms": 0.841781,
+        "frame100_total_stage_ms": 3.21032,
+        "avg_total_stage_ms": 4.44592,
+        "black_border_p95": 0.237383898,
+        "decision": "diagnostic output proves per-frame CUDA write parameters are active; high black border is expected zero-fill dynamic shift behavior, not a quality candidate"
+      }
+    },
+    "claim_boundary": "Safety/dataflow verifier only. This does not claim EIS quality improvement, zero-copy, full real-time EIS, or accepted MMAPI CUDA acceleration."
+  },
+  "task_queue": [
+    {
+      "id": "P0",
+      "title": "Control-plane registration",
+      "objective": "Register this active contract and verify onboard, doctor, and claim gates.",
+      "success_criteria": [
+        "onboard reports this active task contract",
+        "doctor passes",
+        "Running main-gate claim remains forbidden",
+        "JSON parses"
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "Patch-script safety implementation",
+      "objective": "Create a minimal patch script for the Jetson MMAPI transcode sample that routes the pitch-linear scratch stage through CUDA identity/translate/dynamic diagnostics.",
+      "success_criteria": [
+        "patch script is idempotent",
+        "identity mode is the default",
+        "non-identity modes are controlled by environment variables",
+        "logs include frame count and CUDA stage timing",
+        "Makefile gains the minimum CUDA link/include flags"
+      ],
+      "stop_reasons": [
+        "existing MMAPI sample markers are incompatible with a focused patch",
+        "implementation would require broad sample rewrite before identity verifier"
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Local static validation",
+      "objective": "Validate contract JSON, syntax of Python patching code, and public hygiene before touching the Jetson.",
+      "success_criteria": [
+        "json.tool passes",
+        "py_compile passes for new scripts",
+        "harness doctor passes",
+        "no secrets or large artifacts are introduced"
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Jetson patch and build",
+      "objective": "Patch a fresh MMAPI sample copy on Jetson and build it without changing system packages.",
+      "success_criteria": [
+        "patch applies to a fresh sample copy",
+        "build completes",
+        "compile/link failures are classified without broad environment changes"
+      ],
+      "stop_reasons": [
+        "Jetson SSH or device access unavailable",
+        "CUDA/MMAPI headers or libraries unavailable and cannot be resolved minimally",
+        "build would require system-wide package changes"
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "Identity safety run",
+      "objective": "Run identity CUDA interop on a short Regular05 source first, then the full diagnostic if the short run is clean.",
+      "success_criteria": [
+        "rc=0",
+        "output is readable",
+        "no green output",
+        "no visible block tearing",
+        "black-border check is non-regressive or classified"
+      ],
+      "stop_reasons": [
+        "identity output unreadable",
+        "identity output visibly corrupt",
+        "cache or sync ambiguity cannot be classified locally"
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "Translate and dynamic diagnostic",
+      "objective": "Only after identity passes, run one translate mode and one dynamic affine diagnostic.",
+      "success_criteria": [
+        "non-identity output is readable",
+        "no block tearing or green output",
+        "diagnostic timing is recorded",
+        "result remains a safety/dataflow diagnostic"
+      ],
+      "stop_reasons": [
+        "identity did not pass",
+        "translate output tears or becomes unreadable",
+        "dynamic output tears or becomes unreadable"
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "Knowledge recovery if blocked",
+      "objective": "If CUDA interop fails in a way local inspection cannot classify, consult the knowledge routing layer and official/public sources before stopping.",
+      "success_criteria": [
+        "blocker is stated plainly",
+        "one concrete recovery idea, one risk, and one verifier are extracted",
+        "internal-AI prompt is produced only if local/public evidence is insufficient"
+      ]
+    },
+    {
+      "id": "P7",
+      "title": "Evidence closeout",
+      "objective": "Record measured or negative results, exact commands, evidence paths, and claim boundary.",
+      "success_criteria": [
+        "report records only measured data",
+        "README/presentation/evidence routing are updated only where useful",
+        "long-term context is updated with high-signal result only",
+        "review assets are copied to the categorized Windows review tree if generated"
+      ]
+    },
+    {
+      "id": "P8",
+      "title": "Final validation and commit readiness",
+      "objective": "Run harness, JSON, diff, secret, and artifact checks, then prepare a coherent source/config/docs commit if appropriate.",
+      "success_criteria": [
+        "JSON parses",
+        "doctor passes",
+        "git diff --check passes",
+        "large artifacts and secrets remain untracked",
+        "oral template remains unstaged",
+        "commit message trailer policy is followed if committing"
+      ]
+    }
+  ],
+  "forbidden_claims": [
+    "CUDA warp improves EIS quality",
+    "MMAPI CUDA dynamic warp is accepted before identity and non-identity safety pass",
+    "zero-copy full chain",
+    "full real-time EIS",
+    "full-pipeline acceleration from diagnostic timing alone",
+    "mesh/local-warp stabilization solved"
+  ],
+  "stop_reasons": [
+    "Jetson SSH or device access is unavailable and cannot be recovered locally",
+    "identity output is unreadable, green, or visibly torn",
+    "CUDA/NvBufSurface/EGL interop requires broad sample rewrite before a minimal verifier",
+    "manual hardware/system action is required",
+    "local/public knowledge cannot classify the CUDA interop blocker"
+  ],
+  "evidence_output_directory": "results/cuda_mmapi_interop_safety_verifier_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/diagnostic/<YYYYMMDD>_cuda_mmapi_interop_safety_verifier"
+}

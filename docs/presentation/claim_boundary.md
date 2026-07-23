@@ -26,6 +26,9 @@ wrapper lifecycle, sync, transform cost, and perf/watt trade-offs.
 | Nsight shows wrapper/sync/transform/lifecycle cost dominates | `nsight_device_stage_profile_result_2026-07-23.md` |
 | Stream-only reuse gives a small lifecycle gain | 10-run same-source Regular05 repeat: wall mean `1.947 -> 1.844 s`, stage avg `10.336 -> 9.680 ms` |
 | VPI Remap can be wired into the native-size MMAPI scratch stage | `remap_native_size_pad_crop_probe_2026-07-23.md`: 640x360 main chain, 640x368 VPI scratch, identity/wave_safe `rc=0` |
+| Dynamic Remap payload rebuild is viable but costly | `vpi_dynamic_remap_payload_probe_2026-07-23.md`: MMAPI dynamic Remap stage avg about `13.14-13.16 ms` |
+| Standalone CUDA dynamic warp is a promising operator candidate | `cuda_dynamic_warp_probe_2026-07-23.md`: RGBA dynamic `0.194 ms`, Y8 dynamic `0.138 ms` |
+| CUDA/MMAPI scratch interop safety is verified at diagnostic level | `cuda_mmapi_interop_safety_verifier_2026-07-24.md`: identity/shift/dynamic_shift `rc=0`, identity black-border p95 `0` |
 
 ## Forbidden Claims
 
@@ -44,6 +47,9 @@ The result is product-grade or all-scene EIS quality.
 Outdoor-car inverse/post-geometry is Regular05 EIS-quality evidence.
 safe103_crop98 or inclusion_source_to_dest is the current quality anchor.
 Remap proves EIS quality improvement or mesh/local-warp stabilization.
+Standalone CUDA warp is already integrated into MMAPI.
+CUDA dynamic warp proves full-pipeline EIS acceleration.
+CUDA/MMAPI interop safety proves accepted CUDA acceleration.
 ```
 
 ## Precise Wording
@@ -127,6 +133,23 @@ Bad:
 Remap improved my EIS quality.
 ```
 
+### CUDA Dynamic Warp
+
+Good:
+
+```text
+Standalone CUDA dynamic warp avoids the VPI Remap payload rebuild cost in a
+640x368 affine diagnostic. The follow-up MMAPI scratch interop safety verifier
+passed identity/shift/dynamic_shift diagnostics, but it is still a safety result,
+not an accepted acceleration result.
+```
+
+Bad:
+
+```text
+CUDA accelerated the MMAPI EIS pipeline.
+```
+
 ## Current Stage Status
 
 ```text
@@ -135,10 +158,13 @@ NvBuffer pair correctness: sealed as quality-preserving small dataflow gain.
 Nsight/NVTX profiling: completed first capture and lifecycle follow-up.
 Stream-only reuse: promoted as a small accepted lifecycle optimization.
 Remap native-size pad/crop: completed as a diagnostic operator/dataflow closure.
+Dynamic Remap payload: completed as a cost-boundary diagnostic.
+Standalone CUDA dynamic warp: completed as operator evidence only.
+CUDA/MMAPI interop safety verifier: completed as diagnostic safety evidence.
 P6/P7 scheduler or double-buffering work: still not triggered.
-Current best next action: use the final evidence package plus lifecycle result
-for README, interview, and presentation. Start broader engineering only through
-a new scoped contract.
+Current best next action: open a new scoped contract only if continuing toward
+custom CUDA affine-kernel MMAPI diagnostics or another measured device-stage
+question.
 ```
 
 ## Resume-Safe Bullet

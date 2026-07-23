@@ -176,7 +176,8 @@ stream, but recreate EGLImage image wrappers per frame.
 If I had more time, I would choose one scoped route instead of broad exploration:
 
 ```text
-1. VPI Remap C++ official-sample probe, if the goal is another VPI operator.
+1. Custom CUDA affine-kernel MMAPI diagnostic, because CUDA scratch interop now
+   passes the identity-first safety verifier.
 2. Longer fixed-mode perf/watt run, if the goal is stronger power evidence.
 3. Very narrow wrapper/register/free/sync probe, if the goal is dataflow cost.
 ```
@@ -414,6 +415,48 @@ wave 3840x2160:     31.064200 ms -> 9.516820 ms, 3.264x
 
 The correct claim is module/operator-level C++ Remap acceleration. It is not
 yet MMAPI integration and not full EIS pipeline acceleration.
+
+## Q: What did CUDA/MMAPI interop prove?
+
+After the standalone CUDA dynamic warp probe, I ran a separate MMAPI scratch
+interop safety verifier instead of immediately claiming CUDA acceleration.
+
+The verifier keeps the existing device-stage boundary:
+
+```text
+block-linear NV12 main chain
+-> pitch-linear NV12_ER scratch
+-> CUDA driver API EGL interop
+-> block-linear NV12 main chain
+-> NVENC
+```
+
+Result:
+
+```text
+identity:      rc=0, readable 640x360, black-border p95=0
+shift_dx8:     rc=0, readable 640x360
+dynamic_shift: rc=0, readable 640x360
+```
+
+The shift modes intentionally use zero fill, so their high black-border ratio is
+expected diagnostic behavior. The important safety result is that identity
+passes without unreadable output, green output, or obvious black-border
+regression.
+
+Correct claim:
+
+```text
+CUDA can safely read/write the current MMAPI scratch boundary at diagnostic
+level. A custom CUDA affine kernel or acceleration result still needs its own
+contract and timing comparison.
+```
+
+Forbidden claim:
+
+```text
+CUDA has accelerated the full MMAPI EIS pipeline.
+```
 
 ## Q: Why do source, identity_pad_crop, and wave_safe_pad_crop not show stabilization?
 

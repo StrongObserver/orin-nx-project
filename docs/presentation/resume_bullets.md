@@ -42,6 +42,13 @@ stage to 640x368 for Remap, then cropping back before NVENC with rc=0 and no
 black-border regression in diagnostic checks.
 ```
 
+```text
+Verified a CUDA/MMAPI scratch-interoperability boundary before making any CUDA
+acceleration claim: identity, fixed-shift, and dynamic-shift diagnostics all
+returned rc=0 with readable 640x360 output, while identity preserved a
+black-border p95 of 0.
+```
+
 ## Long Version
 
 ```text
@@ -79,6 +86,14 @@ scratch stage and returns to the native 640x360 main chain before encode. This
 is a dataflow/operator integration result, not an EIS quality or zero-copy claim.
 ```
 
+```text
+De-risked the next CUDA device-stage route with an identity-first
+NvBufSurface/EGLImage/CUDA interop verifier. The verifier proves diagnostic
+scratch read/write safety on Jetson Orin NX, but deliberately keeps custom CUDA
+warp acceleration, zero-copy, and full real-time EIS claims out of scope until a
+separate same-input contract measures them.
+```
+
 ## Interview One-Liner
 
 ```text
@@ -97,6 +112,7 @@ Regular-gate quality
 module-level VPI acceleration
 device-stage dataflow
 native-size VPI Remap scratch-stage pad/crop
+CUDA/MMAPI scratch interop safety verifier
 quality-preserving NvBuffer pair follow-up
 stream-only lifecycle optimization
 Nsight-backed bottleneck attribution

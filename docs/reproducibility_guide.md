@@ -303,6 +303,89 @@ This reproduces a Remap operator/dataflow size-layout boundary. It does not
 prove EIS quality improvement, zero-copy, or full-pipeline acceleration.
 ```
 
+## L5.5 - CUDA / MMAPI Interop Safety Verifier
+
+Purpose: verify that CUDA can safely read/write the current MMAPI pitch-linear
+NV12_ER scratch boundary through EGLImage interop before any CUDA warp
+integration or acceleration claim.
+
+Primary docs:
+
+```text
+docs/cuda_mmapi_interop_safety_verifier_2026-07-24.md
+configs/harness/contracts/cuda_mmapi_interop_safety_verifier_v1.json
+```
+
+Tracked implementation:
+
+```text
+scripts/patch_mmapi_cuda_interop_safety_verifier.py
+```
+
+Primary ignored evidence:
+
+```text
+results/cuda_mmapi_interop_safety_verifier_20260724/
+```
+
+Review asset:
+
+```text
+C:\Users\Admin\Videos\orin nx\review\diagnostic\20260724_cuda_mmapi_interop_safety_verifier\20260724_cuda_mmapi_interop_regular05_jetson_identity_shift_dynamic_grid.mp4
+```
+
+Reproduction outline:
+
+```powershell
+scp scripts\patch_mmapi_cuda_interop_safety_verifier.py nvidia@192.168.55.1:/home/nvidia/orin-nx-project/scripts/
+```
+
+```bash
+ROOT=/home/nvidia/orin-nx-project
+SAMPLES=$ROOT/_mmapi_work/jetson_multimedia_api/samples
+SAMPLE=$SAMPLES/99_vpi_transcode_cuda_interop_safety_verifier
+cp -a "$SAMPLES/16_multivideo_transcode" "$SAMPLE"
+python3 "$ROOT/scripts/patch_mmapi_cuda_interop_safety_verifier.py" --sample-dir "$SAMPLE"
+cd "$SAMPLE"
+make -j2
+```
+
+```bash
+ROOT=/home/nvidia/orin-nx-project
+OUT=$ROOT/results/cuda_mmapi_interop_safety_verifier_20260724
+INPUT=$ROOT/results/regular_gate_safe103_crop98_validation_20260720/regular_gate05_regular_6/source.h264
+mkdir -p "$OUT"
+
+CUDA_INTEROP_MODE=identity ./multivideo_transcode num_files 1 \
+  "$INPUT" H264 "$OUT/cuda_interop_identity.h264" H264 \
+  > "$OUT/cuda_interop_identity.log" 2>&1
+
+CUDA_INTEROP_MODE=shift CUDA_INTEROP_DX=8 CUDA_INTEROP_DY=0 ./multivideo_transcode num_files 1 \
+  "$INPUT" H264 "$OUT/cuda_interop_shift_dx8.h264" H264 \
+  > "$OUT/cuda_interop_shift_dx8.log" 2>&1
+
+CUDA_INTEROP_MODE=dynamic_shift ./multivideo_transcode num_files 1 \
+  "$INPUT" H264 "$OUT/cuda_interop_dynamic_shift.h264" H264 \
+  > "$OUT/cuda_interop_dynamic_shift.log" 2>&1
+```
+
+Expected result summary:
+
+```text
+identity, shift_dx8, and dynamic_shift return rc=0
+all outputs are readable 640x360 H264
+identity black-border p95 is 0
+shift modes have high black border by design because they use zero fill
+```
+
+Claim boundary:
+
+```text
+This verifies CUDA/MMAPI scratch interop safety at diagnostic level. It does not
+prove EIS quality improvement, zero-copy, full real-time EIS, or accepted MMAPI
+CUDA acceleration.
+```
+
 ## L6 - Public / Interview Package
 
 Purpose: read the project as a portfolio.

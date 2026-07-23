@@ -28,10 +28,10 @@
   },
   "active_task_contract": "none",
   "current_loop_state": {
-    "last_completed_task": "cuda_dynamic_warp_probe_v1",
+    "last_completed_task": "cuda_mmapi_interop_safety_verifier_v1",
     "current_task": "none",
-    "latest_result": "The project positioning was refined on 2026-07-23: EIS is the representative real-time vision workload, while the resume-facing project is Jetson Orin NX heterogeneous video compute and device-side dataflow optimization. Existing evidence covers Regular quality boundaries, VPI PerspectiveWarp module speed/perf-watt, MMAPI/VPI/NVENC accepted device path, wrapper/sync/transform dataflow breakdown, format-matched NvBuffer pair small gains, completed NVTX/Nsight profiling, final evidence package closeout, stream-only reuse lifecycle follow-up, portfolio/reproducibility closeout, C++ Remap operator probe, Remap-MMAPI scratch-stage insertion, local-warp quality bridge negative evidence, native-size Remap pad/crop closure, device-stage lifecycle/dataflow V2, dynamic Remap payload cost boundary, and standalone CUDA dynamic warp benchmark.",
-    "current_blocker": "No active engineering blocker is open. The CUDA dynamic warp loop showed standalone CUDA is much faster than VPI dynamic Remap payload rebuild for affine/Y-plane diagnostics, while MMAPI CUDA scratch integration still requires a separate interop safety verifier.",
+    "latest_result": "The project positioning was refined on 2026-07-23: EIS is the representative real-time vision workload, while the resume-facing project is Jetson Orin NX heterogeneous video compute and device-side dataflow optimization. Existing evidence covers Regular quality boundaries, VPI PerspectiveWarp module speed/perf-watt, MMAPI/VPI/NVENC accepted device path, wrapper/sync/transform dataflow breakdown, format-matched NvBuffer pair small gains, completed NVTX/Nsight profiling, final evidence package closeout, stream-only reuse lifecycle follow-up, portfolio/reproducibility closeout, C++ Remap operator probe, Remap-MMAPI scratch-stage insertion, local-warp quality bridge negative evidence, native-size Remap pad/crop closure, device-stage lifecycle/dataflow V2, dynamic Remap payload cost boundary, standalone CUDA dynamic warp benchmark, and CUDA/NvBufSurface/EGLImage interop safety verification.",
+    "current_blocker": "No active engineering blocker is open. The CUDA interop safety verifier passed identity, shift, and dynamic_shift diagnostic runs with rc=0 and readable 640x360 output; identity remains the primary safety gate with p95 black-border ratio 0. Future work still needs a separate contract before claiming accepted MMAPI CUDA acceleration.",
     "recommended_next_contract": "none"
   },
   "global_claim_boundary": {
@@ -287,34 +287,36 @@
     },
     {
       "id": "P3",
-      "title": "Future extension selection",
+      "title": "CUDA/MMAPI interop safety verifier",
       "loop_profile": "knowledge_recovery_loop",
-      "objective": "After final evidence package closeout, execute one narrow device-stage lifecycle/perf route: wrapper/register/free/sync lifecycle A/B, device-stage perf-watt check, or a bounded negative-result closeout.",
+      "objective": "After the completed standalone CUDA dynamic warp probe, execute one narrow identity-first NvBufSurface/EGLImage/CUDA interop safety verifier before any MMAPI CUDA performance or quality claim.",
       "external_observation": [
-        "one_concrete_recovery_idea",
-        "one_risk",
-        "one_verifier"
+        "identity_output_readable",
+        "non_identity_output_readable_if_identity_passes",
+        "tearing_green_cache_sync_status"
       ],
       "success_criteria": [
-        "future route matches the refined Orin NX heterogeneous video compute target",
-        "choice is based on current blocker evidence",
-        "user prompt is generated if company-internal AI is needed"
+        "route matches the refined Orin NX heterogeneous video compute target",
+        "identity safety passes before any translate or dynamic diagnostic",
+        "stop immediately on tearing, green output, unreadable output, or cache/sync ambiguity",
+        "no zero-copy, full real-time EIS, or quality improvement claim is made"
       ],
       "stop_reasons": [
-        "requires_product_level_decision",
-        "requires_unavailable_internal_reference",
-        "no_actionable_recovery_found"
+        "jetson_ssh_or_device_blocker",
+        "identity_output_unreadable_or_visibly_corrupt",
+        "requires_broad_mmapi_rewrite_before_minimal_verifier",
+        "requires_unavailable_internal_reference"
       ]
     }
   ],
   "selected_future_route": {
     "id": "none",
-    "decision": "Keep the project narrative centered on EIS/video stabilization plus Orin NX heterogeneous video compute and device-side dataflow. Future work should start from the accepted stabilization workload, quality gates, matrix semantics, VPI/MMAPI/NVENC stages, and measured bottlenecks.",
-    "reason": "The project value comes from a measurable stabilization workload and its device-side dataflow/profiling evidence. New routes should only be opened when they directly explain or improve the EIS pipeline under frozen quality and timing boundaries.",
+    "decision": "CUDA/NvBufSurface/EGLImage scratch interop safety has been verified at diagnostic level. Future CUDA integration or acceleration work must open a separate scoped contract.",
+    "reason": "The verifier closed the safety question without changing EIS quality semantics. The next decision should be based on a new measured bottleneck or presentation need, not automatic continuation.",
     "next_verifier": [
-      "Nsight Systems report or exported summary exists",
-      "stage table names decode, transform, wrapper, submit/sync, warp, encode, and wall time",
-      "same source, matrix, crop/postprocess, and review boundary remain frozen for dataflow A/B",
+      "new contract freezes source, matrix, crop/postprocess, timing scope, and visual review boundary",
+      "accepted MMAPI CUDA acceleration is not claimed from the safety verifier alone",
+      "any future custom CUDA kernel starts from identity and non-identity safety again",
       "zero-copy and full-pipeline acceleration remain forbidden claims"
     ],
     "defer_until_after_alignment": [

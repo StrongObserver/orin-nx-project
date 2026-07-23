@@ -90,14 +90,47 @@ mesh/depth/RS/gyro model and a new scoped contract.
 The latest completed task-specific Done Contract is:
 
 ```text
+C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\cuda_mmapi_interop_safety_verifier_v1.json
+```
+
+This completed engineering extension started from the standalone CUDA dynamic
+warp result and verified the minimum MMAPI/NvBufSurface/EGLImage/CUDA scratch
+interop safety boundary. Identity, fixed-shift, and dynamic-shift diagnostics
+all returned `rc=0` with readable 640x360 outputs; identity is the primary
+safety gate and had p95 black-border ratio 0. Shift modes use zero fill, so
+their high black border is expected diagnostic behavior, not a quality result.
+This remains safety/dataflow evidence only: not accepted MMAPI CUDA
+acceleration, not zero-copy, not full real-time EIS, and not EIS quality
+improvement.
+
+There is currently no active task-specific Done Contract. If engineering
+continues, create a new narrow contract instead of automatically extending this
+CUDA interop verifier.
+
+The standalone CUDA dynamic warp contract is complete and remains supporting
+evidence:
+
+```text
+C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\cuda_dynamic_warp_probe_v1.json
+```
+
+It showed that standalone CUDA dynamic affine warp is much faster than VPI
+dynamic Remap payload rebuild on the tested 640x368 RGBA/Y8 diagnostics, but it
+deliberately did not claim MMAPI integration, zero-copy, full real-time EIS, or
+EIS quality improvement.
+
+The Remap native-size pad/crop contract is complete and remains supporting
+evidence:
+
+```text
 C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\remap_native_size_pad_crop_probe_v1.json
 ```
 
-This completed engineering extension kept the accepted MMAPI/VPI/NVENC
-scratch-stage boundary and closed the narrow native-size Remap question:
-a 640x360 Regular05 input can keep the encoder-facing main chain native, pad
-only the VPI Remap scratch stage to 640x368, run Remap, crop/transform back to
-640x360 before NVENC, and remain readable without green output or tearing.
+It kept the accepted MMAPI/VPI/NVENC scratch-stage boundary and closed the
+narrow native-size Remap question: a 640x360 Regular05 input can keep the
+encoder-facing main chain native, pad only the VPI Remap scratch stage to
+640x368, run Remap, crop/transform back to 640x360 before NVENC, and remain
+readable without green output or tearing.
 
 The standalone C++ Remap operator contract is complete and remains supporting
 evidence:
