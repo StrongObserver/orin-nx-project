@@ -7,14 +7,14 @@ from pathlib import Path
 
 
 REMAP_RE = re.compile(
-    r"VPI_EGLIMAGE_REMAP_PAD_CROP\s+frame=(?P<frame>\d+)\s+"
+    r"VPI_(?:EGLIMAGE_REMAP(?:_STREAM_REUSE)?|NVBUFFER_REMAP)_PAD_CROP\s+frame=(?P<frame>\d+)\s+"
     r"mode=(?P<mode>\S+)\s+scratch_width=(?P<scratch_width>\d+)\s+"
     r"scratch_height=(?P<scratch_height>\d+)\s+elapsed_ms=(?P<elapsed>[0-9.]+)\s+"
     r"avg_ms=(?P<avg>[0-9.]+)"
 )
 
 STAGE_RE = re.compile(
-    r"REMAP_PAD_CROP_STAGE_TIMING\s+frame=(?P<frame>\d+)\s+"
+    r"(?:REMAP|NVBUFFER_REMAP)_PAD_CROP_STAGE_TIMING\s+frame=(?P<frame>\d+)\s+"
     r"main_width=(?P<main_width>\d+)\s+main_height=(?P<main_height>\d+)\s+"
     r"scratch_width=(?P<scratch_width>\d+)\s+scratch_height=(?P<scratch_height>\d+)\s+"
     r"input_transform_ms=(?P<input>[0-9.]+)\s+wrapper_call_ms=(?P<wrapper>[0-9.]+)\s+"
@@ -23,14 +23,14 @@ STAGE_RE = re.compile(
 )
 
 PAYLOAD_RE = re.compile(
-    r"VPI_REMAP_PAD_CROP_PAYLOAD_READY\s+mode=(?P<mode>\S+)\s+"
+    r"VPI_(?:REMAP|NVBUFFER_REMAP)_PAD_CROP_PAYLOAD_READY\s+mode=(?P<mode>\S+)\s+"
     r"width=(?P<width>\d+)\s+height=(?P<height>\d+)\s+"
     r"grid_width=(?P<grid_width>\d+)\s+grid_height=(?P<grid_height>\d+)\s+"
     r"points=(?P<points>\S+)"
 )
 
 SCRATCH_RE = re.compile(
-    r"REMAP_PAD_CROP_SCRATCH_ALLOC\s+main_width=(?P<main_width>\d+)\s+"
+    r"(?:REMAP|NVBUFFER_REMAP)_PAD_CROP_SCRATCH_ALLOC\s+main_width=(?P<main_width>\d+)\s+"
     r"main_height=(?P<main_height>\d+)\s+scratch_width=(?P<scratch_width>\d+)\s+"
     r"scratch_height=(?P<scratch_height>\d+)"
 )

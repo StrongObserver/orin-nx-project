@@ -184,6 +184,34 @@ native 640x360 main chain. This is still a diagnostic operator/dataflow result,
 not Regular EIS quality and not full-pipeline acceleration.
 ```
 
+Lifecycle/dataflow V2 follow-up:
+
+| Route | Mode | rc | Stage Avg | Black P95 | Decision |
+|---|---|---:|---:|---:|---|
+| EGLImage baseline | identity | 0 | 11.039800 ms | 0.000000000 | reference |
+| EGLImage stream-only | identity | 0 | 11.704200 ms | 0.000000000 | healthy but slower |
+| NvBuffer wrapper | identity | 0 | 10.433000 ms | 0.000000000 | small diagnostic gain |
+| EGLImage baseline | wave_safe | 0 | 10.751300 ms | 0.000000000 | reference |
+| EGLImage stream-only | wave_safe | 0 | 11.785700 ms | 0.000003906 | healthy but slower |
+| NvBuffer wrapper | wave_safe | 0 | 10.387900 ms | 0.000000000 | small diagnostic gain |
+
+Five-Regular PerspectiveWarp stream-only safety check:
+
+```text
+5/5 rc=0, fallback=0, frame-index mismatch=0.
+Regular01 remains metric-conditional on gray black-border p95, matching earlier
+dark-edge sensitivity patterns; the route is healthy as device-consumer safety
+evidence, not a new quality claim.
+```
+
+Activity check:
+
+```text
+EGLImage and NvBuffer Remap wave_safe were effectively tied under a small
+tegrastats wrapper: stage avg about 10.36 ms for both, wall about 1.91-1.92 s,
+GR3D avg about 25.8%. This is activity evidence only, not FPS/W.
+```
+
 ## GStreamer / NVMM Readiness
 
 Minimum Jetson path reached EOS:
@@ -456,4 +484,6 @@ docs/remap_mmapi_integration_probe_2026-07-23.md
 results/remap_mmapi_integration_probe_20260723/
 docs/remap_native_size_pad_crop_probe_2026-07-23.md
 results/remap_native_size_pad_crop_probe_20260723/
+docs/device_stage_lifecycle_dataflow_v2_2026-07-23.md
+results/device_stage_lifecycle_dataflow_v2_20260723/
 ```

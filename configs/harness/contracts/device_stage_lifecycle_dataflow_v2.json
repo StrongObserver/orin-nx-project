@@ -1,0 +1,210 @@
+{
+  "schema_version": 1,
+  "contract_id": "device_stage_lifecycle_dataflow_v2",
+  "status": "completed",
+  "loop_type": "device_stage_lifecycle_dataflow_v2",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Continue the Orin NX EIS-workload device-stage optimization path with bounded A/B tests that preserve quality semantics: Remap pad/crop stream-only reuse, five-Regular stream-only safety extension, Remap NvBuffer-wrapper diagnostic A/B, and a small activity check only if a candidate remains healthy.",
+  "entry_context": {
+    "project_positioning": "Jetson Orin NX heterogeneous video compute and device-side dataflow optimization, with EIS as the representative workload.",
+    "quality_anchor": "resid_r15_s07 remains the accepted Regular-gate stabilization-strength anchor.",
+    "previous_lifecycle_result": "EGLImage stream-only reuse improved same-source Regular05 wall mean by about 5.303% and stage running avg by about 6.346% while still recreating image wrappers per frame.",
+    "previous_remap_result": "Native 640x360 main chain can use a 640x368 VPI Remap scratch stage and crop/transform back before NVENC; identity and wave_safe both rc=0 and readable.",
+    "current_question": "Can the safe lifecycle/dataflow ideas already validated on PerspectiveWarp also produce small, measurable, quality-preserving or diagnostic gains on Remap pad/crop and across the Regular gate?",
+    "claim_boundary": "This loop is about device-stage lifecycle/dataflow A/B evidence. It does not claim product real-time EIS, zero-copy, Remap EIS quality improvement, or all-scene stabilization."
+  },
+  "frozen_variables": [
+    "No EIS quality tuning",
+    "No change to resid_r15_s07 quality semantics",
+    "Regular gate quality claims remain separate from diagnostic Remap operator claims",
+    "Accepted C++ main chain remains MMAPI/NVDEC block-linear NV12 -> pitch-linear NV12_ER scratch -> VPI stage -> block-linear NV12 -> NVENC",
+    "Remap native-size diagnostics keep encoder-facing main chain at 640x360 and pad only VPI scratch to 640x368",
+    "Stream-only reuse means reuse VPI stream only; image wrappers are still recreated per frame",
+    "No zero-copy claim",
+    "No full-pipeline acceleration claim"
+  ],
+  "planned_evidence": {
+    "report": "docs/device_stage_lifecycle_dataflow_v2_2026-07-23.md",
+    "evidence_dir": "results/device_stage_lifecycle_dataflow_v2_20260723/",
+    "review_dir": "C:/Users/Admin/Videos/orin nx/review/diagnostic/20260723_device_stage_lifecycle_dataflow_v2/",
+    "patch_scripts": [
+      "scripts/patch_mmapi_vpi_transcode_eglimage_remap_stream_reuse_pad_crop.py",
+      "scripts/patch_mmapi_vpi_transcode_nvbuffer_remap_pad_crop_probe.py"
+    ]
+  },
+  "result": {
+    "report": "docs/device_stage_lifecycle_dataflow_v2_2026-07-23.md",
+    "evidence_dir": "results/device_stage_lifecycle_dataflow_v2_20260723/",
+    "review_dir": "C:/Users/Admin/Videos/orin nx/review/diagnostic/20260723_device_stage_lifecycle_dataflow_v2/",
+    "decision": "Remap NvBuffer wrapper is viable and gives a small diagnostic stage-average gain; Remap stream-only reuse is healthy but slower; PerspectiveWarp stream-only remains healthy across five Regular clips.",
+    "remap_stream_only": {
+      "identity": {
+        "rc": 0,
+        "stage_avg_ms": 11.7042,
+        "black_border_p95": 0.0,
+        "identity_diff_vs_baseline": 0.0,
+        "decision": "healthy but slower than EGLImage baseline"
+      },
+      "wave_safe": {
+        "rc": 0,
+        "stage_avg_ms": 11.7857,
+        "black_border_p95": 0.000003906,
+        "decision": "healthy but slower than EGLImage baseline"
+      }
+    },
+    "regular_stream_only_extension": {
+      "clips": 5,
+      "rc0": 5,
+      "fallback_total": 0,
+      "mismatch_total": 0,
+      "regular01_boundary": "metric-conditional due to gray black-border p95=0.010199653; this matches earlier dark-edge sensitivity patterns and requires human interpretation before treating it as visual regression"
+    },
+    "remap_nvbuffer": {
+      "identity": {
+        "rc": 0,
+        "stage_avg_ms": 10.433,
+        "black_border_p95": 0.0,
+        "identity_diff_vs_eglimage_baseline": 0.0,
+        "stage_avg_improvement_vs_eglimage": "about 5.50%"
+      },
+      "wave_safe": {
+        "rc": 0,
+        "stage_avg_ms": 10.3879,
+        "black_border_p95": 0.0,
+        "stage_avg_improvement_vs_eglimage": "about 3.38%"
+      }
+    },
+    "activity_check": {
+      "egl_wave_safe_stage_avg_ms": 10.3597,
+      "nvbuffer_wave_safe_stage_avg_ms": 10.355,
+      "egl_wall_s": 1.914553,
+      "nvbuffer_wall_s": 1.9243,
+      "gr3d_avg_percent": 25.8,
+      "boundary": "activity evidence only; no FPS/W claim"
+    },
+    "claim_boundary": "Device-stage lifecycle/dataflow evidence only. No zero-copy, no full real-time EIS, no Remap EIS quality improvement, and no queue-depth/double-buffering claim."
+  },
+  "task_queue": [
+    {
+      "id": "P0",
+      "title": "Contract and baseline registration",
+      "objective": "Register this loop, run harness checks, and freeze the source/matrix/boundary set before device work.",
+      "success_criteria": [
+        "onboard points to this active contract while running",
+        "doctor passes",
+        "Running main-gate claim remains forbidden",
+        "baseline Remap pad/crop and accepted stream-only evidence paths are identified"
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "Remap pad/crop stream-only A/B",
+      "objective": "Port the safe stream-only reuse pattern to Remap pad/crop and compare against the existing Remap pad/crop baseline.",
+      "success_criteria": [
+        "identity stream-only returns rc=0",
+        "wave_safe stream-only returns rc=0",
+        "outputs are readable",
+        "black-border p95 remains 0 or is classified",
+        "stage timing is summarized",
+        "claim remains diagnostic operator/dataflow only"
+      ],
+      "stop_reasons": [
+        "stream-only Remap tears, fails, or creates unreadable output after one focused fix"
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Five-Regular stream-only safety extension",
+      "objective": "Extend the already accepted PerspectiveWarp stream-only lifecycle optimization beyond Regular05 to all five Regular clips under frozen quality semantics.",
+      "success_criteria": [
+        "all attempted Regular clips return rc=0",
+        "fallback remains 0 when matrix logs are available",
+        "outputs are readable",
+        "black-border does not show a large regression",
+        "result is classified as gate-wide safety evidence or failure boundary"
+      ],
+      "stop_reasons": [
+        "source/matrix pairs are unavailable for more than one Regular clip",
+        "batch extension hides per-clip failure"
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Remap NvBuffer-wrapper diagnostic A/B",
+      "objective": "Test whether Remap pad/crop can use VPI_IMAGE_BUFFER_NVBUFFER wrappers on format-matched pitch-linear NV12_ER scratch buffers.",
+      "success_criteria": [
+        "sample compiles or compile failure is classified",
+        "identity returns rc=0 if compile succeeds",
+        "wave_safe returns rc=0 if identity succeeds",
+        "stage timing is recorded",
+        "output readability and black-border are checked"
+      ],
+      "stop_reasons": [
+        "VPI Remap rejects NVBUFFER wrapper payload or image format after one focused local fix",
+        "route requires broad MMAPI rewrite before a minimal verifier"
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "Bounded activity check",
+      "objective": "Run a small tegrastats/activity check only for the healthiest candidate from P1-P3.",
+      "success_criteria": [
+        "activity log exists",
+        "wall/stage metrics are recorded",
+        "no FPS/W claim is made without reliable power data"
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "Evidence and docs closeout",
+      "objective": "Write concise measured results, evidence paths, and claim boundaries.",
+      "success_criteria": [
+        "report records only measured data",
+        "final benchmark/hardware boundary/evidence map are updated if result is useful",
+        "long-term context records high-signal result only",
+        "results and review videos remain untracked"
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "Knowledge recovery if blocked",
+      "objective": "If a technical roadblock remains, inspect local knowledge and public/official references before stopping with an internal-AI prompt.",
+      "success_criteria": [
+        "blocker is stated plainly",
+        "local attempts are listed",
+        "internal-AI prompt is produced only if the technical road decision remains unresolved"
+      ]
+    },
+    {
+      "id": "P7",
+      "title": "Final validation and commit",
+      "objective": "Run harness, JSON, diff, secret, and artifact checks, then commit a coherent source/config/docs scope.",
+      "success_criteria": [
+        "JSON parses",
+        "doctor passes",
+        "git diff --check passes",
+        "large artifacts and secrets remain untracked",
+        "oral template remains unstaged",
+        "commit message trailer policy is followed"
+      ]
+    }
+  ],
+  "forbidden_claims": [
+    "full real-time EIS",
+    "zero-copy full chain",
+    "Remap improves Regular EIS quality",
+    "mesh/local-warp stabilization solved",
+    "full-pipeline acceleration from stage-only evidence",
+    "queue-depth or double-buffering proven useful unless directly measured"
+  ],
+  "stop_reasons": [
+    "Jetson SSH or device access is unavailable and cannot be recovered locally",
+    "required source/matrix evidence is missing and no valid substitute exists",
+    "VPI Remap NVBUFFER route is rejected by API/format support after focused local fixes",
+    "manual hardware/system action is required"
+  ],
+  "evidence_output_directory": "results/device_stage_lifecycle_dataflow_v2_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/diagnostic/<YYYYMMDD>_device_stage_lifecycle_dataflow_v2"
+}
