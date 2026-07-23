@@ -11,8 +11,20 @@
     "refined_project_positioning": "Jetson Orin NX heterogeneous video compute and device-side dataflow optimization, with EIS as the representative real-time vision workload.",
     "accepted_quality_anchor": "resid_r15_s07",
     "accepted_device_path": "MMAPI/NVDEC block-linear NV12 main chain -> NvBufSurfTransform to pitch-linear NV12_ER scratch -> VPI CUDA PerspectiveWarp -> NvBufSurfTransform back to block-linear NV12 -> NVENC",
-    "known_stage_boundary": "wrapper lifecycle, VPI sync, and NvBufSurfTransform sandwich dominate more than vpiSubmitPerspectiveWarp itself."
+    "known_stage_boundary": "wrapper lifecycle, VPI sync, and NvBufSurfTransform sandwich dominate more than vpiSubmitPerspectiveWarp itself.",
+    "rk3588_idea_mapping": "The RK3588 NPU reference is useful as a methodology: separate hardware time from wall-clock time, detect host scheduling starvation, and only then consider C++ shared-buffer or multi-in-flight dataflow. RKNN core-mask and rknn_create_mem APIs do not transfer directly."
   },
+  "planning_docs": [
+    "docs/rk3588_npu_idea_mapping_2026-07-23.md",
+    "docs/nsight_device_stage_profile_plan_2026-07-23.md"
+  ],
+  "profiling_questions": [
+    "Is VPI/CUDA/NVENC idle while CPU-side wrapper, transform, or sync work is happening?",
+    "Is the measured wall-clock gap dominated by host scheduling rather than VPI PerspectiveWarp execution?",
+    "Would queue depth, double buffering, or multi-in-flight submission plausibly reduce idle gaps?",
+    "Does format-matched NvBuffer pair reduce only wrapper overhead, or does it also change sync/transform timing?",
+    "Are any proposed optimizations changing output semantics, matrix semantics, or crop/postprocess boundaries?"
+  ],
   "frozen_variables": [
     "input clip and frame-count boundary",
     "matrix: resid_r15_s07 for quality-preserving comparisons, or a clearly labeled diagnostic matrix for pure dataflow probes",
@@ -27,7 +39,8 @@
     "stage names are visible or recoverable from NVTX ranges/logs",
     "same-input timing table is preserved",
     "output video remains readable",
-    "no new zero-copy or full real-time claim is introduced"
+    "no new zero-copy or full real-time claim is introduced",
+    "profiling distinguishes hardware execution time from wall-clock and host-side wait time"
   ],
   "success_criteria": [
     "timeline or exported summary separates decode, input transform, wrapper or NvBuffer wrap, VPI submit, VPI sync, output transform, encode, and wall time",
@@ -38,13 +51,13 @@
   "recommended_steps": [
     {
       "id": "P0",
-      "title": "Instrumentation audit",
-      "objective": "Inspect the accepted C++ sample and existing timing probes to decide whether existing logs are enough or NVTX ranges must be added."
+      "title": "Instrumentation audit and RK3588 idea mapping",
+      "objective": "Inspect the accepted C++ sample, existing timing probes, and docs/rk3588_npu_idea_mapping_2026-07-23.md to decide which stage markers are required."
     },
     {
       "id": "P1",
       "title": "NVTX range insertion or Nsight capture",
-      "objective": "Add minimal stage ranges or run Nsight Systems against the existing stage without changing output semantics."
+      "objective": "Add minimal stage ranges or run Nsight Systems against the existing stage without changing output semantics. The capture should answer whether hardware is starved by host-side wrapper/sync/transform scheduling."
     },
     {
       "id": "P2",
@@ -53,8 +66,8 @@
     },
     {
       "id": "P3",
-      "title": "Presentation update",
-      "objective": "Update only the final architecture/result table and interview wording with measured Nsight evidence."
+      "title": "Route decision and presentation update",
+      "objective": "If the timeline shows idle gaps, propose a separate same-source dataflow A/B contract for queue depth or double buffering. Otherwise record the RK3588 idea as a methodology reference and update final wording with measured Nsight evidence."
     }
   ],
   "forbidden_claims": [

@@ -87,6 +87,8 @@ This map points to local evidence. Most evidence files are ignored by Git.
 | Regular gate NvBuffer pair resid review video | `C:\Users\Admin\Videos\orin nx\review\performance\20260723_regular_gate_nvbuffer_pair_resid_r15_s07_5clip\20260723_regular_gate_nvbuffer_resid_r15_s07_5clip_overview_grid.mp4` | Five-clip overview for source vs NvBuffer pair with the accepted quality anchor | outside repo |
 | Regular05 EGLImage vs NvBuffer resid timing | `results/regular05_eglimage_timing_resid_compare_20260723/` | Same-source Regular05 timing comparison: EGLImage vs format-matched NvBuffer pair under `resid_r15_s07` | ignored |
 | Nsight device-stage profile contract | `configs/harness/contracts/nsight_device_stage_profile_v1.json` | Planned recommended next loop for NVTX/Nsight or equivalent stage-level evidence around the accepted C++ MMAPI/VPI/NVENC path | tracked |
+| RK3588 NPU idea mapping | `docs/rk3588_npu_idea_mapping_2026-07-23.md` | Maps a RK3588/RKNN multi-core/zero-copy optimization idea to Orin NX MMAPI/VPI/NVENC terms; keeps useful methodology while rejecting direct API transplant | tracked |
+| Nsight device-stage profile plan | `docs/nsight_device_stage_profile_plan_2026-07-23.md` | Minimal experiment plan for stage markers, Nsight/NVTX capture, and queue-depth/double-buffering decision boundaries | tracked |
 
 Do not commit ignored evidence unless a future task explicitly selects a small
 representative artifact.
