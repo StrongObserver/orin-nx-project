@@ -2,13 +2,15 @@
 
 ## Project
 
-Jetson Orin NX EIS video stabilization and heterogeneous acceleration project.
+Jetson Orin NX heterogeneous video compute and device-side dataflow optimization
+project, with EIS as the representative real-time vision workload.
 
 Goal:
 
 ```text
-Build a controllable EIS pipeline, measure quality and latency, optimize the
-real bottleneck, and explain both acceleration boundaries and model boundaries.
+Build a controllable EIS workload, measure quality and latency, optimize the
+real heterogeneous-compute and dataflow bottleneck, and explain acceleration,
+memory-format, sync, encode/decode, perf/watt, and model-boundary trade-offs.
 ```
 
 ## Current Baselines
@@ -36,7 +38,7 @@ Regular05 estimate time: 8.568 ms -> 3.022 ms
 Regular05 wall time: 8.473 s -> 7.565 s
 ```
 
-## Hardware Acceleration Boundary
+## Heterogeneous Compute Boundary
 
 VPI:
 
@@ -258,7 +260,9 @@ The strongest acceleration evidence is now PerspectiveWarp module-level
 latency/perf-watt, while the C++ MMAPI/VPI/NVENC path explains the device
 dataflow boundary. The accepted consumer/FIFO path is healthy, but it is not
 zero-copy: wrapper lifecycle, sync, and transform sandwich costs are still
-measured. The accepted quality recovery result is resid_r15_s07.
+measured. The accepted quality recovery result is resid_r15_s07. The next best
+proof for the refined project design is an NVTX/Nsight timeline or equivalent
+stage-level profile for the accepted C++ device path.
 ```
 
 ## Model Boundary
@@ -282,14 +286,14 @@ Crowd:
 ## Best Interview Framing
 
 ```text
-This is not just a stabilizer demo. I built a measurement loop: Regular is the
-in-domain success case, Challenge sets define the model boundary, VPI shows where
-hardware acceleration helps, GStreamer/NVMM measurements explain why direct
-Python dataflow integration is not currently worthwhile, and the MMAPI/VPI/NVENC
-path now has an accepted Regular gate EGLImage device path, a Regular05
-FIFO/live handoff checkpoint, and a format-matched NvBuffer pair follow-up that
-keeps the `resid_r15_s07` quality anchor while shaving a small measured portion
-of the device-side stage cost.
+This is not just a stabilizer demo. I used EIS as a real-time video workload and
+built a measurement loop around it: Regular is the in-domain quality case,
+Challenge sets define the model boundary, VPI shows where module acceleration
+helps, GStreamer/NVMM measurements explain why direct Python dataflow integration
+is not currently worthwhile, and the MMAPI/VPI/NVENC path now has an accepted
+Regular gate EGLImage device path, a FIFO/live handoff checkpoint, and a
+format-matched NvBuffer pair follow-up that keeps the `resid_r15_s07` quality
+anchor while shaving a small measured portion of the device-side stage cost.
 ```
 
 ## Evidence

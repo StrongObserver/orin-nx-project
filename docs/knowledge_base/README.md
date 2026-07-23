@@ -1,19 +1,20 @@
-# Orin NX EIS External Knowledge Base
+# Orin NX Heterogeneous Video Compute External Knowledge Base
 
 ## Purpose
 
-This knowledge base is a small routing layer for the Orin NX EIS project. It is
-not a second progress log and not a dump of every useful article. Its job is to
-help future agents break out of local parameter loops by pointing them to the
-right outside reference when the current harness evidence says the project is
-stuck.
+This knowledge base is a small routing layer for the Orin NX heterogeneous video
+compute project. EIS remains the representative workload, so classic
+stabilization references are still useful, but the current project target also
+includes VPI/CUDA modules, MMAPI/NVDEC/NVENC dataflow, memory layout,
+profiling, and perf/watt evidence. This is not a second progress log and not a
+dump of every useful article.
 
 Use this knowledge base only when a real blocker appears:
 
-- quality does not improve after a scoped attempt;
+- workload quality does not improve after a scoped attempt;
 - metrics improve but visual review vetoes the result;
 - a change helps `nus_running_gate_v1` while hurting `nus_regular_gate_v1`;
-- VPI, CUDA, GStreamer, NVMM, NVDEC, or NVENC usage is unclear;
+- VPI, CUDA, GStreamer, NVMM, NVDEC, NVENC, Nsight, or NVTX usage is unclear;
 - motion estimation fails because of foreground, weak texture, parallax, rolling
   shutter, or strong user intent motion;
 - an agent cannot explain why a change helped and what it costs.
@@ -54,6 +55,11 @@ The current main project boundary is:
 - The current frozen CPU baseline is `regular_gate05 + lp_rigid_strength080_dynzoom106`.
 - Same-input VPI backend replacement is a measured boundary result, not a
   full-pipeline acceleration result, for the current 640x360 Python path.
+- The refined project target is heterogeneous video compute and device-side
+  dataflow optimization, not another stabilization-parameter sweep.
+- The preferred next technical reference area is Nsight/NVTX plus Jetson
+  MMAPI/VPI/NVENC dataflow, unless a real quality blocker is reopened by the
+  user.
 
 The knowledge base should reinforce those boundaries. It should not reopen a
 blind LP weight sweep or turn Running into the main success target.

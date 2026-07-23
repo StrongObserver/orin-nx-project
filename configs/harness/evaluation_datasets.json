@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "project": "orin-nx-eis",
-  "purpose": "Lifecycle dataset registry for Orin NX EIS evaluation. This registry separates main quality evidence, challenge/failure-boundary evidence, diagnostic intent/foreground evidence, performance evidence, and future metric-calibration data.",
+  "project": "orin-nx-heterogeneous-video-compute",
+  "purpose": "Lifecycle dataset registry for the EIS representative workload inside the Orin NX heterogeneous-video-compute project. This registry separates main quality evidence, challenge/failure-boundary evidence, diagnostic intent/foreground evidence, performance evidence, and future metric-calibration data.",
   "storage_policy": {
     "large_media_roots": [
       "data/raw",
@@ -17,7 +17,7 @@
     "Main quality claims come from core regression sets, not challenge sets.",
     "Challenge sets expose model boundaries and degradation behavior.",
     "Diagnostic sets answer why a method failed; they do not define headline pass rate.",
-    "Metric-calibration datasets validate metrics, not EIS quality directly.",
+    "Metric-calibration datasets validate metrics, not EIS workload quality directly.",
     "Datasets may be redundant, but claim boundaries must remain separate."
   ],
   "datasets": [

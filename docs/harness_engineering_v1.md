@@ -1,16 +1,21 @@
-# Orin NX EIS Harness Engineering V1
+# Orin NX Heterogeneous Video Compute Harness Engineering V1
 
 ## Purpose
 
-This harness is a small control plane for the Orin NX EIS project. It is not a
-new algorithm framework and not a dashboard. Its job is to make every AI-assisted
-experiment reproducible, reviewable, and stoppable.
+This harness is a small control plane for the Orin NX heterogeneous video
+compute project. EIS is the representative real-time vision workload, but the
+current project target is the measurable organization of algorithm quality,
+VPI/CUDA modules, MMAPI/NVDEC/NVENC dataflow, memory layout, synchronization,
+and perf/watt evidence. The harness is not a new algorithm framework and not a
+dashboard. Its job is to make every AI-assisted experiment reproducible,
+reviewable, and stoppable.
 
 The core rule is:
 
 ```text
-Do not let an agent change an EIS configuration unless the clip role,
-frozen variables, validators, evidence paths, and stop reasons are known.
+Do not let an agent change an algorithm, backend, memory path, or profiling
+scope unless the workload role, frozen variables, validators, evidence paths,
+and stop reasons are known.
 ```
 
 ## What Is Fixed
@@ -24,8 +29,10 @@ frozen variables, validators, evidence paths, and stop reasons are known.
 | `nus_running_gate_v1` | challenge gate | Failure-boundary and scene-gate degradation evidence |
 | `regular05_perf_gate` | performance gate | Same-input Jetson runtime evidence |
 
-The main project claim must come from Regular, not Running. Running is a model
-boundary set for the current pure-visual global-affine pipeline.
+The quality claim must come from Regular, not Running. Running is a model
+boundary set for the current pure-visual global-affine pipeline. The project
+claim is broader than Regular quality: it also needs measured VPI module,
+MMAPI/NVENC dataflow, power/perf, and profiling evidence.
 
 ## Done Contract
 
@@ -280,15 +287,17 @@ next attempt instead of retreating to the stable baseline:
 |---|---|---|
 | VPI backend replacement is slower | VPI acceleration is impossible | Build/check backend support, measure module-level cost, or isolate conversion/readback overhead |
 | Python GStreamer round trip is too costly | GStreamer/NVMM is useless | Move to non-Python NVMM, CUDA, C++, or hardware decode/encode boundary work |
-| Challenge set fails | EIS project is finished or hopeless | Keep Challenge as boundary evidence and continue Regular-performance or next-model exploration |
+| Challenge set fails | The workload quality model has a boundary, not that the heterogeneous-video-compute project is finished or hopeless | Keep Challenge as boundary evidence and continue dataflow/profiling or explicitly scoped model-boundary work |
 | CPU baseline is accepted | Project is done | Commit/preserve the checkpoint, then continue the unfinished core track |
 
 The harness must keep these active core tracks visible until they are explicitly
 completed or the user changes the target:
 
 1. VPI backend validation and heterogeneous acceleration.
-2. Algorithm cost reduction plus zero-copy or non-Python pipeline exploration.
-3. Hardware decode/encode, power modes, perf/watt, and quality/crop trade-off.
+2. Device-side dataflow profiling around MMAPI/NVDEC/NVENC, NvBufSurface,
+   NvBuffer, VPI wrappers, sync, and transform sandwich.
+3. Hardware decode/encode, perf/watt, final result table, architecture diagram,
+   and NVTX/Nsight timeline evidence.
 
 ## Knowledge Base Recovery
 
@@ -325,7 +334,7 @@ Use these profiles:
 | Profile | Use |
 |---|---|
 | `performance_loop` | Same-input Jetson timing, backend, or dataflow evidence |
-| `quality_loop` | One EIS algorithm/config variable with metrics plus visual review |
+| `quality_loop` | One EIS algorithm/config variable with metrics plus visual review; currently closed unless the user explicitly reopens quality tuning |
 | `scene_gate_loop` | Scene role or degradation-policy changes |
 | `evaluation_loop` | Metric/report/human-review schema changes |
 | `knowledge_recovery_loop` | Read outside references after a real blocker |
@@ -340,28 +349,33 @@ docs/loop_engineering_v2.md
 
 ## Current Next Action
 
-The Jetson same-input CPU baseline evidence for `regular_gate05_regular_6.mp4`
-has been recorded and validates under the current Done Contract:
+The Jetson same-input CPU baseline, Regular performance baseline, VPI module
+evidence, C++ MMAPI/VPI/NVENC path, and NvBuffer pair follow-up have all been
+recorded. The current active task is no longer another quality loop; it is the
+profiling and presentation closeout route for the refined project design.
+
+Use:
 
 ```powershell
-py -3.12 scripts\harness_runner.py validate-evidence results\evidence\20260718_jetson_regular05_perf --date 20260718
+py -3.12 scripts\harness_runner.py onboard
 ```
 
-The frozen stage baseline is now `lp_rigid_strength080_dynzoom106`. Same-input
-backend comparison shows that `vpi_cpu`, `vpi_cuda`, and `vpi_vic` are all slower
-than `opencv_cpu` for the current 640x360 Python full-pipeline path. Do not claim
-VPI full-pipeline acceleration from that result.
-
-Update - anti-retreat correction:
+It should point to:
 
 ```text
-The CPU baseline and its Git/evidence checkpoint are not the final goal.
-The next project work should return to the three unfinished core tracks:
-VPI backend validation, non-Python dataflow/zero-copy or pipeline work, and
-NVDEC/NVENC plus power/perf evaluation.
+configs/harness/contracts/nsight_device_stage_profile_v1.json
 ```
 
-Update - device-side path:
+Anti-retreat correction:
+
+```text
+The accepted EIS quality baseline and NvBuffer pair closeout are not permission
+to keep tuning the same stabilization problem. The next valuable work is an
+architecture/result table plus NVTX/Nsight or equivalent device-stage profiling
+for the accepted C++ dataflow.
+```
+
+Device-side path:
 
 ```text
 The current acceleration frontier is no longer Python appsink/appsrc or a simple

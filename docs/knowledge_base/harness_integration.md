@@ -27,7 +27,8 @@ Invoke the knowledge base when one of these stop or recovery rules fires:
 | A change helps `nus_running_gate_v1` while hurting Regular | Read `public:bundled_camera_paths` / `public:meshflow`, then reclassify the clip or stop |
 | Visual veto: frame shift, rollback, jello, local pull, or unacceptable blur | Read the matched quality or model-boundary card; do not argue from metrics alone |
 | VPI/CUDA/GStreamer/NVMM usage becomes the blocker | Read the relevant NVIDIA source card before implementing |
-| The next change would require gyro, mesh, rolling-shutter, or major dataflow work | Treat it as a scope fork; summarize evidence before coding |
+| The next change would require gyro, mesh, rolling-shutter, or broad MMAPI rewrite | Treat it as a scope fork; summarize evidence before coding |
+| Nsight/NVTX or device-stage profiling is blocked by tool usage details | Read the relevant NVIDIA Nsight / Jetson Multimedia API source card before changing code |
 
 ## Done Contract Extension
 
@@ -92,6 +93,12 @@ lp_rigid + stabilization_strength=0.80 + crop90 + lanczos + sharpen0.25 + dynzoo
 
 Current backend boundary:
 VPI CPU/CUDA/VIC backend swaps are slower than OpenCV CPU in the 640x360 Python full pipeline.
+
+Current refined project boundary:
+EIS is the representative workload. The active project claim is heterogeneous
+video compute and device-side dataflow optimization. The next high-value
+knowledge recovery should support NVTX/Nsight, MMAPI/NVENC dataflow, VPI module
+usage, or perf/watt evidence rather than another stabilization-parameter sweep.
 ```
 
 Do not start another LP parameter sweep simply because new references exist. Use

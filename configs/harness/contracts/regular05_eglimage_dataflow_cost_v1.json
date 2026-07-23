@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract_id": "regular05_eglimage_dataflow_cost_v1",
-  "status": "active",
+  "status": "validated_supporting_evidence_superseded_by_nsight_device_stage_profile_v1",
   "loop_type": "device_dataflow_performance",
   "loop_profile": "performance_loop",
   "autonomy_level": "L3",

@@ -86,6 +86,7 @@ This map points to local evidence. Most evidence files are ignored by Git.
 | Regular gate NvBuffer pair resid evidence | `results/regular_gate_nvbuffer_pair_resid_20260723/` | Per-clip NvBuffer pair outputs, summaries, and timing evidence for `resid_r15_s07` | ignored |
 | Regular gate NvBuffer pair resid review video | `C:\Users\Admin\Videos\orin nx\review\performance\20260723_regular_gate_nvbuffer_pair_resid_r15_s07_5clip\20260723_regular_gate_nvbuffer_resid_r15_s07_5clip_overview_grid.mp4` | Five-clip overview for source vs NvBuffer pair with the accepted quality anchor | outside repo |
 | Regular05 EGLImage vs NvBuffer resid timing | `results/regular05_eglimage_timing_resid_compare_20260723/` | Same-source Regular05 timing comparison: EGLImage vs format-matched NvBuffer pair under `resid_r15_s07` | ignored |
+| Nsight device-stage profile contract | `configs/harness/contracts/nsight_device_stage_profile_v1.json` | Planned recommended next loop for NVTX/Nsight or equivalent stage-level evidence around the accepted C++ MMAPI/VPI/NVENC path | tracked |
 
 Do not commit ignored evidence unless a future task explicitly selects a small
 representative artifact.

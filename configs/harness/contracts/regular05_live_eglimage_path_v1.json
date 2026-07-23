@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract_id": "regular05_live_eglimage_path_v1",
-  "status": "active",
+  "status": "validated_supporting_device_path",
   "loop_type": "live_producer_device_path",
   "loop_profile": "performance_loop",
   "autonomy_level": "L3",

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "project": "orin-nx-eis",
-  "purpose": "Stable gate definitions for the Orin NX EIS harness. These roles prevent smoke, quality, challenge, and performance evidence from being mixed.",
+  "project": "orin-nx-heterogeneous-video-compute",
+  "purpose": "Stable gate definitions for the EIS representative workload inside the Orin NX heterogeneous-video-compute harness. These roles prevent smoke, quality, challenge, performance, and dataflow evidence from being mixed.",
   "evaluation_dataset_registry": "configs/harness/evaluation_datasets.json",
   "metric_schema": "configs/harness/metric_schema.json",
   "datasets": [

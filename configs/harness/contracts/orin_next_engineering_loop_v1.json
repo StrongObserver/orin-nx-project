@@ -5,30 +5,34 @@
   "loop_type": "multi_stage_engineering_loop",
   "loop_profile": "performance_loop",
   "autonomy_level": "L3",
-  "objective": "Run the agreed P0-P3 engineering sequence without exiting early unless all tasks are complete, a stop rule is hit, or user/hardware approval is required.",
+  "objective": "Run the current Orin NX heterogeneous-video-compute engineering sequence without exiting early unless all tasks are complete, a stop rule is hit, or user/hardware approval is required.",
   "progressive_onboarding": {
     "manifest": "configs/harness/onboarding_manifest.json",
     "default_rule": "Use progressive disclosure. Read lightweight routing and active contracts first; load long project context, internal references, and external knowledge only when the active task or blocker requires them.",
     "token_budget_intent": "Reduce repeated startup token cost while preserving enough current-state evidence to avoid stale decisions."
   },
-  "active_task_contract": "configs/harness/contracts/presentation_closeout_v1.json",
+  "active_task_contract": "configs/harness/contracts/nsight_device_stage_profile_v1.json",
   "current_loop_state": {
-    "last_completed_task": "regular_gate_nvbuffer_pair_resid_r15_s07_closeout",
-    "current_task": "presentation_closeout_v1",
-    "latest_result": "After spike_mid was rejected, residual-grid diagnostics did not justify opening mesh. The accepted residual closed-loop candidate resid_r15_s07 remains the current quality anchor. On 2026-07-23, resid_r15_s07 was also run through the format-matched NvBuffer pair path on all five Regular clips with rc=0 and fallback=0. Regular05 same-source EGLImage vs NvBuffer comparison aligned exactly in time/geometry; NvBuffer retained the quality anchor and gave a small dataflow-stage gain, about 7.535 ms -> 7.230 ms at frame100 and 9.589 ms -> 9.401 ms running average.",
-    "current_blocker": "No current stabilization-strength or NvBuffer-pair correctness blocker. The project should move to presentation/closeout or a new explicitly scoped dataflow optimization contract; do not continue limiter/R/LP/residual/safe103/inclusion sweeps.",
-    "recommended_next_contract": "presentation_closeout_v1"
+    "last_completed_task": "presentation_closeout_v1",
+    "current_task": "nsight_device_stage_profile_v1",
+    "latest_result": "The project positioning was refined on 2026-07-23: EIS is the representative real-time vision workload, while the resume-facing project is Jetson Orin NX heterogeneous video compute and device-side dataflow optimization. Existing evidence already covers Regular quality boundaries, VPI PerspectiveWarp module speed/perf-watt, MMAPI/VPI/NVENC accepted device path, wrapper/sync/transform dataflow breakdown, and format-matched NvBuffer pair small stage gains.",
+    "current_blocker": "No current stabilization-strength or NvBuffer-pair correctness blocker. The highest-value remaining engineering evidence is a final architecture/result table and an NVTX/Nsight Systems timeline for the accepted C++ device-side stage.",
+    "recommended_next_contract": "nsight_device_stage_profile_v1"
   },
   "global_claim_boundary": {
     "allowed": [
+      "EIS is the representative real-time vision workload, not the whole project identity",
       "Regular05 source_to_dest is the current EIS-quality device replay convention",
-      "MMAPI/VPI/NVENC device-side handoff is the active acceleration frontier",
+      "MMAPI/VPI/NVENC device-side dataflow is the active acceleration frontier",
       "Regular performance baseline is accepted only inside the Regular gate boundary",
       "resid_r15_s07 is the accepted Regular gate stabilization-strength recovery candidate",
       "NvBuffer pair quality comparisons must use resid_r15_s07 when judging stabilization strength",
-      "Challenge and diagnostic sets explain model boundaries"
+      "Challenge and diagnostic sets explain model boundaries",
+      "VPI CUDA PerspectiveWarp and 4K perf/watt are module-level heterogeneous acceleration evidence",
+      "Nsight/NVTX timeline evidence is the preferred next proof for wrapper/sync/transform bottlenecks"
     ],
     "forbidden": [
+      "presenting the project as mainly a better stabilization algorithm",
       "outdoor-car inverse/post_geometry as Regular05 EIS-quality progress",
       "using inclusion_source_to_dest or safe103_crop98 as a substitute for the current resid_r15_s07 stabilization-strength baseline",
       "full real-time EIS without live same-input evidence",
@@ -270,14 +274,14 @@
       "id": "P3",
       "title": "Future extension selection",
       "loop_profile": "knowledge_recovery_loop",
-      "objective": "Only after the device handoff mainline stabilizes, select one future route: VPI optical flow, mesh/grid warp, RS/gyro-like route, or perf-per-watt table.",
+      "objective": "Only after the current dataflow/profiling evidence is sealed, select one future route: NVTX/Nsight refinement, format-matched NvBuffer dataflow A/B, VPI Remap C++ probe, or perf-per-watt long run.",
       "external_observation": [
         "one_concrete_recovery_idea",
         "one_risk",
         "one_verifier"
       ],
       "success_criteria": [
-        "future route matches Orin NX EIS project target",
+        "future route matches the refined Orin NX heterogeneous video compute target",
         "choice is based on current blocker evidence",
         "user prompt is generated if company-internal AI is needed"
       ],
@@ -289,13 +293,13 @@
     }
   ],
   "selected_future_route": {
-    "id": "regular_gate_nvbuffer_pair_resid_r15_s07_closeout",
-    "decision": "Freeze resid_r15_s07 as the Regular gate quality anchor and record the format-matched NvBuffer pair path as a quality-preserving C++ dataflow alternative with small measured stage gains.",
-    "reason": "NvBuffer pair with inclusion matrices was visually healthy but weaker in stabilization because inclusion was not the quality anchor. Re-running with resid_r15_s07 and the same Regular gate source preserved the accepted quality result, aligned with EGLImage output, and showed a small dataflow-stage improvement without becoming zero-copy.",
+    "id": "nsight_device_stage_profile_v1",
+    "decision": "Move the active engineering route from quality recovery to profiling-backed device-side dataflow explanation. Keep resid_r15_s07 and NvBuffer pair as sealed evidence, then collect or prepare NVTX/Nsight timeline evidence for the C++ MMAPI/VPI/NVENC stage.",
+    "reason": "The refined project design values heterogeneous runtime/dataflow evidence more than another EIS quality tuning loop. Existing measurements already show that wrapper lifecycle, VPI sync, and NvBufSurfTransform dominate over the PerspectiveWarp submit call; Nsight/NVTX evidence would make that claim interview-grade.",
     "next_verifier": [
-      "presentation closeout keeps the quality anchor and dataflow claims separate",
-      "future dataflow A/B tests use same source, same matrix, same crop, and 25fps/180f review boundaries",
-      "Regular01 gray-threshold black-border flag remains visual-conditional unless human review rejects it",
+      "Nsight Systems report or exported summary exists if the contract is executed",
+      "stage table names decode, transform, wrapper, submit/sync, warp, encode, and wall time",
+      "same source, matrix, crop/postprocess, and review boundary remain frozen for dataflow A/B",
       "zero-copy and full-pipeline acceleration remain forbidden claims"
     ],
     "defer_until_after_alignment": [

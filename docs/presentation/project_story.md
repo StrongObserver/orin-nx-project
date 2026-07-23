@@ -2,25 +2,28 @@
 
 ## One-Liner
 
-Jetson Orin NX real-time EIS project: build a controllable CPU stabilization
-pipeline, validate quality with gates and visual review, then measure where
-performance optimization and hardware acceleration actually help.
+Jetson Orin NX heterogeneous video compute project: use EIS as a representative
+real-time vision workload, validate output quality with gates, then measure
+where VPI/CUDA/MMAPI/NVENC compute, memory layout, synchronization, and
+device-side dataflow actually help.
 
 ## Problem
 
-The goal is not just to output a stabilized video. A useful engineering project
+The goal is not just to output a stabilized video. A useful heterogeneous
+video-compute project
 must answer:
 
 ```text
 Does it stabilize selected real clips?
 What does it cost in latency?
 What artifacts remain?
-Which optimizations help, and which do not?
+Which backend, dataflow, memory-format, sync, and perf/watt optimizations help?
 ```
 
 ## Current Result
 
-The project has a closed Regular-gate quality result and two CPU baselines:
+The project has a closed Regular-gate workload-quality result and two CPU
+baselines:
 
 ```text
 quality-safe baseline:
@@ -43,25 +46,25 @@ than BQP/spike_mid, without hard pose snaps or visible black borders.
 
 ## Engineering Value
 
-The strongest project story is measurement discipline:
+The strongest project story is heterogeneous-system measurement discipline:
 
-- quality gates are separated from challenge sets;
+- EIS quality gates are separated from challenge sets;
 - Regular performance baseline is measured on Jetson;
 - VPI full-pipeline backend swap was rejected because it was slower;
 - VPI CUDA was still shown useful for high-resolution warp-heavy modules;
 - 4K PerspectiveWarp also has board-level perf/W evidence;
 - VPI PyrLK and Remap were tested and rejected as short-term replacement routes;
-- MMAPI/EGLImage dataflow was decomposed into wrapper, sync, and transform costs;
+- MMAPI/EGLImage/NvBuffer dataflow was decomposed into wrapper, sync, transform,
+  and memory-format costs;
 - challenge sets are used to map model boundaries instead of being hidden;
 - GStreamer/NVMM dataflow is scoped as a latency boundary, not overclaimed.
 
 ## Three-Minute Version
 
 ```text
-This is a Jetson Orin NX video stabilization project. I started from a
-controllable CPU EIS pipeline instead of treating the stabilizer as a black box:
-motion estimation, global motion smoothing, warp, crop, and visual review are
-all explicit.
+This is a Jetson Orin NX heterogeneous video compute project. I used EIS as a
+representative real-time vision workload because it stresses motion estimation,
+warp, crop, quality review, video memory format, and encode/decode dataflow.
 
 The first goal was not just to output a video, but to make the result measurable.
 I split the data into a Regular main gate and challenge/diagnostic sets, added
@@ -86,13 +89,14 @@ sample path.
 On the device-side path, I moved away from Python appsink/appsrc and used the
 C++ MMAPI/VPI/NVENC path as the performance frontier. The latest submit/sync
 probe shows that vpiSubmit itself is almost free, while wrapper lifecycle,
-stream sync, and NvBufSurfTransform dominate the stage cost. This keeps the
-claim honest: module acceleration and measured dataflow boundaries, not a
-finished zero-copy real-time EIS product.
+stream sync, and NvBufSurfTransform dominate the stage cost. The next best
+evidence is an NVTX/Nsight timeline for that stage. This keeps the claim honest:
+module acceleration and measured dataflow boundaries, not a finished zero-copy
+real-time EIS product.
 
-The main engineering value is that every claim has a boundary: Regular baseline,
-challenge-set limitations, VPI module acceleration, perf/W evidence, and
-MMAPI/NVMM dataflow boundaries are kept separate.
+The main engineering value is that every claim has a boundary: Regular workload
+quality, challenge-set limitations, VPI module acceleration, perf/W evidence,
+and MMAPI/NVMM dataflow boundaries are kept separate.
 ```
 
 ## Evidence

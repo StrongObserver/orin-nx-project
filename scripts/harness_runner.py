@@ -526,7 +526,7 @@ def command_validate_evidence(args: argparse.Namespace) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Orin NX EIS harness control-plane helper.")
+    parser = argparse.ArgumentParser(description="Orin NX heterogeneous video compute harness control-plane helper.")
     parser.add_argument("--gates", type=Path, default=DEFAULT_GATES)
     subparsers = parser.add_subparsers(dest="command", required=True)
 

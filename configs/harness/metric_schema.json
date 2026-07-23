@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "project": "orin-nx-eis",
-  "purpose": "Lifecycle metric schema for Orin NX EIS evaluation. Metrics are layered so agents can use redundant evidence without mixing hard gates, diagnostic signals, and future calibration work.",
+  "project": "orin-nx-heterogeneous-video-compute",
+  "purpose": "Lifecycle metric schema for the EIS representative workload inside the Orin NX heterogeneous-video-compute project. Metrics are layered so agents can use redundant evidence without mixing hard gates, diagnostic signals, dataflow timing, and future calibration work.",
   "source_principles": [
     "Objective metrics are proxy signals and must be paired with side-by-side visual review.",
     "Hard degradation gates protect against unacceptable output even if stability metrics improve.",

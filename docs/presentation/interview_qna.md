@@ -2,9 +2,11 @@
 
 ## Q: What is the project?
 
-A Jetson Orin NX EIS project. I built a controllable CPU video stabilization
-pipeline, added quality gates and review assets, measured Jetson runtime, then
-tested where performance optimization and hardware acceleration actually help.
+A Jetson Orin NX heterogeneous video compute and device-side dataflow project.
+I use EIS as a representative real-time vision workload: first keep quality
+measurable with CPU baselines and gates, then profile where VPI/CUDA/MMAPI/NVENC
+compute, memory format, synchronization, and encode/decode dataflow actually
+help.
 
 ## Q: What is your current best result?
 
@@ -102,6 +104,8 @@ measured bottlenecks:
 
 I would not claim zero-copy until a format-stable path removes or reduces those
 costs without reintroducing tearing, green output, or format mismatch failures.
+The highest-value next evidence is an NVTX/Nsight Systems timeline for this
+accepted C++ stage.
 
 ## Q: Why not continue tuning Regular05?
 

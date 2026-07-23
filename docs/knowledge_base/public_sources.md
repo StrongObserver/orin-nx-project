@@ -1,8 +1,10 @@
 # Public Source Cards
 
-The cards below are public, commit-safe references for the Orin NX EIS project.
-They are chosen for closeness to the current pipeline and Harness boundary, not
-for novelty.
+The cards below are public, commit-safe references for the Orin NX heterogeneous
+video compute project. EIS references remain useful because EIS is the
+representative workload, but NVIDIA VPI, Jetson Multimedia API, GStreamer/NVMM,
+and Nsight/NVTX references are now the highest-value route for device-side
+dataflow and profiling work.
 
 ## Summary Ranking
 

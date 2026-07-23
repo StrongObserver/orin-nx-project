@@ -1,0 +1,75 @@
+{
+  "schema_version": 1,
+  "contract_id": "nsight_device_stage_profile_v1",
+  "status": "planned_recommended",
+  "loop_type": "device_stage_profiling",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L2",
+  "required_platform_label": "jetson",
+  "objective": "Add or collect NVTX/Nsight Systems evidence for the accepted C++ MMAPI/VPI/NVENC device-side stage, so the final project can explain decode, transform, wrapper, submit/sync, warp, encode, and wall-time boundaries with a timeline.",
+  "design_context": {
+    "refined_project_positioning": "Jetson Orin NX heterogeneous video compute and device-side dataflow optimization, with EIS as the representative real-time vision workload.",
+    "accepted_quality_anchor": "resid_r15_s07",
+    "accepted_device_path": "MMAPI/NVDEC block-linear NV12 main chain -> NvBufSurfTransform to pitch-linear NV12_ER scratch -> VPI CUDA PerspectiveWarp -> NvBufSurfTransform back to block-linear NV12 -> NVENC",
+    "known_stage_boundary": "wrapper lifecycle, VPI sync, and NvBufSurfTransform sandwich dominate more than vpiSubmitPerspectiveWarp itself."
+  },
+  "frozen_variables": [
+    "input clip and frame-count boundary",
+    "matrix: resid_r15_s07 for quality-preserving comparisons, or a clearly labeled diagnostic matrix for pure dataflow probes",
+    "matrix convention: source_to_dest for Regular gate quality work",
+    "consumer path: accepted C++ MMAPI/VPI/NVENC path or the format-matched NvBuffer pair path",
+    "no algorithm quality tuning inside this contract",
+    "no change from block-linear main chain to pitch-linear encoder main path",
+    "no EGLImage image-wrapper reuse revival"
+  ],
+  "external_observation": [
+    "Nsight Systems report or exported summary exists",
+    "stage names are visible or recoverable from NVTX ranges/logs",
+    "same-input timing table is preserved",
+    "output video remains readable",
+    "no new zero-copy or full real-time claim is introduced"
+  ],
+  "success_criteria": [
+    "timeline or exported summary separates decode, input transform, wrapper or NvBuffer wrap, VPI submit, VPI sync, output transform, encode, and wall time",
+    "result table can explain why the bottleneck is dataflow/sync/wrapper rather than the PerspectiveWarp API call alone",
+    "claim boundary stays module/dataflow-level, not full EIS pipeline acceleration",
+    "evidence path is recorded in README/presentation/long-term context if produced"
+  ],
+  "recommended_steps": [
+    {
+      "id": "P0",
+      "title": "Instrumentation audit",
+      "objective": "Inspect the accepted C++ sample and existing timing probes to decide whether existing logs are enough or NVTX ranges must be added."
+    },
+    {
+      "id": "P1",
+      "title": "NVTX range insertion or Nsight capture",
+      "objective": "Add minimal stage ranges or run Nsight Systems against the existing stage without changing output semantics."
+    },
+    {
+      "id": "P2",
+      "title": "Timeline export and summary",
+      "objective": "Produce one timeline screenshot/export and one concise table mapping stage cost to engineering interpretation."
+    },
+    {
+      "id": "P3",
+      "title": "Presentation update",
+      "objective": "Update only the final architecture/result table and interview wording with measured Nsight evidence."
+    }
+  ],
+  "forbidden_claims": [
+    "full real-time EIS",
+    "zero-copy full chain",
+    "all-scene or product-grade EIS quality",
+    "VPI optical-flow acceleration",
+    "full-pipeline acceleration from module-only or stage-only evidence"
+  ],
+  "stop_reasons": [
+    "Jetson SSH or Nsight runtime blocker",
+    "instrumentation changes output semantics",
+    "Nsight capture requires unavailable GUI/manual action",
+    "would require broad C++ rewrite instead of minimal profiling instrumentation"
+  ],
+  "evidence_output_directory": "results/nsight_device_stage_profile_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/performance/<YYYYMMDD>_nsight_device_stage_profile"
+}

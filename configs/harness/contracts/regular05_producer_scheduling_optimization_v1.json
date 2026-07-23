@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract_id": "regular05_producer_scheduling_optimization_v1",
-  "status": "active",
+  "status": "validated_supporting_evidence",
   "loop_type": "producer_compute_scheduling_optimization",
   "loop_profile": "performance_loop",
   "autonomy_level": "L3",

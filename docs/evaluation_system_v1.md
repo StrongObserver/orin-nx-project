@@ -1,14 +1,15 @@
-# Orin NX EIS Evaluation System V1 - 2026-07-17
+# Orin NX EIS Workload Evaluation System V1 - 2026-07-17
 
 ## Purpose
 
-This document defines the lifecycle evaluation system for the Orin NX EIS
-project. The goal is to keep future experiments comparable: datasets, metric
-layers, claim boundaries, and manual review labels should stay stable across
-algorithm and performance work.
+This document defines the lifecycle evaluation system for the EIS workload inside
+the Orin NX heterogeneous-video-compute project. The goal is to keep future
+experiments comparable: datasets, metric layers, claim boundaries, and manual
+review labels should stay stable across algorithm, backend, and dataflow work.
 
-This is not an algorithm progress log. It is the evaluation contract that sits
-under Harness V1 and Loop Engineering V2.
+This is not an algorithm progress log. It is the workload-quality contract that
+sits under Harness V1 and Loop Engineering V2. It prevents dataflow or profiling
+work from silently changing the output semantics.
 
 ## Source Basis
 
@@ -62,7 +63,9 @@ py -3.12 scripts\harness_runner.py list-metric-schema
 | `nus_running_gate_v1` | challenge_gate | active_prepared | Running/high-frequency boundary |
 | `regular05_perf_gate` | performance_gate | active_prepared | Jetson same-input performance evidence |
 
-These are the only P0 prepared gates for headline project claims.
+These are the only P0 prepared gates for EIS workload-quality claims. The broader
+project headline also depends on VPI module, MMAPI/NVENC dataflow, perf/watt,
+and profiling evidence.
 
 ### P1 Lifecycle Boundary Sets
 
@@ -233,6 +236,8 @@ powershell -ExecutionPolicy Bypass -File scripts\download_nus_category.ps1 -Cate
 
 2. Visual-quality metrics are diagnostic only. They need human-review
    calibration before becoming gates.
-3. The next project action is still Jetson same-input performance evidence for
-   `regular_gate05_regular_6.mp4`.
+3. The next project action is no longer another EIS quality gate. The current
+   high-value route is device-stage profiling through
+   `configs/harness/contracts/nsight_device_stage_profile_v1.json`, while this
+   evaluation system keeps the EIS workload semantics frozen.
 

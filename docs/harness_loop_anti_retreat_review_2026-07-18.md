@@ -48,8 +48,10 @@ The project is not complete until these are either completed or explicitly
 descoped by the user:
 
 1. VPI backend validation and heterogeneous acceleration.
-2. Algorithm cost reduction plus zero-copy or non-Python pipeline exploration.
-3. Hardware decode/encode, power modes, perf/watt, and quality/crop trade-off.
+2. Device-side dataflow profiling around MMAPI/NVDEC/NVENC, NvBufSurface,
+   NvBuffer, VPI wrappers, sync, and transform sandwich.
+3. Hardware decode/encode, perf/watt, final architecture/result table, and
+   NVTX/Nsight timeline evidence.
 
 ## Files Updated
 
@@ -85,5 +87,7 @@ After a stable baseline or negative result, the next task must answer:
 Which unfinished core track does this route to next?
 ```
 
-If the answer is only "write better docs" while core tracks are unfinished, the
-loop is wrong.
+If the answer is only "write better docs" while measured dataflow/profiling
+evidence is missing, the loop is wrong. If the answer is "compress measured
+results into final tables, diagrams, and interview wording," the loop is valid
+only when it links to existing evidence and does not invent a larger claim.

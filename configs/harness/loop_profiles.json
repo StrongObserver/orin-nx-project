@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
-  "project": "orin-nx-eis",
-  "purpose": "Loop Engineering V2 profiles. These profiles sit above the harness gates and define how an agent may iterate, stop, recover, and use external knowledge.",
+  "project": "orin-nx-heterogeneous-video-compute",
+  "purpose": "Loop Engineering V2 profiles. These profiles sit above the harness gates and define how an agent may iterate, stop, recover, and use external knowledge for the refined Orin NX heterogeneous-video-compute project, where EIS is the representative workload rather than the whole project identity.",
   "autonomy_levels": [
     {
       "id": "L0",
@@ -26,7 +26,7 @@
     {
       "id": "L4",
       "name": "semi_autonomous_pipeline",
-      "description": "Scheduled or event-driven multi-step loop. Not recommended for the current Orin NX EIS project stage."
+      "description": "Scheduled or event-driven multi-step loop. Not recommended for the current Orin NX heterogeneous-video-compute project stage."
     }
   ],
   "default_rules": {
@@ -58,7 +58,7 @@
   "active_core_tracks": [
     {
       "id": "vpi_backend_validation_and_heterogeneous_acceleration",
-      "goal": "Build a backend support table, then replace hot modules such as optical flow, warp, or remap with the best supported VPI or hardware backend and record before-after evidence.",
+      "goal": "Maintain the backend support table and use PerspectiveWarp, PyrLK, Remap, and GStreamer/NVMM probes to decide which VPI/CUDA/MMAPI routes are real acceleration evidence and which are negative boundaries.",
       "not_done_until": [
         "backend_support_table_recorded",
         "at_least_one_hot_module_replaced_or_ruled_out_with_reason",
@@ -66,21 +66,21 @@
       ]
     },
     {
-      "id": "algorithm_cost_zero_copy_pipeline",
-      "goal": "Reduce algorithm cost and then explore non-Python device-side dataflow such as NvBufSurface, unified memory, staged threading, or CUDA stream overlap.",
+      "id": "device_side_dataflow_profiling",
+      "goal": "Profile and reduce the C++ device-side dataflow cost around MMAPI/NVDEC/NVENC, NvBufSurface/NvBuffer, VPI wrappers, sync, and transform sandwich without claiming zero-copy until measured.",
       "not_done_until": [
-        "algorithm_cost_reduction_recorded",
+        "stage_breakdown_recorded",
         "copy_or_readback_boundary_recorded",
-        "non_python_pipeline_route_evaluated_or_blocked_with_reason"
+        "NVTX_or_Nsight_timeline_recorded_or_blocked_with_reason"
       ]
     },
     {
-      "id": "nvdec_nvenc_power_evaluation",
-      "goal": "Use hardware decode and encode where appropriate, query available power modes, then report perf, watt, and quality/crop trade-offs.",
+      "id": "nvdec_nvenc_power_and_presentation_evaluation",
+      "goal": "Preserve hardware decode/encode boundaries, power/perf evidence, and final architecture/result tables for interview-facing explanation.",
       "not_done_until": [
-        "nvpmodel_q_recorded",
         "nvdec_nvenc_before_after_or_boundary_recorded",
-        "perf_per_watt_table_recorded"
+        "perf_per_watt_table_recorded",
+        "final_architecture_and_result_table_recorded"
       ]
     }
   ],
@@ -124,7 +124,7 @@
       ],
       "recovery_actions": [
         "if_backend_swap_is_slower_classify_overhead_and_try_backend_support_or_module_scope",
-        "if_python_dataflow_is_too_expensive_route_to_non_python_nvmm_or_cuda_contract",
+        "if_python_dataflow_is_too_expensive_route_to_cxx_mmapi_nvmm_or_cuda_contract",
         "if_operator_speedup_does_not_become_end_to_end_speedup_measure_conversion_sync_or_readback_cost"
       ],
       "knowledge_triggers": [
@@ -136,6 +136,7 @@
     {
       "id": "quality_loop",
       "recommended_autonomy": "L2",
+      "current_default": "closed_for_regular_gate_quality_unless_user_reopens",
       "allowed_change": [
         "one_algorithm_or_config_variable"
       ],

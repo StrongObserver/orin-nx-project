@@ -1,18 +1,17 @@
-# Jetson Orin NX EIS Project
+# Jetson Orin NX Heterogeneous Video Compute Project
 
-Resume-oriented engineering project for real-time electronic image
-stabilization (EIS) and heterogeneous vision acceleration on NVIDIA Jetson Orin
-NX.
+Resume-oriented engineering project for heterogeneous video compute and
+device-side dataflow optimization on NVIDIA Jetson Orin NX.
 
 The project is not just a demo. The target is an explainable engineering loop:
 
 ```text
-shaky video
--> controllable CPU EIS baseline
--> quality and artifact gates
--> Jetson timing evidence
--> scoped backend / dataflow optimization
--> honest boundary and trade-off summary
+EIS representative workload
+-> controllable CPU baseline and quality gates
+-> VPI/CUDA backend and module benchmarks
+-> MMAPI/NVDEC/NVENC device-side dataflow
+-> wrapper / sync / transform / memory-format profiling
+-> honest boundary and trade-off summary for interviews
 ```
 
 ## Current Highlights
@@ -497,6 +496,13 @@ C:\Users\Admin\Videos\orin nx\review\performance\20260720_regular05_live_eglimag
 
 Do not continue blind global affine/rigid parameter sweeps on `regular05`.
 
+The current project direction follows the 2026-07-23 refined design:
+
+```text
+Jetson Orin NX heterogeneous video compute and device-side dataflow optimization
+with EIS as the representative real-time vision workload.
+```
+
 The current device-side acceleration path should stay scoped:
 
 ```text
@@ -507,9 +513,11 @@ The current device-side acceleration path should stay scoped:
 5. keep the BGR8 VPI Python path as visual correctness reference, not as a
    real-time acceleration result;
 6. do not reuse EGLImage image wrappers in this MMAPI path;
-7. treat stride5 producer scheduling as the current Regular05 optimization
-   candidate pending power/perf evidence and five-clip extension;
-8. do not return to Python appsink/appsrc EIS integration.
+7. treat NvBuffer pair as a small quality-preserving dataflow-stage follow-up,
+   not a zero-copy or full-pipeline acceleration result;
+8. do not return to Python appsink/appsrc EIS integration;
+9. the highest-value remaining evidence is a final architecture/result table
+   and an NVTX/Nsight Systems timeline for the C++ device-side stage.
 ```
 
 Current accepted Regular05 device path:
@@ -527,6 +535,12 @@ Current active contracts:
 
 ```text
 configs/harness/contracts/orin_next_engineering_loop_v1.json
+configs/harness/contracts/nsight_device_stage_profile_v1.json
+```
+
+Important completed or supporting contracts:
+
+```text
 configs/harness/contracts/presentation_closeout_v1.json
 configs/harness/contracts/regular_gate_stabilization_strength_recovery_loop_v1.json
 configs/harness/contracts/regular05_live_eglimage_path_v1.json

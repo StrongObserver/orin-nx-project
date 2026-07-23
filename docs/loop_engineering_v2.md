@@ -1,11 +1,13 @@
-# Orin NX EIS Loop Engineering V2 - 2026-07-17
+# Orin NX Heterogeneous Video Compute Loop Engineering V2 - 2026-07-17
 
 ## Purpose
 
-This document upgrades the Orin NX EIS project from Harness V1 to a clearer Loop
-Engineering V2. It does not replace the existing harness. It explains how future
-agents should decide what to do next, when to stop, when to recover, and when to
-call the external knowledge base.
+This document upgrades the Orin NX project from Harness V1 to a clearer Loop
+Engineering V2. The refined project direction is heterogeneous video compute and
+device-side dataflow optimization, with EIS as the representative workload. This
+document does not replace the existing harness. It explains how future agents
+should decide what to do next, when to stop, when to recover, and when to call
+the external knowledge base.
 
 The decision is:
 
@@ -77,8 +79,9 @@ This loop system must not turn a stable checkpoint into the final project goal.
 
 Stable baselines exist for version control, comparison, rollback, and honest
 before/after claims. They do not lower the original project target. A negative
-result is also evidence, but it is not permission to retreat into documentation
-or presentation work while core engineering tracks remain unfinished.
+result is also evidence, but it is not permission to reopen old quality tuning or
+to claim a finished real-time product. Documentation is now useful only when it
+compresses measured dataflow/profiling evidence into final interview materials.
 
 Use this rule after every failed or negative performance result:
 
@@ -87,20 +90,24 @@ Use this rule after every failed or negative performance result:
 | VPI backend swap is slower | The chosen placement/dataflow is bad, not VPI as a whole | Classify conversion/sync/readback cost, then test backend support or module scope |
 | Python appsink/appsrc is expensive | Python round trip is bad, not NVMM/NVDEC/NVENC as a whole | Route to non-Python NVMM/CUDA/C++ dataflow contract |
 | Challenge clips fail | Current global-warp model is limited, not the whole project failed | Keep Regular as main gate and open mesh/grid/scene-degrade as future model route |
-| CPU baseline is stable | A checkpoint exists, not the project is finished | Preserve it with Git/evidence, then continue the active core track |
+| CPU baseline is stable | A workload and comparison boundary exists, not the project is finished | Preserve it with Git/evidence, then continue device-side dataflow or profiling evidence |
+| NvBuffer pair gives small gains | Dataflow route is promising but not zero-copy | Preserve it, then collect Nsight/NVTX or equivalent stage evidence |
 
 Forbidden behavior:
 
 - downgrade the project goal without user approval;
-- replace unfinished core work with documentation packaging;
+- replace missing profiling/dataflow evidence with generic documentation packaging;
 - keep polishing the same stable CPU baseline after its gate is already closed;
 - treat "do not overclaim" as "do not continue exploring".
 
-The active unfinished core tracks are:
+The active core tracks after the 2026-07-23 design refinement are:
 
-1. VPI backend validation and heterogeneous acceleration;
-2. algorithm cost reduction, zero-copy or non-Python pipeline exploration;
-3. hardware decode/encode plus power and perf/watt evaluation.
+1. VPI backend validation and heterogeneous acceleration, with PerspectiveWarp
+   as the current positive module result and PyrLK/Remap as bounded negatives.
+2. Device-side dataflow profiling around MMAPI/NVDEC/NVENC, NvBufSurface,
+   NvBuffer, wrapper lifecycle, sync, and transform sandwich.
+3. Power/perf, final result table, architecture diagram, and NVTX/Nsight
+   timeline evidence for interview-facing closure.
 
 ## Layer Split
 
@@ -207,9 +214,9 @@ project loop that controls whether the inner loop is allowed to continue.
 | L3 | Contracted loop | Execute up to max attempts inside a Done Contract | Jetson same-input perf and narrow quality loops |
 | L4 | Semi-autonomous pipeline | Scheduled/event loops, worktrees, maker/checker automation | Not recommended yet for this project |
 
-Current recommendation: keep Orin NX EIS at **L2/L3**. Do not build L4
-automation until Jetson performance evidence, manual review labels, and stable
-quality gates are stronger.
+Current recommendation: keep Orin NX heterogeneous-video-compute work at
+**L2/L3**. Do not build L4 automation until device-stage profiling evidence,
+manual review labels, and stable quality/dataflow gates are stronger.
 
 ## Loop Profiles
 
@@ -281,7 +288,7 @@ large default context load and follow this order:
    py -3.12 scripts\harness_runner.py onboard
 3. Read configs/harness/contracts/orin_next_engineering_loop_v1.json.
 4. Read the current task contract, currently:
-   configs/harness/contracts/regular05_live_eglimage_path_v1.json.
+   configs/harness/contracts/nsight_device_stage_profile_v1.json.
 5. Open long-term context sections or reference folders only when a manifest
    trigger, contract stop/recovery rule, or real blocker requires them.
 ```
@@ -339,6 +346,8 @@ Current completed boundary:
 
 ```text
 Jetson same-input CPU baseline evidence exists for regular_gate05_regular_6.
+Regular-gate quality recovery is closed around resid_r15_s07.
+Format-matched NvBuffer pair has a quality-preserving small stage gain.
 ```
 
 The current frozen stage baseline is:
@@ -354,8 +363,8 @@ Same-input backend replacement has also been checked: `vpi_cpu`, `vpi_cuda`, and
 `vpi_vic` are slower than `opencv_cpu` in the current 640x360 Python
 full-pipeline path. Do not start another LP parameter sweep or claim VPI
 full-pipeline acceleration from that result. The next performance loop should
-change one variable such as motion-estimation scale/feature budget, or move to a
-separate high-resolution VPI module or GStreamer/NVMM dataflow contract.
+prefer the current device-stage profiling contract:
+`configs/harness/contracts/nsight_device_stage_profile_v1.json`.
 
 ## What V2 Changes Immediately
 
@@ -367,8 +376,9 @@ separate high-resolution VPI module or GStreamer/NVMM dataflow contract.
    blur, and subjective display decisions.
 6. Negative results must produce a next exploration route while core tracks are
    unfinished.
-7. Documentation loops may record a checkpoint, but they cannot replace
-   unfinished VPI, dataflow, decode/encode, or power-evaluation work.
+7. Documentation loops may record a checkpoint, but final presentation work
+   must point to measured VPI, dataflow, decode/encode, power, or Nsight/NVTX
+   evidence rather than inventing a larger claim.
 
 ## What V2 Defers
 

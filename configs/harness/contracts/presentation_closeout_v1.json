@@ -1,17 +1,18 @@
 {
   "schema_version": 1,
   "contract_id": "presentation_closeout_v1",
-  "status": "active",
+  "status": "completed_superseded_by_nsight_device_stage_profile_v1",
   "loop_type": "presentation_closeout",
   "loop_profile": "documentation_loop",
   "autonomy_level": "L3",
-  "objective": "Close the current Orin NX stage by synchronizing control-plane and interview-facing materials around measured results, without opening new algorithm or dataflow experiments.",
+  "objective": "Close the previous Orin NX stage by synchronizing control-plane and interview-facing materials around measured results, without opening new algorithm or dataflow experiments.",
   "entry_context": {
     "quality_anchor": "resid_r15_s07",
     "latest_device_dataflow_result": "format-matched NvBuffer pair preserves the resid_r15_s07 quality anchor on five Regular clips and gives a small Regular05 device-stage gain",
     "current_blocker": "No current stabilization-strength or NvBuffer-pair correctness blocker.",
     "recommended_next_after_closeout": "Only open a new dataflow contract if it uses the same source, same matrix, same crop/postprocess, and same 25fps/180f review boundary."
   },
+  "superseded_by": "configs/harness/contracts/nsight_device_stage_profile_v1.json",
   "claim_boundary": {
     "allowed": [
       "resid_r15_s07 is the accepted Regular gate stabilization-strength recovery candidate",
@@ -33,9 +34,9 @@
       "id": "P8-1",
       "priority": "P0",
       "title": "Control-plane alignment",
-      "objective": "Point onboarding and loop state at this presentation closeout contract and remove stale active-task references.",
+      "objective": "Record that this presentation closeout contract completed and that onboarding now routes to the next engineering contract.",
       "success_criteria": [
-        "onboard prints presentation_closeout_v1 as the active task contract",
+        "onboard prints nsight_device_stage_profile_v1 as the active task contract",
         "active loop state says stabilization and NvBuffer-pair correctness are closed",
         "JSON parses cleanly"
       ]
