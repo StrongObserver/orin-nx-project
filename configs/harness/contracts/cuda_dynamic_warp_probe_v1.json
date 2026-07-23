@@ -1,0 +1,169 @@
+{
+  "schema_version": 1,
+  "contract_id": "cuda_dynamic_warp_probe_v1",
+  "status": "completed",
+  "loop_type": "cuda_dynamic_warp_probe",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Evaluate whether a custom CUDA dynamic warp kernel is a better execution route than VPI dynamic Remap payload rebuild for future per-frame mesh/local-warp work, without changing current EIS quality semantics.",
+  "entry_context": {
+    "project_positioning": "Jetson Orin NX heterogeneous video compute and device-side dataflow optimization, with EIS as the representative workload.",
+    "previous_boundary": "VPI dynamic Remap works but per-frame payload rebuild is material: standalone NV12_ER dynamic total is about 2.913 ms/frame and MMAPI dynamic Remap stage avg is about 13.1 ms.",
+    "current_question": "Can a custom CUDA dynamic warp kernel update per-frame transform parameters without paying VPI Remap payload rebuild cost, and is it worth considering before any future mesh/local-warp route?",
+    "quality_boundary": "No EIS quality tuning, no change to resid_r15_s07, and no claim that CUDA warp improves stabilization quality."
+  },
+  "frozen_variables": [
+    "No EIS quality tuning",
+    "No change to resid_r15_s07",
+    "Start with standalone CUDA benchmark before any MMAPI integration",
+    "Use VPI dynamic Remap standalone timing as the comparison baseline",
+    "Do not revive the rejected MMAPI pitch-pointer tearing path without a new safety verifier",
+    "No zero-copy claim",
+    "No full-pipeline acceleration claim"
+  ],
+  "planned_evidence": {
+    "report": "docs/cuda_dynamic_warp_probe_2026-07-23.md",
+    "evidence_dir": "results/cuda_dynamic_warp_probe_20260723/",
+    "review_dir": "C:/Users/Admin/Videos/orin nx/review/diagnostic/20260723_cuda_dynamic_warp_probe/",
+    "source_dir": "experiments/cuda_dynamic_warp_probe/"
+  },
+  "result": {
+    "report": "docs/cuda_dynamic_warp_probe_2026-07-23.md",
+    "evidence_dir": "results/cuda_dynamic_warp_probe_20260723/",
+    "review_image": "C:/Users/Admin/Videos/orin nx/review/diagnostic/20260723_cuda_dynamic_warp_probe/20260723_cuda_dynamic_warp_standalone_grid.jpg",
+    "decision": "Standalone CUDA dynamic warp is much faster than VPI dynamic Remap payload rebuild for this affine diagnostic, but MMAPI CUDA scratch integration is deferred to a separate safety verifier.",
+    "cuda_rgba_dynamic_total_ms": 0.194142,
+    "cuda_y8_dynamic_total_ms": 0.138282,
+    "vpi_bgr8_dynamic_total_ms": 2.25015,
+    "vpi_nv12_er_dynamic_total_ms": 2.91301,
+    "identity_diff": 0.0,
+    "mmapi_decision": "Do not directly open MMAPI CUDA writeback in this loop because prior low-level CUDA/pitch-wrapper paths caused tearing; require a new NvBufSurface/EGLImage/CUDA interop verifier first.",
+    "claim_boundary": "Standalone CUDA operator evidence only. No MMAPI integration, no zero-copy, no full real-time EIS, and no EIS quality improvement claim."
+  },
+  "task_queue": [
+    {
+      "id": "P0",
+      "title": "Contract and control-plane setup",
+      "objective": "Register this CUDA dynamic warp loop and freeze the comparison boundary.",
+      "success_criteria": [
+        "onboard points to this active contract while running",
+        "doctor passes",
+        "VPI dynamic Remap baseline numbers are named",
+        "oral template remains unstaged"
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "CUDA and MMAPI boundary review",
+      "objective": "Inspect existing CUDA/VPI/MMAPI references enough to avoid repeating the rejected tearing route.",
+      "success_criteria": [
+        "standalone CUDA route is separated from MMAPI scratch integration",
+        "previous tearing path is not reused as an accepted path",
+        "go/no-go for standalone CUDA implementation is clear"
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Standalone CUDA dynamic warp",
+      "objective": "Implement and run a minimal CUDA dynamic affine warp kernel on synthetic BGR/RGBA data.",
+      "success_criteria": [
+        "CUDA code compiles on Jetson",
+        "identity output matches input or has explained border differences",
+        "dynamic transform output is readable",
+        "kernel and total timing are recorded",
+        "OpenCV or CPU reference diff is recorded"
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "CUDA vs VPI dynamic comparison",
+      "objective": "Compare standalone CUDA dynamic warp against VPI dynamic Remap with same resolution, frame count, and transform sequence.",
+      "success_criteria": [
+        "same resolution and frame count are used",
+        "CUDA timing and VPI timing are compared",
+        "output-difference boundary is explained",
+        "decision is based on measured data"
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "Y-plane CUDA dynamic warp",
+      "objective": "If BGR/RGBA CUDA route is promising, implement a Y-plane dynamic warp closer to NV12 scratch semantics.",
+      "success_criteria": [
+        "Y-plane kernel compiles",
+        "identity and dynamic transforms run",
+        "timing and CPU/OpenCV diff are recorded"
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "MMAPI integration decision",
+      "objective": "Decide whether to attempt MMAPI CUDA scratch integration based on standalone results and known tearing risks.",
+      "success_criteria": [
+        "decision cites standalone CUDA/VPI data",
+        "NvBufSurface/CUDA writeback risks are named",
+        "MMAPI branch is skipped unless a safe verifier exists"
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "Optional MMAPI CUDA diagnostic",
+      "objective": "Only if P5 is favorable, run a minimal MMAPI CUDA identity/translate/dynamic diagnostic.",
+      "success_criteria": [
+        "identity is clean before non-identity",
+        "output readability and black border are checked",
+        "tearing or sync failures stop the branch"
+      ]
+    },
+    {
+      "id": "P7",
+      "title": "Knowledge recovery if blocked",
+      "objective": "Use local knowledge, public/official references, or an internal-AI prompt if CUDA/NvBufSurface interop remains unclear.",
+      "success_criteria": [
+        "blocker is stated plainly",
+        "local attempts are listed",
+        "internal-AI prompt is produced only if needed"
+      ]
+    },
+    {
+      "id": "P8",
+      "title": "Evidence closeout",
+      "objective": "Write measured CUDA dynamic warp result, ROI, and claim boundary.",
+      "success_criteria": [
+        "report records measured data only",
+        "final benchmark/hardware boundary/evidence map are updated if useful",
+        "long-term context records high-signal result",
+        "review artifacts are copied to the categorized Windows review tree if generated"
+      ]
+    },
+    {
+      "id": "P9",
+      "title": "Final validation and commit",
+      "objective": "Run JSON, harness, diff, secret, and artifact checks, then commit coherent source/config/docs changes.",
+      "success_criteria": [
+        "JSON parses",
+        "doctor passes",
+        "git diff --check passes",
+        "large artifacts and secrets remain untracked",
+        "oral template remains unstaged",
+        "commit message trailer policy is followed"
+      ]
+    }
+  ],
+  "forbidden_claims": [
+    "CUDA warp improves EIS quality",
+    "mesh/local-warp stabilization solved",
+    "zero-copy full chain",
+    "full real-time EIS",
+    "MMAPI CUDA path accepted without identity and non-identity visual sanity"
+  ],
+  "stop_reasons": [
+    "Jetson CUDA compiler/runtime is unavailable and cannot be recovered locally",
+    "standalone CUDA is slower than VPI dynamic Remap and no engineering value remains",
+    "MMAPI CUDA integration would require reviving a known tearing path without a new verifier",
+    "manual hardware/system action is required"
+  ],
+  "evidence_output_directory": "results/cuda_dynamic_warp_probe_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/diagnostic/<YYYYMMDD>_cuda_dynamic_warp_probe"
+}

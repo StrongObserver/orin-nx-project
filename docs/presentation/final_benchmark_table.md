@@ -17,6 +17,7 @@ separate.
 | Remap native-size pad/crop | Native 640x360 main chain with 640x368 VPI scratch | identity and wave_safe both `rc=0`; output remains 640x360 and readable | Size/layout diagnostic; not EIS quality or full-pipeline acceleration |
 | Remap NvBuffer wrapper | Native 640x360 main chain, 640x368 pitch-linear NV12_ER scratch | identity/wave_safe `rc=0`, p95 black border `0`, stage avg improves about `3-6%` vs EGLImage baseline in diagnostic timing | Small diagnostic dataflow gain; not zero-copy or quality improvement |
 | Dynamic Remap payload | 640x368 standalone and MMAPI pad/crop diagnostics | dynamic payload rebuild works; MMAPI stage avg about `13.14-13.16 ms` | Viability and cost boundary; not quality or acceleration claim |
+| CUDA dynamic warp | Standalone 640x368 affine warp kernel | RGBA dynamic `0.194 ms`; Y8 dynamic `0.138 ms` | Standalone execution evidence; not MMAPI integration or quality claim |
 | Local-warp quality bridge | Parallax10 static local correction prototype | No residual improvement; baseline `global_residual_p95_avg=2.196`, best attempted local corrections stayed about `2.199-2.216` | Negative diagnostic result; static local offset is not enough |
 | Python dataflow boundary | GStreamer appsink/appsrc | appsink readback `7.93 ms/frame`; appsrc encode pass-through `15.81 ms/frame` | Explains why Python-in-loop is not the next acceleration path |
 | C++ device path | MMAPI/VPI/NVENC Regular05 stage | Accepted EGLImage wrapper path; stage around `7.5-10.5 ms/frame` depending probe/capture | Device-stage evidence, not full real-time EIS |
@@ -184,6 +185,22 @@ MMAPI native-size pad/crop diagnostic:
 Dynamic Remap works, but per-frame payload rebuild is material and dominates the
 added cost. This is a future mesh/local-warp cost boundary, not a quality win.
 
+## CUDA Dynamic Warp
+
+CUDA dynamic affine warp was measured as an alternative to VPI dynamic Remap
+payload rebuild.
+
+| Route | Comparable Mode | Total Avg |
+|---|---|---:|
+| CUDA RGBA dynamic affine | dynamic matrix update + kernel | 0.194142 ms |
+| VPI BGR8 dynamic Remap | per-frame WarpMap/payload rebuild | 2.250150 ms |
+| CUDA Y8 dynamic affine | dynamic matrix update + kernel | 0.138282 ms |
+| VPI NV12_ER dynamic Remap | per-frame WarpMap/payload rebuild | 2.913010 ms |
+
+CUDA is much faster in this standalone affine diagnostic, but it is not yet an
+accepted MMAPI path. Direct MMAPI CUDA scratch writeback needs a separate safety
+verifier because earlier low-level CUDA/pitch-wrapper routes caused tearing.
+
 ## Local-Warp Quality Bridge
 
 The next diagnostic question was whether a constrained local Remap correction can
@@ -278,6 +295,7 @@ docs/remap_mmapi_integration_probe_2026-07-23.md
 docs/remap_native_size_pad_crop_probe_2026-07-23.md
 docs/device_stage_lifecycle_dataflow_v2_2026-07-23.md
 docs/vpi_dynamic_remap_payload_probe_2026-07-23.md
+docs/cuda_dynamic_warp_probe_2026-07-23.md
 docs/local_warp_quality_bridge_2026-07-23.md
 docs/presentation/hardware_acceleration_boundary.md
 results/regular_gate_est0p5_grid16_validation_20260718/
@@ -292,5 +310,6 @@ results/remap_mmapi_integration_probe_20260723/
 results/remap_native_size_pad_crop_probe_20260723/
 results/device_stage_lifecycle_dataflow_v2_20260723/
 results/vpi_dynamic_remap_payload_probe_20260723/
+results/cuda_dynamic_warp_probe_20260723/
 results/local_warp_quality_bridge_20260723/
 ```

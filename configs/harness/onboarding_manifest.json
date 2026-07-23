@@ -30,7 +30,7 @@
     "Run or read this manifest via: py -3.12 scripts/harness_runner.py onboard",
     "Read AGENTS.md only for dispatch rules and safety boundaries.",
     "Read the active loop contract: configs/harness/contracts/orin_next_engineering_loop_v1.json",
-    "Read the latest task-specific Done Contract before new engineering: currently configs/harness/contracts/vpi_dynamic_remap_payload_probe_v1.json. It is completed; choose a new scoped contract before more experiments.",
+    "Read the latest task-specific Done Contract before new engineering: currently configs/harness/contracts/cuda_dynamic_warp_probe_v1.json. It is completed; choose a new scoped contract before more experiments.",
     "Run harness static checks before experiments: doctor, check-claim, and JSON/schema checks as needed."
   ],
   "load_on_demand": [
@@ -52,6 +52,7 @@
     {
       "trigger": "Need device-side MMAPI/VPI/NVENC handoff details",
       "open": [
+        "configs/harness/contracts/cuda_dynamic_warp_probe_v1.json",
         "configs/harness/contracts/vpi_dynamic_remap_payload_probe_v1.json",
         "configs/harness/contracts/device_stage_lifecycle_dataflow_v2.json",
         "configs/harness/contracts/remap_native_size_pad_crop_probe_v1.json",
@@ -93,7 +94,7 @@
   ],
   "active_loop_contract": "configs/harness/contracts/orin_next_engineering_loop_v1.json",
   "active_task_contract": "none",
-  "latest_completed_task_contract": "configs/harness/contracts/vpi_dynamic_remap_payload_probe_v1.json",
+  "latest_completed_task_contract": "configs/harness/contracts/cuda_dynamic_warp_probe_v1.json",
   "hard_rules": [
     "Do not load the full long-term context or full internal reference folders during default startup.",
     "Do not copy internal original text, images, private links, or screenshots into public GitHub outputs.",

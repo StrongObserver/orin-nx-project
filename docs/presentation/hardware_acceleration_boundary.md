@@ -243,6 +243,29 @@ payload rebuild overhead. Treat this as a cost boundary before opening a real
 mesh/local-warp quality loop.
 ```
 
+## CUDA Dynamic Warp Kernel
+
+The CUDA dynamic warp probe tests whether a custom kernel can avoid VPI Remap's
+per-frame payload rebuild cost for simple dynamic affine warp.
+
+Standalone 640x368 result:
+
+| Route | Comparable Mode | Total Avg | Boundary |
+|---|---|---:|---|
+| CUDA RGBA dynamic affine | dynamic matrix update + kernel | 0.194142 ms | standalone only |
+| VPI BGR8 dynamic Remap | per-frame WarpMap/payload rebuild | 2.250150 ms | standalone VPI |
+| CUDA Y8 dynamic affine | dynamic matrix update + kernel | 0.138282 ms | standalone only |
+| VPI NV12_ER dynamic Remap | per-frame WarpMap/payload rebuild | 2.913010 ms | standalone VPI |
+
+Interpretation:
+
+```text
+CUDA is the stronger execution candidate for per-frame dynamic warp in this
+standalone affine diagnostic. It is not yet a MMAPI/NvBufSurface integration.
+The next safe step, if needed, is a separate CUDA/NvBufSurface interop contract
+with identity and translate sanity checks before any dynamic matrix run.
+```
+
 ## GStreamer / NVMM Readiness
 
 Minimum Jetson path reached EOS:
@@ -519,4 +542,6 @@ docs/device_stage_lifecycle_dataflow_v2_2026-07-23.md
 results/device_stage_lifecycle_dataflow_v2_20260723/
 docs/vpi_dynamic_remap_payload_probe_2026-07-23.md
 results/vpi_dynamic_remap_payload_probe_20260723/
+docs/cuda_dynamic_warp_probe_2026-07-23.md
+results/cuda_dynamic_warp_probe_20260723/
 ```
