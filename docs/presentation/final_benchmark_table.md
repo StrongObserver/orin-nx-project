@@ -20,6 +20,7 @@ separate.
 | CUDA dynamic warp | Standalone 640x368 affine warp kernel | RGBA dynamic `0.194 ms`; Y8 dynamic `0.138 ms` | Standalone execution evidence; not MMAPI integration or quality claim |
 | CUDA/MMAPI interop safety | Regular05 MMAPI scratch diagnostic | corrected identity/marker/dynamic_marker `rc=0`, p95 black-border `0`; older shift modes rejected for tearing | Safety/dataflow verifier only; not accepted acceleration |
 | CUDA affine MMAPI diagnostic | Regular05 MMAPI scratch diagnostic | identity CUDA kernel readable; translate/affine random sampling tears on current EGL-mapped NV12_ER scratch | Negative integration evidence; needs a different surface/ownership route |
+| CUDA double-surface debug | Regular05 MMAPI scratch diagnostic | VIC round-trip and CUDA full-frame copy pass; integer translate tears | Narrows blocker to spatial random sampling over current EGL scratch route |
 | Local-warp quality bridge | Parallax10 static local correction prototype | No residual improvement; baseline `global_residual_p95_avg=2.196`, best attempted local corrections stayed about `2.199-2.216` | Negative diagnostic result; static local offset is not enough |
 | Python dataflow boundary | GStreamer appsink/appsrc | appsink readback `7.93 ms/frame`; appsrc encode pass-through `15.81 ms/frame` | Explains why Python-in-loop is not the next acceleration path |
 | C++ device path | MMAPI/VPI/NVENC Regular05 stage | Accepted EGLImage wrapper path; stage around `7.5-10.5 ms/frame` depending probe/capture | Device-stage evidence, not full real-time EIS |
@@ -241,6 +242,21 @@ CUDA affine kernel inside the MMAPI transcode scratch boundary.
 This is negative integration evidence: standalone CUDA is fast and scratch
 interop identity is safe, but the current EGL-mapped pitch-linear NV12_ER route
 is not an accepted CUDA affine warp path.
+
+## CUDA Double-Surface Debug
+
+Internal-AI guidance recommended isolating the path before any further affine
+work. The result narrowed the failure:
+
+| Test | Mode | Result | Decision |
+|---|---|---|---|
+| Test0 | VIC round-trip | `rc=0`, readable, no tearing, black-border p95 `0.024495226` | pass as baseline round-trip sanity |
+| Test1 | dual-surface CUDA full-frame copy | `rc=0`, readable, no tearing, black-border p95 `0`, source-vs-output mean_abs_center_avg `2.805186` | pass |
+| Test2 | dual-surface CUDA integer translate | `rc=0`, severe tearing/distortion | reject |
+
+This means the basic transform/encode path and full-frame CUDA copy are clean,
+but spatial random sampling/remap over the current EGL-mapped NV12_ER scratch
+route is still not accepted.
 
 ## Local-Warp Quality Bridge
 

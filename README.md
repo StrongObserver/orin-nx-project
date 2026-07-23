@@ -38,6 +38,7 @@ Quality boundary -> CPU baseline -> VPI module evidence
 | Dynamic Remap payload | Dynamic per-frame Remap payload rebuild works but raises MMAPI stage avg to about `13.14-13.16 ms` | Future mesh/local-warp cost boundary, not quality or acceleration |
 | CUDA dynamic warp | Standalone 640x368 CUDA affine warp: RGBA dynamic `0.194 ms`, Y8 dynamic `0.138 ms` | Standalone operator evidence; MMAPI integration still needs safety verifier |
 | CUDA affine MMAPI diagnostic | Identity CUDA kernel path is readable, but translate/affine random-sampling over current EGL-mapped NV12_ER scratch tears | Negative integration evidence; needs different CUDA surface route |
+| CUDA double-surface debug | VIC round-trip and dual-surface CUDA full-frame copy pass; integer translate still tears | Narrows blocker to spatial random sampling over current EGL scratch route |
 | Local-warp quality bridge | Static single-cell local Remap correction on `parallax10` did not improve local residual metrics | Negative diagnostic result; richer dynamic mesh/depth/RS model needed |
 | Python dataflow boundary | appsink readback about `7.93 ms/frame`; appsink -> appsrc -> encode about `15.81 ms/frame` | Explains why Python-in-loop is not the acceleration path |
 | C++ device stage | MMAPI/NVDEC -> block-linear NV12 -> pitch-linear NV12_ER scratch -> VPI CUDA warp -> NVENC | Device-stage evidence, not full real-time EIS |
@@ -134,6 +135,7 @@ Current sealed stage:
   Dynamic Remap payload cost and standalone CUDA dynamic warp probes are complete.
   CUDA/MMAPI scratch interop safety verification is complete.
   CUDA affine MMAPI diagnostic is closed as negative evidence at non-identity warp.
+  CUDA double-surface debug narrows the blocker: full-frame copy is clean, integer translate still tears.
 
 Regular performance baseline:
   lp_rigid_strength080_dynzoom106 + estimate_scale=0.5 + feature_grid_size=16

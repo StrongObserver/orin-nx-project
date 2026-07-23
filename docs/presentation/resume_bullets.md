@@ -103,6 +103,13 @@ scratch repeatedly tore, showing that this route needs a different surface
 ownership/synchronization model before it can become an accepted warp path.
 ```
 
+```text
+Followed up with a double-surface CUDA debug loop: verified that VIC round-trip
+and dual-surface full-frame CUDA copy are clean, then isolated the remaining
+failure to integer translate / spatial random sampling over the current
+EGL-mapped NV12_ER scratch path.
+```
+
 ## Interview One-Liner
 
 ```text

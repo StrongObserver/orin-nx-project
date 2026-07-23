@@ -502,6 +502,32 @@ full-frame CUDA affine warp path. The next route needs a different surface
 ownership model or official/internal guidance.
 ```
 
+## Q: What did the double-surface debug prove?
+
+It split the CUDA/MMAPI problem into smaller tests:
+
+```text
+Test0 VIC round-trip:
+  decode/transform/encode path is readable, no tearing
+
+Test1 dual-surface CUDA full-frame copy:
+  rc=0, readable, black-border p95=0, source-vs-output mean_abs_center_avg=2.805
+
+Test2 dual-surface CUDA integer translate:
+  rc=0 but visual tearing/distortion remains
+```
+
+So the blocker is now narrower:
+
+```text
+The basic transforms, encoder path, and full-frame CUDA copy are clean.
+The failure appears when the CUDA kernel does spatial random sampling / remap
+over the current EGL-mapped NV12_ER scratch surface.
+```
+
+That means the next route should change the memory/surface ownership model, not
+keep patching the same EGL random-write path.
+
 ## Q: Why do source, identity_pad_crop, and wave_safe_pad_crop not show stabilization?
 
 Because that review video is not a stabilization-quality candidate. It is a

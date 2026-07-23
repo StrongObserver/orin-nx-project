@@ -1,0 +1,147 @@
+{
+  "schema_version": 1,
+  "contract_id": "cuda_double_surface_debug_v1",
+  "status": "blocked_negative_closeout",
+  "loop_type": "cuda_double_surface_debug",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Follow the internal-AI recommended Test0-Test3 path to isolate whether MMAPI/NvBufSurface/CUDA corruption is in VIC round-trip, full-frame CUDA copy, integer translate, or EGL writeback.",
+  "entry_context": {
+    "project_positioning": "Jetson Orin NX heterogeneous video compute and device-side dataflow optimization, with EIS as the representative workload.",
+    "previous_negative_result": "cuda_affine_mmapi_diagnostic_v1 showed identity CUDA kernel output is readable, but translate/affine random sampling over the current EGL-mapped pitch-linear NV12_ER scratch tears or corrupts output.",
+    "internal_ai_guidance": "Do not mix CPU NvBufSurfaceSync rules with CUDA EGLImage path. Start from pure VIC round-trip, then dual-surface CUDA full-frame copy with separate Y/UV kernels, then integer translate, then optional cudaMallocPitch intermediate.",
+    "current_question": "Can a simpler dual-surface NV12 path establish a clean full-frame CUDA copy and integer translate before returning to affine warp?"
+  },
+  "frozen_variables": [
+    "Use Regular05 source H264 under /home/nvidia/orin-nx-project/results/regular_gate_safe103_crop98_validation_20260720/regular_gate05_regular_6/source.h264",
+    "No EIS tuning",
+    "No change to resid_r15_s07",
+    "No zero-copy claim",
+    "No full-pipeline acceleration claim",
+    "No accepted CUDA warp claim until visual review passes",
+    "Stop on tearing, green output, unreadable output, or unrelated visual content"
+  ],
+  "planned_evidence": {
+    "report": "docs/cuda_double_surface_debug_2026-07-24.md",
+    "evidence_dir": "results/cuda_double_surface_debug_20260724/",
+    "review_dir": "C:/Users/Admin/Videos/orin nx/review/diagnostic/20260724_cuda_double_surface_debug/",
+    "patch_script": "scripts/patch_mmapi_cuda_double_surface_debug.py"
+  },
+  "result": {
+    "report": "docs/cuda_double_surface_debug_2026-07-24.md",
+    "evidence_dir": "results/cuda_double_surface_debug_20260724/",
+    "decision": "Test0 VIC round-trip and Test1 dual-surface CUDA full-frame copy pass, but Test2 dual-surface integer translate still tears. This isolates the failure to spatial random-sampling/remap over the current EGL-mapped pitch-linear NV12_ER scratch path, not to basic BL/PL transform, encode, or full-frame CUDA copy.",
+    "test0_vic_roundtrip": {
+      "rc": 0,
+      "visual": "readable, no tearing",
+      "black_border_p95": 0.024495226,
+      "source_vs_output_mean_abs_center_avg": 14.597394,
+      "decision": "base VIC round-trip is usable as dataflow sanity, with expected codec/color/edge drift"
+    },
+    "test1_cuda_copy": {
+      "rc": 0,
+      "visual": "readable, no tearing",
+      "black_border_p95": 0.0,
+      "source_vs_output_mean_abs_center_avg": 2.805186,
+      "frame100_cuda_elapsed_ms": 3.18337,
+      "frame100_total_stage_ms": 5.49017,
+      "decision": "dual-surface full-frame CUDA copy with separate Y/UV kernels is clean"
+    },
+    "test2_cuda_translate": {
+      "rc": 0,
+      "visual": "severe tearing/distortion",
+      "black_border_p95": 0.024389757,
+      "frame100_cuda_elapsed_ms": 1.75775,
+      "frame100_total_stage_ms": 4.03409,
+      "decision": "rejected; integer translate/random sampling still corrupts output"
+    },
+    "claim_boundary": "Negative integration evidence for spatial CUDA warp over this EGL-mapped NV12_ER scratch path. Do not claim accepted CUDA warp, zero-copy, full-pipeline acceleration, or EIS quality improvement."
+  },
+  "task_queue": [
+    {
+      "id": "P0",
+      "title": "Control-plane registration",
+      "objective": "Register the active contract and verify harness gates.",
+      "success_criteria": [
+        "onboard reports this active task contract",
+        "doctor passes",
+        "Running main-gate claim remains forbidden",
+        "JSON parses"
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "Test0 VIC round-trip",
+      "objective": "Run decode BL -> pitch-linear scratch -> block-linear encode without CUDA.",
+      "success_criteria": [
+        "rc=0",
+        "output is readable",
+        "visual review has no tearing or color corruption",
+        "source-vs-output diff is near codec/dataflow floor"
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Test1 CUDA full-frame copy",
+      "objective": "Run dual-surface CUDA copy with separate Y and UV kernels, no random sampling.",
+      "success_criteria": [
+        "rc=0",
+        "output is readable",
+        "visual review has no tearing or color corruption",
+        "black-border p95 remains 0 or is classified"
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Test2 integer translate",
+      "objective": "Run dual-surface integer translate with separate Y and UV kernels.",
+      "success_criteria": [
+        "rc=0",
+        "output shows coherent geometric translate",
+        "black border is explained by geometry, not block corruption",
+        "visual review rejects no tearing"
+      ],
+      "stop_reasons": [
+        "Test1 did not pass",
+        "integer translate still tears or shows unrelated content"
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "Test3 cudaMallocPitch intermediate",
+      "objective": "Only if Test2 is ambiguous, use CUDA-owned intermediate output and copy back to EGL output.",
+      "success_criteria": [
+        "result distinguishes kernel correctness from EGL writeback correctness",
+        "visual review and timing are recorded"
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "Closeout",
+      "objective": "Write measured result and decide whether a later affine route is justified.",
+      "success_criteria": [
+        "report records only measured data",
+        "claim boundary is explicit",
+        "long-term context is updated",
+        "source/config/docs commit is prepared without results or secrets"
+      ]
+    }
+  ],
+  "forbidden_claims": [
+    "zero-copy full chain",
+    "full real-time EIS",
+    "accepted CUDA affine warp before Test2 visual pass",
+    "EIS quality improvement",
+    "all-scene stabilization"
+  ],
+  "stop_reasons": [
+    "Jetson SSH or device access unavailable",
+    "Test0 VIC round-trip fails",
+    "Test1 full-frame CUDA copy tears",
+    "Test2 integer translate tears after Test1 passes",
+    "local and public references cannot identify a safe next route"
+  ],
+  "evidence_output_directory": "results/cuda_double_surface_debug_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/diagnostic/<YYYYMMDD>_cuda_double_surface_debug"
+}

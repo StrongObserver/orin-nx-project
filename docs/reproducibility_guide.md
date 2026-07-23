@@ -430,6 +430,47 @@ This is negative integration evidence. Do not claim an accepted MMAPI CUDA affin
 warp path, zero-copy, full-pipeline acceleration, or EIS quality improvement.
 ```
 
+## L5.7 - CUDA Double-Surface Debug
+
+Purpose: follow the internal-AI Test0-Test2 path to isolate whether the CUDA
+failure is in the base VIC/encode path, full-frame CUDA copy, or spatial
+random-sampling translate.
+
+Primary docs:
+
+```text
+docs/cuda_double_surface_debug_2026-07-24.md
+configs/harness/contracts/cuda_double_surface_debug_v1.json
+```
+
+Tracked implementation:
+
+```text
+scripts/patch_mmapi_cuda_double_surface_debug.py
+```
+
+Primary ignored evidence:
+
+```text
+results/cuda_double_surface_debug_20260724/
+```
+
+Expected result summary:
+
+```text
+Test0 VIC round-trip: rc=0, readable, no tearing
+Test1 dual-surface CUDA full-frame copy: rc=0, readable, no tearing
+Test2 dual-surface CUDA integer translate: rc=0 but visual tearing/distortion
+```
+
+Claim boundary:
+
+```text
+This narrows the blocker to spatial random sampling/remap over the current
+EGL-mapped NV12_ER scratch route. It is not an accepted CUDA warp or acceleration
+result.
+```
+
 ## L6 - Public / Interview Package
 
 Purpose: read the project as a portfolio.

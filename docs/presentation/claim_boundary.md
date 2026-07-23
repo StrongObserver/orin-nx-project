@@ -30,6 +30,7 @@ wrapper lifecycle, sync, transform cost, and perf/watt trade-offs.
 | Standalone CUDA dynamic warp is a promising operator candidate | `cuda_dynamic_warp_probe_2026-07-23.md`: RGBA dynamic `0.194 ms`, Y8 dynamic `0.138 ms` |
 | CUDA/MMAPI scratch interop safety is verified at diagnostic level | `cuda_mmapi_interop_safety_verifier_2026-07-24.md`: corrected identity/marker/dynamic_marker `rc=0`, p95 black-border `0`; older shift modes rejected for tearing |
 | CUDA affine MMAPI diagnostic found a non-identity integration boundary | `cuda_affine_mmapi_diagnostic_2026-07-24.md`: identity kernel passes, translate/affine random sampling tears |
+| CUDA double-surface debug narrows the blocker | `cuda_double_surface_debug_2026-07-24.md`: VIC round-trip and CUDA copy pass, integer translate tears |
 
 ## Forbidden Claims
 
@@ -52,6 +53,7 @@ Standalone CUDA warp is already integrated into MMAPI.
 CUDA dynamic warp proves full-pipeline EIS acceleration.
 CUDA/MMAPI interop safety proves accepted CUDA acceleration.
 CUDA affine MMAPI diagnostic proves an accepted warp path.
+CUDA double-surface debug proves CUDA warp acceleration.
 ```
 
 ## Precise Wording
@@ -165,6 +167,7 @@ Dynamic Remap payload: completed as a cost-boundary diagnostic.
 Standalone CUDA dynamic warp: completed as operator evidence only.
 CUDA/MMAPI interop safety verifier: completed as diagnostic safety evidence.
 CUDA affine MMAPI diagnostic: closed as negative evidence at non-identity warp.
+CUDA double-surface debug: closed as negative evidence at integer translate.
 P6/P7 scheduler or double-buffering work: still not triggered.
 Current best next action: open a new scoped contract only if continuing toward
 custom CUDA affine-kernel MMAPI diagnostics or another measured device-stage

@@ -28,10 +28,10 @@
   },
   "active_task_contract": "none",
   "current_loop_state": {
-    "last_completed_task": "cuda_affine_mmapi_diagnostic_v1",
+    "last_completed_task": "cuda_double_surface_debug_v1",
     "current_task": "none",
     "latest_result": "The project positioning was refined on 2026-07-23: EIS is the representative real-time vision workload, while the resume-facing project is Jetson Orin NX heterogeneous video compute and device-side dataflow optimization. Existing evidence covers Regular quality boundaries, VPI PerspectiveWarp module speed/perf-watt, MMAPI/VPI/NVENC accepted device path, wrapper/sync/transform dataflow breakdown, format-matched NvBuffer pair small gains, completed NVTX/Nsight profiling, final evidence package closeout, stream-only reuse lifecycle follow-up, portfolio/reproducibility closeout, C++ Remap operator probe, Remap-MMAPI scratch-stage insertion, local-warp quality bridge negative evidence, native-size Remap pad/crop closure, device-stage lifecycle/dataflow V2, dynamic Remap payload cost boundary, standalone CUDA dynamic warp benchmark, and CUDA/NvBufSurface/EGLImage interop safety verification.",
-    "current_blocker": "The CUDA affine MMAPI diagnostic is closed as negative evidence at the translate/non-identity stage. Identity CUDA kernel output is readable, but translate/affine/random-sampling CUDA kernels over the current EGL-mapped pitch-linear NV12_ER scratch produce severe tearing/distortion; NvBufSurfaceSyncForDevice on the output scratch segfaulted. A new route needs a separate contract and likely official/internal guidance.",
+    "current_blocker": "The CUDA double-surface debug loop is closed as negative evidence at Test2. Test0 VIC round-trip and Test1 dual-surface full-frame CUDA copy pass, but Test2 integer translate still tears, isolating the remaining blocker to spatial random-sampling/remap over the current EGL-mapped pitch-linear NV12_ER scratch path.",
     "recommended_next_contract": "none"
   },
   "global_claim_boundary": {
@@ -311,12 +311,12 @@
   ],
   "selected_future_route": {
     "id": "none",
-    "decision": "Do not continue the current EGL-mapped NV12_ER scratch random-sampling CUDA affine route without a new contract and stronger reference guidance.",
-    "reason": "The identity copy path is safe, but non-identity CUDA affine/random sampling repeatedly produces visual corruption. Continuing to patch the same path would be blind retry rather than engineering progress.",
+    "decision": "Do not continue CUDA random-sampling warp over the current EGL-mapped NV12_ER scratch route without a materially different surface ownership model.",
+    "reason": "The debug route proved the base transforms and full-frame CUDA copy are clean, while integer translate still corrupts output. The next route must change the memory/surface model rather than retrying the same EGL scratch random-write path.",
     "next_verifier": [
-      "new route names a different memory ownership or surface-processing model",
-      "identity and translate visual review pass before static or dynamic affine",
-      "official Jetson MMAPI/CUDA sample or internal guidance explains required sync/layout rules",
+      "new route uses CUDA-owned intermediate surface or official VPI/MMAPI-supported warp path",
+      "identity and full-frame copy still pass before non-identity warp",
+      "integer translate visual review passes before affine or matrix replay",
       "zero-copy and full-pipeline acceleration remain forbidden claims"
     ],
     "defer_until_after_alignment": [
