@@ -117,6 +117,55 @@ no block-linear VPI scratch pair
 no zero-copy claim unless measured
 ```
 
+## Actual Probe Result
+
+The minimum A/B was executed on Jetson with the same source and same
+`resid_r15_s07` matrix:
+
+```text
+results/rk3588_idea_probe_20260723/repeat/
+```
+
+Five alternating runs compared:
+
+```text
+accepted EGLImage path
+format-matched NvBuffer pair path
+```
+
+Summary:
+
+| Metric | EGLImage mean | NvBuffer pair mean | Improvement |
+|---|---:|---:|---:|
+| Wall time | 1.913690 s | 1.864678 s | 2.56% |
+| Wall time median | 1.905795 s | 1.843885 s | 3.25% |
+| Stage frame100 | 7.823870 ms | 7.204884 ms | 7.91% |
+| Stage running avg | 10.240050 ms | 9.898324 ms | 3.34% |
+| VPI warp avg | 1.537340 ms | 1.526802 ms | 0.69% |
+| Wrapper call | 5.896924 ms | 5.442238 ms | 7.71% |
+| First stage | 282.794 ms | 267.135 ms | 5.54% |
+| Fallback | 0 / 5 runs | 0 / 5 runs | no regression |
+| Output success | 5 / 5 runs | 5 / 5 runs | no regression |
+| Output size | 3415439 bytes | 3415439 bytes | identical |
+
+Interpretation:
+
+```text
+The blogger-inspired direction transfers as a dataflow/profiling methodology,
+not as a large RKNN-style throughput optimization. NvBuffer pair improves the
+device stage modestly, mainly around wrapper/dataflow cost. VPI warp itself is
+nearly unchanged, so the benefit is not a PerspectiveWarp kernel speedup.
+```
+
+Decision:
+
+```text
+Worth continuing only as profiling-first device-stage work. Do not build a new
+multi-threaded scheduler until Nsight/NVTX or equivalent evidence shows hardware
+idle gaps or host-side wait that queue depth / double buffering can actually
+remove.
+```
+
 ## Interview Use
 
 Good wording:

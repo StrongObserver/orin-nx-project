@@ -88,7 +88,8 @@ This map points to local evidence. Most evidence files are ignored by Git.
 | Regular05 EGLImage vs NvBuffer resid timing | `results/regular05_eglimage_timing_resid_compare_20260723/` | Same-source Regular05 timing comparison: EGLImage vs format-matched NvBuffer pair under `resid_r15_s07` | ignored |
 | Nsight device-stage profile contract | `configs/harness/contracts/nsight_device_stage_profile_v1.json` | Planned recommended next loop for NVTX/Nsight or equivalent stage-level evidence around the accepted C++ MMAPI/VPI/NVENC path | tracked |
 | RK3588 NPU idea mapping | `docs/rk3588_npu_idea_mapping_2026-07-23.md` | Maps a RK3588/RKNN multi-core/zero-copy optimization idea to Orin NX MMAPI/VPI/NVENC terms; keeps useful methodology while rejecting direct API transplant | tracked |
-| Nsight device-stage profile plan | `docs/nsight_device_stage_profile_plan_2026-07-23.md` | Minimal experiment plan for stage markers, Nsight/NVTX capture, and queue-depth/double-buffering decision boundaries | tracked |
+| Nsight device-stage profile plan | `docs/nsight_device_stage_profile_plan_2026-07-23.md` | Minimal experiment plan plus first log-based EGLImage vs NvBuffer pair A/B result; next step is Nsight/NVTX if more timeline detail is needed | tracked |
+| RK3588 idea first probe evidence | `results/rk3588_idea_probe_20260723/repeat/` | Five alternating runs for accepted EGLImage path vs format-matched NvBuffer pair under the same Regular05 source and `resid_r15_s07` matrix | ignored |
 
 Do not commit ignored evidence unless a future task explicitly selects a small
 representative artifact.

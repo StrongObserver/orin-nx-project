@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract_id": "nsight_device_stage_profile_v1",
-  "status": "planned_recommended",
+  "status": "first_log_probe_completed_nsight_pending",
   "loop_type": "device_stage_profiling",
   "loop_profile": "performance_loop",
   "autonomy_level": "L2",
@@ -18,6 +18,45 @@
     "docs/rk3588_npu_idea_mapping_2026-07-23.md",
     "docs/nsight_device_stage_profile_plan_2026-07-23.md"
   ],
+  "first_probe_result": {
+    "evidence_dir": "results/rk3588_idea_probe_20260723/repeat/",
+    "runs_per_path": 5,
+    "paths": [
+      "accepted EGLImage path",
+      "format-matched NvBuffer pair path"
+    ],
+    "wall_time_mean_sec": {
+      "eglimage": 1.91369,
+      "nvbuffer_pair": 1.864678,
+      "improvement_pct": 2.561
+    },
+    "stage_frame100_mean_ms": {
+      "eglimage": 7.82387,
+      "nvbuffer_pair": 7.204884,
+      "improvement_pct": 7.912
+    },
+    "stage_running_avg_mean_ms": {
+      "eglimage": 10.24005,
+      "nvbuffer_pair": 9.898324,
+      "improvement_pct": 3.337
+    },
+    "vpi_warp_avg_mean_ms": {
+      "eglimage": 1.53734,
+      "nvbuffer_pair": 1.526802,
+      "improvement_pct": 0.685
+    },
+    "wrapper_call_mean_ms": {
+      "eglimage": 5.896924,
+      "nvbuffer_pair": 5.442238,
+      "improvement_pct": 7.711
+    },
+    "robustness": {
+      "fallback_total": 0,
+      "output_success_runs": "5/5 for both paths",
+      "output_size_bytes": "3415439 for both paths"
+    },
+    "interpretation": "The RK3588-inspired methodology transfers as a profiling/dataflow idea. The measured Orin benefit is small and concentrated in wrapper/dataflow stage cost; VPI warp itself is nearly unchanged."
+  },
   "profiling_questions": [
     "Is VPI/CUDA/NVENC idle while CPU-side wrapper, transform, or sync work is happening?",
     "Is the measured wall-clock gap dominated by host scheduling rather than VPI PerspectiveWarp execution?",

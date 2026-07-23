@@ -2,7 +2,7 @@
 
 ## Purpose
 
-This is the minimum experiment plan for the current
+This is the minimum experiment plan and first probe result for the current
 `nsight_device_stage_profile_v1` contract. It converts the RK3588 NPU blogger's
 methodology into an Orin NX profiling question:
 
@@ -109,4 +109,39 @@ Nsight .nsys-rep or exported summary
 stage timing table
 short interpretation of hardware idle vs host wait
 one claim-boundary paragraph for presentation docs
+```
+
+## First Probe Completed
+
+A log-based A/B has already been run before adding NVTX:
+
+```text
+results/rk3588_idea_probe_20260723/repeat/
+```
+
+Inputs were frozen:
+
+```text
+same Regular05 source
+same resid_r15_s07 matrix
+same accepted EGLImage path vs format-matched NvBuffer pair path
+5 alternating runs
+```
+
+Result:
+
+| Metric | EGLImage mean | NvBuffer pair mean | Improvement |
+|---|---:|---:|---:|
+| Wall time | 1.913690 s | 1.864678 s | 2.56% |
+| Stage frame100 | 7.823870 ms | 7.204884 ms | 7.91% |
+| Stage running avg | 10.240050 ms | 9.898324 ms | 3.34% |
+| VPI warp avg | 1.537340 ms | 1.526802 ms | 0.69% |
+| Wrapper call | 5.896924 ms | 5.442238 ms | 7.71% |
+
+The first probe answers part of the RK3588-inspired question:
+
+```text
+The measurable gain is in wrapper/dataflow stage cost, not in the VPI warp
+kernel. This supports continuing to Nsight/NVTX profiling, but does not justify
+building a new scheduler or claiming zero-copy.
 ```
