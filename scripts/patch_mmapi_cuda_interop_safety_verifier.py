@@ -112,8 +112,9 @@ cuda_copy_plane_2d(CUdeviceptr dst, size_t dst_pitch, CUdeviceptr src, size_t sr
 }
 
 static int
-cuda_shift_nv12(CUeglFrame &input_frame, CUeglFrame &output_frame,
-                uint32_t width, uint32_t height, int dx, int dy)
+cuda_copy_nv12_with_optional_marker(CUeglFrame &input_frame, CUeglFrame &output_frame,
+                                    uint32_t width, uint32_t height,
+                                    bool draw_marker, int marker_x, int marker_y)
 {
     if (input_frame.frameType != CU_EGL_FRAME_TYPE_PITCH ||
         output_frame.frameType != CU_EGL_FRAME_TYPE_PITCH)
@@ -136,46 +137,38 @@ cuda_shift_nv12(CUeglFrame &input_frame, CUeglFrame &output_frame,
     size_t in_pitch = input_frame.pitch;
     size_t out_pitch = output_frame.pitch;
 
-    if (cuda_check(cuMemsetD2D8(out_y, out_pitch, 0, width, height), "cuMemsetD2D8_y") != 0)
+    if (cuda_copy_plane_2d(out_y, out_pitch, in_y, in_pitch, width, height) != 0)
     {
         return -1;
     }
-    if (cuda_check(cuMemsetD2D8(out_uv, out_pitch, 128, width, height / 2), "cuMemsetD2D8_uv") != 0)
+    if (cuda_copy_plane_2d(out_uv, out_pitch, in_uv, in_pitch, width, height / 2) != 0)
     {
         return -1;
     }
 
-    int src_x = std::max(0, -dx);
-    int dst_x = std::max(0, dx);
-    int src_y = std::max(0, -dy);
-    int dst_y = std::max(0, dy);
-    int copy_w = (int)width - std::abs(dx);
-    int copy_h = (int)height - std::abs(dy);
-    if (copy_w > 0 && copy_h > 0)
+    if (draw_marker)
     {
-        if (cuda_copy_plane_2d(out_y + dst_y * out_pitch + dst_x, out_pitch,
-                               in_y + src_y * in_pitch + src_x, in_pitch,
-                               (size_t)copy_w, (size_t)copy_h) != 0)
+        int x0 = std::max(0, std::min(marker_x, (int)width - 1));
+        int y0 = std::max(0, std::min(marker_y, (int)height - 1));
+        int marker_w = std::min(64, (int)width - x0);
+        int marker_h = std::min(36, (int)height - y0);
+        marker_w = marker_w & ~1;
+        marker_h = marker_h & ~1;
+        if (marker_w > 0 && marker_h > 0)
         {
-            return -1;
-        }
-    }
-
-    int uv_dx = (dx / 2) * 2;
-    int uv_dy = dy / 2;
-    int uv_src_x = std::max(0, -uv_dx);
-    int uv_dst_x = std::max(0, uv_dx);
-    int uv_src_y = std::max(0, -uv_dy);
-    int uv_dst_y = std::max(0, uv_dy);
-    int uv_copy_w = (int)width - std::abs(uv_dx);
-    int uv_copy_h = (int)(height / 2) - std::abs(uv_dy);
-    if (uv_copy_w > 0 && uv_copy_h > 0)
-    {
-        if (cuda_copy_plane_2d(out_uv + uv_dst_y * out_pitch + uv_dst_x, out_pitch,
-                               in_uv + uv_src_y * in_pitch + uv_src_x, in_pitch,
-                               (size_t)uv_copy_w, (size_t)uv_copy_h) != 0)
-        {
-            return -1;
+            if (cuda_check(cuMemsetD2D8(out_y + y0 * out_pitch + x0,
+                                        out_pitch, 235, marker_w, marker_h),
+                           "cuMemsetD2D8_marker_y") != 0)
+            {
+                return -1;
+            }
+            int uv_y = y0 / 2;
+            if (cuda_check(cuMemsetD2D8(out_uv + uv_y * out_pitch + x0,
+                                        out_pitch, 128, marker_w, marker_h / 2),
+                           "cuMemsetD2D8_marker_uv") != 0)
+            {
+                return -1;
+            }
         }
     }
 
@@ -194,24 +187,34 @@ cuda_process_egl_images(EGLImageKHR input_egl, EGLImageKHR output_egl,
         g_cuda_interop_mode = mode_env;
     }
 
-    int dx = 0;
-    int dy = 0;
+    int marker_x = 0;
+    int marker_y = 0;
+    bool draw_marker = false;
     if (g_cuda_interop_mode == "identity")
     {
-        dx = 0;
-        dy = 0;
+        marker_x = 0;
+        marker_y = 0;
+        draw_marker = false;
     }
-    else if (g_cuda_interop_mode == "shift")
+    else if (g_cuda_interop_mode == "marker")
     {
-        const char *dx_env = getenv("CUDA_INTEROP_DX");
-        const char *dy_env = getenv("CUDA_INTEROP_DY");
-        dx = dx_env ? atoi(dx_env) : 8;
-        dy = dy_env ? atoi(dy_env) : 0;
+        const char *x_env = getenv("CUDA_INTEROP_MARKER_X");
+        const char *y_env = getenv("CUDA_INTEROP_MARKER_Y");
+        marker_x = x_env ? atoi(x_env) : 16;
+        marker_y = y_env ? atoi(y_env) : 16;
+        draw_marker = true;
     }
-    else if (g_cuda_interop_mode == "dynamic_shift")
+    else if (g_cuda_interop_mode == "dynamic_marker")
     {
-        dx = (int)lrintf(sinf(current_frame * 0.05f) * 8.0f);
-        dy = (int)lrintf(cosf(current_frame * 0.04f) * 4.0f);
+        marker_x = 16 + (int)lrintf((sinf(current_frame * 0.05f) + 1.0f) * 24.0f);
+        marker_y = 16 + (int)lrintf((cosf(current_frame * 0.04f) + 1.0f) * 12.0f);
+        draw_marker = true;
+    }
+    else if (g_cuda_interop_mode == "shift" || g_cuda_interop_mode == "dynamic_shift")
+    {
+        cerr << "CUDA_INTEROP_ERROR mode_rejected=" << g_cuda_interop_mode
+             << " reason=large-plane-shift-caused-visible-tearing; use marker or dynamic_marker" << endl;
+        return -1;
     }
     else
     {
@@ -263,7 +266,8 @@ cuda_process_egl_images(EGLImageKHR input_egl, EGLImageKHR output_egl,
     }
     auto mapped_t1 = std::chrono::high_resolution_clock::now();
 
-    int rc = cuda_shift_nv12(input_frame, output_frame, width, height, dx, dy);
+    int rc = cuda_copy_nv12_with_optional_marker(input_frame, output_frame, width, height,
+                                                 draw_marker, marker_x, marker_y);
     auto process_t1 = std::chrono::high_resolution_clock::now();
 
     CUresult unregister_output = cuGraphicsUnregisterResource(output_resource);
@@ -291,8 +295,9 @@ cuda_process_egl_images(EGLImageKHR input_egl, EGLImageKHR output_egl,
     {
         cerr << "CUDA_INTEROP_FRAME frame=" << frame_count
              << " mode=" << g_cuda_interop_mode
-             << " dx=" << dx
-             << " dy=" << dy
+             << " marker_x=" << marker_x
+             << " marker_y=" << marker_y
+             << " marker=" << (draw_marker ? 1 : 0)
              << " width=" << width
              << " height=" << height
              << " input_pitch=" << input_frame.pitch
@@ -513,7 +518,7 @@ def main() -> int:
         description=(
             "Patch MMAPI transcode sample with a CUDA/EGLImage scratch interop "
             "safety verifier. Default mode is identity; set CUDA_INTEROP_MODE "
-            "to shift or dynamic_shift only after identity passes."
+            "to marker or dynamic_marker only after identity passes."
         )
     )
     parser.add_argument("--sample-dir", type=Path, required=True)

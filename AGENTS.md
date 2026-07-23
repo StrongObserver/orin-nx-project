@@ -95,11 +95,13 @@ C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\cuda_mmapi_inte
 
 This completed engineering extension started from the standalone CUDA dynamic
 warp result and verified the minimum MMAPI/NvBufSurface/EGLImage/CUDA scratch
-interop safety boundary. Identity, fixed-shift, and dynamic-shift diagnostics
-all returned `rc=0` with readable 640x360 outputs; identity is the primary
-safety gate and had p95 black-border ratio 0. Shift modes use zero fill, so
-their high black border is expected diagnostic behavior, not a quality result.
-This remains safety/dataflow evidence only: not accepted MMAPI CUDA
+interop safety boundary. The first non-identity attempt, `shift_dx8` /
+`dynamic_shift`, returned `rc=0` but was rejected after visual review because it
+created severe tearing/distortion. The corrected verifier uses `identity`,
+`marker`, and `dynamic_marker`: all three return `rc=0` with readable 640x360
+outputs and p95 black-border ratio 0. Identity is the primary safety gate;
+marker modes only prove small ROI CUDA write activity without large-plane
+tearing. This remains safety/dataflow evidence only: not accepted MMAPI CUDA
 acceleration, not zero-copy, not full real-time EIS, and not EIS quality
 improvement.
 

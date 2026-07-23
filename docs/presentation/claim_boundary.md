@@ -28,7 +28,7 @@ wrapper lifecycle, sync, transform cost, and perf/watt trade-offs.
 | VPI Remap can be wired into the native-size MMAPI scratch stage | `remap_native_size_pad_crop_probe_2026-07-23.md`: 640x360 main chain, 640x368 VPI scratch, identity/wave_safe `rc=0` |
 | Dynamic Remap payload rebuild is viable but costly | `vpi_dynamic_remap_payload_probe_2026-07-23.md`: MMAPI dynamic Remap stage avg about `13.14-13.16 ms` |
 | Standalone CUDA dynamic warp is a promising operator candidate | `cuda_dynamic_warp_probe_2026-07-23.md`: RGBA dynamic `0.194 ms`, Y8 dynamic `0.138 ms` |
-| CUDA/MMAPI scratch interop safety is verified at diagnostic level | `cuda_mmapi_interop_safety_verifier_2026-07-24.md`: identity/shift/dynamic_shift `rc=0`, identity black-border p95 `0` |
+| CUDA/MMAPI scratch interop safety is verified at diagnostic level | `cuda_mmapi_interop_safety_verifier_2026-07-24.md`: corrected identity/marker/dynamic_marker `rc=0`, p95 black-border `0`; older shift modes rejected for tearing |
 
 ## Forbidden Claims
 
@@ -140,8 +140,9 @@ Good:
 ```text
 Standalone CUDA dynamic warp avoids the VPI Remap payload rebuild cost in a
 640x368 affine diagnostic. The follow-up MMAPI scratch interop safety verifier
-passed identity/shift/dynamic_shift diagnostics, but it is still a safety result,
-not an accepted acceleration result.
+passed identity plus small ROI marker diagnostics. The earlier large-plane
+shift/dynamic_shift attempt is rejected because visual review showed tearing.
+This is still a safety result, not an accepted acceleration result.
 ```
 
 Bad:

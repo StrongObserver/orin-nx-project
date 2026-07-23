@@ -18,7 +18,7 @@ separate.
 | Remap NvBuffer wrapper | Native 640x360 main chain, 640x368 pitch-linear NV12_ER scratch | identity/wave_safe `rc=0`, p95 black border `0`, stage avg improves about `3-6%` vs EGLImage baseline in diagnostic timing | Small diagnostic dataflow gain; not zero-copy or quality improvement |
 | Dynamic Remap payload | 640x368 standalone and MMAPI pad/crop diagnostics | dynamic payload rebuild works; MMAPI stage avg about `13.14-13.16 ms` | Viability and cost boundary; not quality or acceleration claim |
 | CUDA dynamic warp | Standalone 640x368 affine warp kernel | RGBA dynamic `0.194 ms`; Y8 dynamic `0.138 ms` | Standalone execution evidence; not MMAPI integration or quality claim |
-| CUDA/MMAPI interop safety | Regular05 MMAPI scratch diagnostic | identity/shift/dynamic_shift `rc=0`; identity black-border p95 `0` | Safety/dataflow verifier only; not accepted acceleration |
+| CUDA/MMAPI interop safety | Regular05 MMAPI scratch diagnostic | corrected identity/marker/dynamic_marker `rc=0`, p95 black-border `0`; older shift modes rejected for tearing | Safety/dataflow verifier only; not accepted acceleration |
 | Local-warp quality bridge | Parallax10 static local correction prototype | No residual improvement; baseline `global_residual_p95_avg=2.196`, best attempted local corrections stayed about `2.199-2.216` | Negative diagnostic result; static local offset is not enough |
 | Python dataflow boundary | GStreamer appsink/appsrc | appsink readback `7.93 ms/frame`; appsrc encode pass-through `15.81 ms/frame` | Explains why Python-in-loop is not the next acceleration path |
 | C++ device path | MMAPI/VPI/NVENC Regular05 stage | Accepted EGLImage wrapper path; stage around `7.5-10.5 ms/frame` depending probe/capture | Device-stage evidence, not full real-time EIS |
@@ -209,13 +209,20 @@ MMAPI scratch boundary before opening any custom CUDA warp integration.
 
 | Mode | rc | Frame100 CUDA elapsed | Frame100 process | Frame100 total stage | Avg total stage | Black-border p95 | Meaning |
 |---|---:|---:|---:|---:|---:|---:|---|
-| identity | 0 | 1.353660 ms | 0.844692 ms | 3.354930 ms | 4.095380 ms | 0.000000000 | Primary safety gate passed |
-| shift_dx8 | 0 | 1.452710 ms | 0.836533 ms | 3.432850 ms | 4.096300 ms | 0.191930556 | Non-identity write path active; expected zero-fill border |
-| dynamic_shift | 0 | 1.290720 ms | 0.841781 ms | 3.210320 ms | 4.445920 ms | 0.237383898 | Per-frame CUDA write parameters active; expected zero-fill border |
+| identity | 0 | 1.700850 ms | 0.833623 ms | 3.967790 ms | 4.525640 ms | 0.000000000 | Primary safety gate passed |
+| marker | 0 | 1.400010 ms | 0.828183 ms | 3.400640 ms | 4.305430 ms | 0.000000000 | Small ROI CUDA write activity passed |
+| dynamic_marker | 0 | 1.547280 ms | 0.899545 ms | 3.516580 ms | 4.122590 ms | 0.000000000 | Per-frame small ROI CUDA write activity passed |
 
 This proves the scratch interop path can produce readable output. It does not
 prove an accepted CUDA warp kernel, zero-copy, full-pipeline acceleration, or
 EIS quality improvement.
+
+Rejected first attempt:
+
+| Mode | rc | Black-border p95 | Visual decision |
+|---|---:|---:|---|
+| shift_dx8 | 0 | 0.191930556 | rejected, severe tearing/distortion |
+| dynamic_shift | 0 | 0.237383898 | rejected, severe tearing/distortion |
 
 ## Local-Warp Quality Bridge
 

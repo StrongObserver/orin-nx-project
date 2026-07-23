@@ -283,9 +283,10 @@ Remap native-size pad/crop closure:
 CUDA/MMAPI interop safety verifier:
   CUDA driver API EGL interop can read/write the pitch-linear NV12_ER scratch
   stage and encode readable 640x360 output
-  identity, shift_dx8, and dynamic_shift all rc=0
-  identity black-border p95 is 0
-  shift modes have high black border by design because they use zero fill
+  corrected identity, marker, and dynamic_marker modes all rc=0
+  all three corrected modes have black-border p95 0
+  the older large-plane shift/dynamic_shift modes are rejected after visual
+  review because they caused severe tearing/distortion despite rc=0
 ```
 
 Claim:

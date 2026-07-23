@@ -434,15 +434,17 @@ block-linear NV12 main chain
 Result:
 
 ```text
-identity:      rc=0, readable 640x360, black-border p95=0
-shift_dx8:     rc=0, readable 640x360
-dynamic_shift: rc=0, readable 640x360
+identity:       rc=0, readable 640x360, black-border p95=0
+marker:         rc=0, readable 640x360, black-border p95=0
+dynamic_marker: rc=0, readable 640x360, black-border p95=0
 ```
 
-The shift modes intentionally use zero fill, so their high black-border ratio is
-expected diagnostic behavior. The important safety result is that identity
-passes without unreadable output, green output, or obvious black-border
-regression.
+The first large-plane `shift_dx8` / `dynamic_shift` attempt returned `rc=0`, but
+human review rejected it because the review video showed severe tearing and
+distortion. The corrected marker modes copy the full frame first and then write
+only a small Y-plane ROI marker, so they verify CUDA write activity without
+large-plane tearing. The important safety result is that identity passes without
+unreadable output, green output, or black-border regression.
 
 Correct claim:
 

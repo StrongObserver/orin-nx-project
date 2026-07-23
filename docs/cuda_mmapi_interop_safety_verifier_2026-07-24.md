@@ -2,12 +2,18 @@
 
 ## Decision
 
-The minimum CUDA/NvBufSurface/EGLImage scratch interop verifier passed.
+The corrected CUDA/NvSurface/EGLImage scratch interop verifier passed for
+identity and small-marker diagnostics.
 
 This closes the narrow safety question after the standalone CUDA dynamic warp
 probe: CUDA can read/write the pitch-linear NV12_ER scratch stage through
 EGLImage interop in the MMAPI transcode sample without immediate unreadable
-output, green output, or obvious identity-path black-border regression.
+output, green output, or identity-path black-border regression.
+
+Important correction: the first attempt used `shift_dx8` and `dynamic_shift` to
+move large NV12 planes with zero fill. Human review of the generated grid video
+showed severe tearing/distortion. Those large-plane shift modes are rejected
+diagnostics and are not evidence that non-identity CUDA warp is safe.
 
 Boundary:
 
@@ -27,7 +33,7 @@ scripts/patch_mmapi_cuda_interop_safety_verifier.py
 Jetson sample copy used:
 
 ```text
-/home/nvidia/orin-nx-project/_mmapi_work/jetson_multimedia_api/samples/99_vpi_transcode_cuda_interop_safety_verifier_20260724_02
+/home/nvidia/orin-nx-project/_mmapi_work/jetson_multimedia_api/samples/99_vpi_transcode_cuda_interop_safety_verifier_20260724_fix01
 ```
 
 Input:
@@ -39,8 +45,8 @@ Input:
 Evidence:
 
 ```text
-results/cuda_mmapi_interop_safety_verifier_20260724/
-C:\Users\Admin\Videos\orin nx\review\diagnostic\20260724_cuda_mmapi_interop_safety_verifier\20260724_cuda_mmapi_interop_regular05_jetson_identity_shift_dynamic_grid.mp4
+results/cuda_mmapi_interop_safety_verifier_20260724_fix01/
+C:\Users\Admin\Videos\orin nx\review\diagnostic\20260724_cuda_mmapi_interop_safety_verifier\20260724_cuda_mmapi_interop_regular05_jetson_identity_marker_dynamicmarker_grid_fix01.mp4
 ```
 
 ## What Was Verified
@@ -59,27 +65,34 @@ Modes:
 
 ```text
 identity: copy input scratch to output scratch
-shift_dx8: shift the scratch content by 8 pixels with zero fill
-dynamic_shift: per-frame dx/dy shift with zero fill
+marker: copy full frame, then write a small static Y-plane marker
+dynamic_marker: copy full frame, then write a small moving Y-plane marker
 ```
 
-Identity is the safety gate. Shift modes only prove non-identity CUDA writes are
-active; their black border is expected zero-fill behavior and is not a quality
-candidate.
+Identity is the safety gate. Marker modes prove CUDA write activity while
+keeping the frame structure intact. Large-plane shift modes are rejected because
+they caused visible tearing/distortion despite `rc=0`.
 
 ## Results
 
-All three runs returned `rc=0`, produced readable 640x360 H264 output, and
-completed 180 frames.
+The corrected three runs returned `rc=0`, produced readable 640x360 H264 output,
+and completed 180 frames.
 
 | Mode | rc | Frame100 CUDA elapsed | Frame100 process | Frame100 total stage | Avg total stage | Black-border p95 | Decision |
 |---|---:|---:|---:|---:|---:|---:|---|
-| identity | 0 | 1.353660 ms | 0.844692 ms | 3.354930 ms | 4.095380 ms | 0.000000000 | Primary safety gate passed |
-| shift_dx8 | 0 | 1.452710 ms | 0.836533 ms | 3.432850 ms | 4.096300 ms | 0.191930556 | Non-identity write path active; high black border expected |
-| dynamic_shift | 0 | 1.290720 ms | 0.841781 ms | 3.210320 ms | 4.445920 ms | 0.237383898 | Per-frame CUDA write parameters active; high black border expected |
+| identity | 0 | 1.700850 ms | 0.833623 ms | 3.967790 ms | 4.525640 ms | 0.000000000 | Primary safety gate passed |
+| marker | 0 | 1.400010 ms | 0.828183 ms | 3.400640 ms | 4.305430 ms | 0.000000000 | Small ROI CUDA write activity passed |
+| dynamic_marker | 0 | 1.547280 ms | 0.899545 ms | 3.516580 ms | 4.122590 ms | 0.000000000 | Per-frame small ROI CUDA write activity passed |
 
 The first-frame stage has initialization spikes, so frame100 and average values
 should be read as diagnostic timing rather than a final performance claim.
+
+Rejected first attempt:
+
+| Mode | rc | Black-border p95 | Visual decision |
+|---|---:|---:|---|
+| shift_dx8 | 0 | 0.191930556 | rejected, severe tearing/distortion |
+| dynamic_shift | 0 | 0.237383898 | rejected, severe tearing/distortion |
 
 ## Interpretation
 
@@ -87,9 +100,9 @@ What this proves:
 
 ```text
 CUDA driver API EGL interop can register the scratch EGLImages, map them as
-CUeglFrame pitch frames, perform device-to-device NV12 plane copy/shift, sync,
-unregister resources, transform back to the main chain, and encode readable
-output.
+CUeglFrame pitch frames, perform full-frame NV12 device-to-device copy plus
+small Y-plane marker writes, sync, unregister resources, transform back to the
+main chain, and encode readable output.
 ```
 
 What this does not prove:
@@ -100,6 +113,7 @@ It does not prove full MMAPI CUDA acceleration.
 It does not prove zero-copy.
 It does not prove a full real-time EIS pipeline.
 It does not improve Regular EIS quality.
+It does not prove that large-plane CUDA shifting or affine warp is safe.
 ```
 
 ## Next Contract Boundary

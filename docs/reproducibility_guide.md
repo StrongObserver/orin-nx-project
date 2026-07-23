@@ -331,7 +331,7 @@ results/cuda_mmapi_interop_safety_verifier_20260724/
 Review asset:
 
 ```text
-C:\Users\Admin\Videos\orin nx\review\diagnostic\20260724_cuda_mmapi_interop_safety_verifier\20260724_cuda_mmapi_interop_regular05_jetson_identity_shift_dynamic_grid.mp4
+C:\Users\Admin\Videos\orin nx\review\diagnostic\20260724_cuda_mmapi_interop_safety_verifier\20260724_cuda_mmapi_interop_regular05_jetson_identity_marker_dynamicmarker_grid_fix01.mp4
 ```
 
 Reproduction outline:
@@ -360,22 +360,22 @@ CUDA_INTEROP_MODE=identity ./multivideo_transcode num_files 1 \
   "$INPUT" H264 "$OUT/cuda_interop_identity.h264" H264 \
   > "$OUT/cuda_interop_identity.log" 2>&1
 
-CUDA_INTEROP_MODE=shift CUDA_INTEROP_DX=8 CUDA_INTEROP_DY=0 ./multivideo_transcode num_files 1 \
-  "$INPUT" H264 "$OUT/cuda_interop_shift_dx8.h264" H264 \
-  > "$OUT/cuda_interop_shift_dx8.log" 2>&1
+CUDA_INTEROP_MODE=marker CUDA_INTEROP_MARKER_X=16 CUDA_INTEROP_MARKER_Y=16 ./multivideo_transcode num_files 1 \
+  "$INPUT" H264 "$OUT/cuda_interop_marker.h264" H264 \
+  > "$OUT/cuda_interop_marker.log" 2>&1
 
-CUDA_INTEROP_MODE=dynamic_shift ./multivideo_transcode num_files 1 \
-  "$INPUT" H264 "$OUT/cuda_interop_dynamic_shift.h264" H264 \
-  > "$OUT/cuda_interop_dynamic_shift.log" 2>&1
+CUDA_INTEROP_MODE=dynamic_marker ./multivideo_transcode num_files 1 \
+  "$INPUT" H264 "$OUT/cuda_interop_dynamic_marker.h264" H264 \
+  > "$OUT/cuda_interop_dynamic_marker.log" 2>&1
 ```
 
 Expected result summary:
 
 ```text
-identity, shift_dx8, and dynamic_shift return rc=0
+identity, marker, and dynamic_marker return rc=0
 all outputs are readable 640x360 H264
-identity black-border p95 is 0
-shift modes have high black border by design because they use zero fill
+black-border p95 is 0 for all three corrected modes
+large-plane shift/dynamic_shift modes are not accepted; visual review found tearing
 ```
 
 Claim boundary:

@@ -657,12 +657,13 @@ configs/harness/contracts/cuda_mmapi_interop_safety_verifier_v1.json
 
 This verifier is now complete. It started from the standalone CUDA dynamic warp
 result and checked only whether CUDA can safely write through the current MMAPI
-scratch boundary. Identity, shift, and dynamic_shift diagnostics all returned
-rc=0 with readable 640x360 outputs; identity is the primary safety gate and had
-p95 black-border ratio 0. Shift/dynamic_shift use zero fill, so their high black
-border is expected diagnostic behavior, not a quality result. This remains a
-safety/dataflow verifier, not a quality loop, not zero-copy, and not a
-full-pipeline acceleration claim.
+scratch boundary. The first `shift` / `dynamic_shift` diagnostics returned
+rc=0, but visual review rejected those outputs because they had severe
+tearing/distortion. The corrected verifier uses identity plus small ROI marker
+diagnostics: identity, marker, and dynamic_marker all return rc=0 with readable
+640x360 outputs and p95 black-border ratio 0. Marker modes prove CUDA write
+activity without large-plane tearing. This remains a safety/dataflow verifier,
+not a quality loop, not zero-copy, and not a full-pipeline acceleration claim.
 
 Final evidence package docs:
 

@@ -44,9 +44,10 @@ black-border regression in diagnostic checks.
 
 ```text
 Verified a CUDA/MMAPI scratch-interoperability boundary before making any CUDA
-acceleration claim: identity, fixed-shift, and dynamic-shift diagnostics all
-returned rc=0 with readable 640x360 output, while identity preserved a
-black-border p95 of 0.
+acceleration claim: the corrected identity, marker, and dynamic-marker
+diagnostics all returned rc=0 with readable 640x360 output and black-border p95
+of 0; the earlier large-plane shift attempt was rejected after visual review for
+tearing.
 ```
 
 ## Long Version
