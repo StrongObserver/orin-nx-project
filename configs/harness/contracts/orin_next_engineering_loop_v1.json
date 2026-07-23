@@ -11,13 +11,13 @@
     "default_rule": "Use progressive disclosure. Read lightweight routing and active contracts first; load long project context, internal references, and external knowledge only when the active task or blocker requires them.",
     "token_budget_intent": "Reduce repeated startup token cost while preserving enough current-state evidence to avoid stale decisions."
   },
-  "active_task_contract": "configs/harness/contracts/nsight_device_stage_profile_v1.json",
+  "active_task_contract": "configs/harness/contracts/local_warp_quality_bridge_loop_v1.json",
   "current_loop_state": {
-    "last_completed_task": "presentation_closeout_v1",
-    "current_task": "nsight_device_stage_profile_v1",
-    "latest_result": "The project positioning was refined on 2026-07-23: EIS is the representative real-time vision workload, while the resume-facing project is Jetson Orin NX heterogeneous video compute and device-side dataflow optimization. Existing evidence already covers Regular quality boundaries, VPI PerspectiveWarp module speed/perf-watt, MMAPI/VPI/NVENC accepted device path, wrapper/sync/transform dataflow breakdown, and format-matched NvBuffer pair small stage gains.",
-    "current_blocker": "No current stabilization-strength or NvBuffer-pair correctness blocker. The highest-value remaining engineering evidence is a final architecture/result table and an NVTX/Nsight Systems timeline for the accepted C++ device-side stage.",
-    "recommended_next_contract": "nsight_device_stage_profile_v1"
+    "last_completed_task": "final_evidence_package_closeout_v1",
+    "current_task": "local_warp_quality_bridge_loop_v1",
+    "latest_result": "The project positioning was refined on 2026-07-23: EIS is the representative real-time vision workload, while the resume-facing project is Jetson Orin NX heterogeneous video compute and device-side dataflow optimization. Existing evidence covers Regular quality boundaries, VPI PerspectiveWarp module speed/perf-watt, MMAPI/VPI/NVENC accepted device path, wrapper/sync/transform dataflow breakdown, format-matched NvBuffer pair small stage gains, completed NVTX/Nsight profiling, final evidence package closeout, completed stream-only reuse lifecycle follow-up, portfolio/reproducibility closeout, standalone VPI C++ Remap operator probe, Remap-MMAPI scratch-stage diagnostic insertion, and local-warp quality bridge negative evidence.",
+    "current_blocker": "No active quality-recovery blocker is open. The latest quality bridge showed that static single-cell local Remap correction does not improve the selected parallax boundary; future quality work needs a richer dynamic mesh/depth/RS/gyro model and a new scoped contract.",
+    "recommended_next_contract": "none"
   },
   "global_claim_boundary": {
     "allowed": [
@@ -29,7 +29,7 @@
       "NvBuffer pair quality comparisons must use resid_r15_s07 when judging stabilization strength",
       "Challenge and diagnostic sets explain model boundaries",
       "VPI CUDA PerspectiveWarp and 4K perf/watt are module-level heterogeneous acceleration evidence",
-      "Nsight/NVTX timeline evidence is the preferred next proof for wrapper/sync/transform bottlenecks"
+      "Nsight/NVTX evidence shows wrapper/sync/transform/lifecycle cost dominates the accepted C++ device stage"
     ],
     "forbidden": [
       "presenting the project as mainly a better stabilization algorithm",
@@ -274,7 +274,7 @@
       "id": "P3",
       "title": "Future extension selection",
       "loop_profile": "knowledge_recovery_loop",
-      "objective": "Only after the current dataflow/profiling evidence is sealed, select one future route: NVTX/Nsight refinement, format-matched NvBuffer dataflow A/B, VPI Remap C++ probe, or perf-per-watt long run.",
+      "objective": "After final evidence package closeout, execute one narrow device-stage lifecycle/perf route: wrapper/register/free/sync lifecycle A/B, device-stage perf-watt check, or a bounded negative-result closeout.",
       "external_observation": [
         "one_concrete_recovery_idea",
         "one_risk",
@@ -293,11 +293,11 @@
     }
   ],
   "selected_future_route": {
-    "id": "nsight_device_stage_profile_v1",
-    "decision": "Move the active engineering route from quality recovery to profiling-backed device-side dataflow explanation. Keep resid_r15_s07 and NvBuffer pair as sealed evidence, then collect or prepare NVTX/Nsight timeline evidence for the C++ MMAPI/VPI/NVENC stage.",
-    "reason": "The refined project design values heterogeneous runtime/dataflow evidence more than another EIS quality tuning loop. Existing measurements already show that wrapper lifecycle, VPI sync, and NvBufSurfTransform dominate over the PerspectiveWarp submit call; Nsight/NVTX evidence would make that claim interview-grade.",
+    "id": "none",
+    "decision": "Keep the project narrative centered on EIS/video stabilization plus Orin NX heterogeneous video compute and device-side dataflow. Future work should start from the accepted stabilization workload, quality gates, matrix semantics, VPI/MMAPI/NVENC stages, and measured bottlenecks.",
+    "reason": "The project value comes from a measurable stabilization workload and its device-side dataflow/profiling evidence. New routes should only be opened when they directly explain or improve the EIS pipeline under frozen quality and timing boundaries.",
     "next_verifier": [
-      "Nsight Systems report or exported summary exists if the contract is executed",
+      "Nsight Systems report or exported summary exists",
       "stage table names decode, transform, wrapper, submit/sync, warp, encode, and wall time",
       "same source, matrix, crop/postprocess, and review boundary remain frozen for dataflow A/B",
       "zero-copy and full-pipeline acceleration remain forbidden claims"

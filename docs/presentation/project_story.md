@@ -53,9 +53,15 @@ The strongest project story is heterogeneous-system measurement discipline:
 - VPI full-pipeline backend swap was rejected because it was slower;
 - VPI CUDA was still shown useful for high-resolution warp-heavy modules;
 - 4K PerspectiveWarp also has board-level perf/W evidence;
-- VPI PyrLK and Remap were tested and rejected as short-term replacement routes;
+- VPI PyrLK was tested and rejected as a short-term motion-estimation
+  replacement, while C++ Remap became a positive module/operator result after
+  the Python binding abort was isolated;
 - MMAPI/EGLImage/NvBuffer dataflow was decomposed into wrapper, sync, transform,
   and memory-format costs;
+- NVTX/Nsight profiling confirmed that wrapper, sync, transform, and lifecycle
+  costs dominate over the PerspectiveWarp submit call;
+- a narrow stream-only reuse follow-up improved same-source Regular05 wall mean
+  by about 5.3% without changing output semantics;
 - challenge sets are used to map model boundaries instead of being hidden;
 - GStreamer/NVMM dataflow is scoped as a latency boundary, not overclaimed.
 
@@ -82,15 +88,21 @@ backend swap was slower in the small full Python pipeline, but VPI CUDA showed
 clear gains on high-resolution PerspectiveWarp. In the latest 4K stable
 workload, OpenCV CPU ran at 48.995 ms per frame and 1.682 FPS/W, while VPI CUDA
 ran at 20.514 ms and 4.385 FPS/W. I also tested VPI PyrLK and Remap: PyrLK can
-run on CPU/CUDA but is not a good OpenCV replacement under the current probe,
-and Python Remap hits a native binding abort, so Remap would need a C++/official
-sample path.
+run on CPU/CUDA but is not a good OpenCV replacement under the current probe.
+Python Remap hits a native binding abort, but the C++ Remap probe works on
+CPU/CUDA and shows about 2.5x-3.4x CUDA speedup over OpenCV CPU on tested
+identity/wave maps.
 
 On the device-side path, I moved away from Python appsink/appsrc and used the
 C++ MMAPI/VPI/NVENC path as the performance frontier. The latest submit/sync
 probe shows that vpiSubmit itself is almost free, while wrapper lifecycle,
-stream sync, and NvBufSurfTransform dominate the stage cost. The next best
-evidence is an NVTX/Nsight timeline for that stage. This keeps the claim honest:
+stream sync, and NvBufSurfTransform dominate the stage cost. I then added
+NVTX/Nsight evidence for the accepted EGLImage and NvBuffer pair paths. The
+timeline confirmed the same conclusion: the remaining cost is wrapper, sync,
+transform, CUDA/EGL lifecycle, and resource management, not the PerspectiveWarp
+submit call alone. A narrow stream-only reuse follow-up then reused only the VPI
+stream while recreating image wrappers per frame; it improved same-source
+Regular05 wall mean from 1.946819s to 1.843571s. That keeps the claim honest:
 module acceleration and measured dataflow boundaries, not a finished zero-copy
 real-time EIS product.
 
@@ -110,4 +122,14 @@ results/gst_nvmm_decode_convert_latency_20260718/summary.md
 results/vpi_warp_module_rerun_20260722/
 results/power_probe_20260722_sudo/
 results/regular05_submit_sync_probe_20260722/
+docs/presentation/final_benchmark_table.md
+docs/presentation/dataflow_architecture.md
+docs/presentation/claim_boundary.md
+docs/nsight_device_stage_profile_result_2026-07-23.md
+results/nsight_device_stage_profile_20260723/
+docs/device_stage_lifecycle_budget_2026-07-23.md
+docs/device_stage_lifecycle_perf_result_2026-07-23.md
+results/device_stage_lifecycle_perf_20260723/
+docs/vpi_remap_cpp_probe_2026-07-23.md
+results/vpi_remap_cpp_probe_20260723/
 ```

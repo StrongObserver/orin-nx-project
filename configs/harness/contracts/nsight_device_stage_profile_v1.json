@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract_id": "nsight_device_stage_profile_v1",
-  "status": "first_log_probe_and_nsight_capture_completed",
+  "status": "completed_superseded_by_final_evidence_package_closeout_v1",
   "loop_type": "device_stage_profiling",
   "loop_profile": "performance_loop",
   "autonomy_level": "L2",
@@ -12,14 +12,14 @@
     "accepted_quality_anchor": "resid_r15_s07",
     "accepted_device_path": "MMAPI/NVDEC block-linear NV12 main chain -> NvBufSurfTransform to pitch-linear NV12_ER scratch -> VPI CUDA PerspectiveWarp -> NvBufSurfTransform back to block-linear NV12 -> NVENC",
     "known_stage_boundary": "wrapper lifecycle, VPI sync, and NvBufSurfTransform sandwich dominate more than vpiSubmitPerspectiveWarp itself.",
-    "rk3588_idea_mapping": "The RK3588 NPU reference is useful as a methodology: separate hardware time from wall-clock time, detect host scheduling starvation, and only then consider C++ shared-buffer or multi-in-flight dataflow. RKNN core-mask and rknn_create_mem APIs do not transfer directly."
+    "device_stage_profile_methodology": "The useful methodology is to separate hardware time from wall-clock time, detect host scheduling starvation, and only then consider C++ shared-buffer or multi-in-flight dataflow under frozen EIS workload semantics."
   },
   "planning_docs": [
-    "docs/rk3588_npu_idea_mapping_2026-07-23.md",
+    "docs/device_stage_profile_methodology_2026-07-23.md",
     "docs/nsight_device_stage_profile_plan_2026-07-23.md"
   ],
   "first_probe_result": {
-    "evidence_dir": "results/rk3588_idea_probe_20260723/repeat/",
+    "evidence_dir": "results/device_stage_profile_probe_20260723/repeat/",
     "runs_per_path": 5,
     "paths": [
       "accepted EGLImage path",
@@ -55,7 +55,7 @@
       "output_success_runs": "5/5 for both paths",
       "output_size_bytes": "3415439 for both paths"
     },
-    "interpretation": "The RK3588-inspired methodology transfers as a profiling/dataflow idea. The measured Orin benefit is small and concentrated in wrapper/dataflow stage cost; VPI warp itself is nearly unchanged."
+    "interpretation": "The profiling methodology is useful as a dataflow attribution tool. The measured Orin benefit is small and concentrated in wrapper/dataflow stage cost; VPI warp itself is nearly unchanged."
   },
   "nsight_result": {
     "evidence_dir": "results/nsight_device_stage_profile_20260723/",
@@ -70,10 +70,10 @@
       "input/output transforms are each about 0.87-0.97 ms per frame",
       "CUDA API summaries show material cudaFree, cudaStreamSynchronize, cudaGraphicsEGLRegisterImage, and cudaGraphicsUnregisterResource cost"
     ],
-    "p6_p7_decision": "Do not open queue-depth or double-buffering A/B yet. Nsight supports wrapper/sync/transform/lifecycle attribution, not a large RK3588-style scheduler win."
+    "p6_p7_decision": "Do not open queue-depth or double-buffering A/B yet. Nsight supports wrapper/sync/transform/lifecycle attribution, not a large scheduler rewrite."
   },
   "stream_reuse_followup": {
-    "evidence_dir": "results/rk3588_lifecycle_probe_20260723/repeat/",
+    "evidence_dir": "results/device_stage_lifecycle_probe_20260723/repeat/",
     "runs_per_path": 5,
     "paths": [
       "accepted EGLImage path",
@@ -95,6 +95,11 @@
       "vpi_warp_improvement_pct": 0.839
     },
     "decision": "Safe lifecycle variants show only low-single-digit wall/stage gains under the current source and matrix. Keep them as bounded dataflow evidence; do not open a broad scheduler or double-buffering implementation loop."
+  },
+  "closeout": {
+    "superseded_by": "configs/harness/contracts/final_evidence_package_closeout_v1.json",
+    "final_decision": "The first log probe, NVTX/Nsight capture, and lifecycle follow-up are complete. Use the results as bottleneck-attribution evidence in the final presentation package.",
+    "next_default": "Do not run more profiling by default. Start a new scoped contract only if the user requests additional engineering beyond the current evidence package."
   },
   "profiling_questions": [
     "Is VPI/CUDA/NVENC idle while CPU-side wrapper, transform, or sync work is happening?",
@@ -126,26 +131,26 @@
     "claim boundary stays module/dataflow-level, not full EIS pipeline acceleration",
     "evidence path is recorded in README/presentation/long-term context if produced"
   ],
-  "recommended_steps": [
+  "completed_steps": [
     {
       "id": "P0",
-      "title": "Instrumentation audit and RK3588 idea mapping",
-      "objective": "Inspect the accepted C++ sample, existing timing probes, and docs/rk3588_npu_idea_mapping_2026-07-23.md to decide which stage markers are required."
+      "title": "Instrumentation audit and device-stage profiling method",
+      "objective": "Completed. The device-stage profiling method was mapped to Orin NX stabilization dataflow questions."
     },
     {
       "id": "P1",
       "title": "NVTX range insertion or Nsight capture",
-      "objective": "Add minimal stage ranges or run Nsight Systems against the existing stage without changing output semantics. The capture should answer whether hardware is starved by host-side wrapper/sync/transform scheduling."
+      "objective": "Completed. NVTX-instrumented EGLImage and NvBuffer pair samples produced Nsight reports and exported CSV summaries."
     },
     {
       "id": "P2",
       "title": "Timeline export and summary",
-      "objective": "Produce one timeline screenshot/export and one concise table mapping stage cost to engineering interpretation."
+      "objective": "Completed. docs/nsight_device_stage_profile_result_2026-07-23.md records the timing table and interpretation."
     },
     {
       "id": "P3",
       "title": "Route decision and presentation update",
-      "objective": "If the timeline shows idle gaps, propose a separate same-source dataflow A/B contract for queue depth or double buffering. Otherwise record the RK3588 idea as a methodology reference and update final wording with measured Nsight evidence."
+      "objective": "Completed. P6/P7 queue-depth or double-buffering work is not triggered; final wording is routed through final_evidence_package_closeout_v1."
     }
   ],
   "forbidden_claims": [

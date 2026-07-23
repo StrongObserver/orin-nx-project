@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "contract_id": "final_evidence_package_closeout_v1",
+  "status": "completed",
+  "loop_type": "final_evidence_package_closeout",
+  "loop_profile": "documentation_loop",
+  "autonomy_level": "L3",
+  "objective": "Seal the current Orin NX stage into a concise final evidence package: result table, device-side dataflow architecture, claim boundary, presentation wording, and control-plane routing.",
+  "entry_context": {
+    "refined_project_positioning": "Jetson Orin NX heterogeneous video compute and device-side dataflow optimization, with EIS as the representative real-time vision workload.",
+    "quality_anchor": "resid_r15_s07",
+    "latest_device_dataflow_result": "Format-matched NvBuffer pair preserves the resid_r15_s07 quality anchor and gives a small measured device-stage gain.",
+    "latest_profile_result": "NVTX/Nsight evidence shows wrapper, sync, transform, and lifecycle cost dominate the accepted C++ MMAPI/VPI/NVENC device stage; P6/P7 queue-depth or double-buffering work is not triggered.",
+    "current_blocker": "No active quality, NvBuffer correctness, or Nsight profiling blocker."
+  },
+  "claim_boundary": {
+    "allowed": [
+      "EIS is the representative real-time vision workload, not the entire project identity",
+      "Regular gate quality and Challenge/diagnostic boundaries are separate claims",
+      "resid_r15_s07 is the accepted Regular-gate stabilization-strength recovery result",
+      "VPI CUDA PerspectiveWarp has module-level speed and perf-per-watt evidence at high resolution",
+      "The accepted C++ MMAPI/VPI/NVENC device path is a measured device-side dataflow stage",
+      "Format-matched NvBuffer pair is a quality-preserving dataflow alternative with small measured stage gains",
+      "Nsight/NVTX evidence supports wrapper/sync/transform/lifecycle attribution"
+    ],
+    "forbidden": [
+      "claiming a full real-time EIS product",
+      "claiming zero-copy full chain",
+      "claiming full-pipeline acceleration from module-only or stage-only evidence",
+      "claiming VPI optical-flow acceleration",
+      "claiming all-scene or product-grade EIS quality",
+      "using outdoor-car inverse or post-geometry smoke results as Regular05 EIS-quality evidence",
+      "using inclusion_source_to_dest or safe103_crop98 as the current stabilization-strength baseline",
+      "reopening limiter, R-radius, LP-weight, residual-strength, safe103, or inclusion sweeps for the accepted quality issue"
+    ]
+  },
+  "completed_outputs": [
+    "docs/presentation/final_benchmark_table.md",
+    "docs/presentation/dataflow_architecture.md",
+    "docs/presentation/claim_boundary.md",
+    "docs/nsight_device_stage_profile_result_2026-07-23.md",
+    "docs/regular_gate_nvbuffer_pair_resid_2026-07-23.md",
+    "docs/evidence_map_2026-07-18.md",
+    "README.md",
+    "docs/presentation/one_page_summary.md",
+    "docs/presentation/interview_qna.md",
+    "docs/presentation/project_story.md"
+  ],
+  "verification": {
+    "required_checks": [
+      "py -3.12 scripts/harness_runner.py onboard",
+      "py -3.12 scripts/harness_runner.py doctor",
+      "py -3.12 -m json.tool configs/harness/contracts/final_evidence_package_closeout_v1.json",
+      "py -3.12 -m json.tool configs/harness/contracts/orin_next_engineering_loop_v1.json",
+      "py -3.12 -m json.tool configs/harness/contracts/nsight_device_stage_profile_v1.json"
+    ],
+    "expected_result": "JSON parses and harness doctor passes. The only untracked or modified non-project-entry change allowed outside this closeout is the user-updated oral template."
+  },
+  "next_route_policy": {
+    "default_next_action": "Do not start another experiment by default. The current stage is sealed for presentation and interview use.",
+    "if_user_requests_more_engineering": [
+      "Choose exactly one new scoped contract first.",
+      "Prefer a narrow wrapper/register/free/sync lifecycle A/B only if it preserves source, matrix, crop/postprocess, and output readability.",
+      "Alternative future routes are VPI Remap C++ official-sample probe, longer perf/watt run, or a small architecture diagram refresh.",
+      "Do not open broad C++ rewrites, mesh/grid warp, VPI optical flow, or quality tuning unless the user explicitly changes the objective."
+    ]
+  },
+  "stop_reasons": [
+    "a required verification check fails and cannot be fixed locally",
+    "new experimental measurement would be required",
+    "editing would require copying internal/private material into public docs",
+    "user changes the objective"
+  ]
+}

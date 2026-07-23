@@ -2,9 +2,9 @@
 
 ## Decision
 
-The RK3588-inspired route is useful as a profiling method, but the Orin NX
-result does not justify building a new queue-depth, double-buffering, or
-multi-in-flight scheduler yet.
+The device-stage profiling route is useful, but the Orin NX result does not
+justify building a new queue-depth, double-buffering, or multi-in-flight
+scheduler yet.
 
 Why:
 
@@ -29,14 +29,14 @@ reuse.
 Raw evidence is local and ignored by Git:
 
 ```text
-results/rk3588_idea_probe_20260723/repeat/
+results/device_stage_profile_probe_20260723/repeat/
 results/nsight_device_stage_profile_20260723/
 ```
 
 Tracked context:
 
 ```text
-docs/rk3588_npu_idea_mapping_2026-07-23.md
+docs/device_stage_profile_methodology_2026-07-23.md
 docs/nsight_device_stage_profile_plan_2026-07-23.md
 configs/harness/contracts/nsight_device_stage_profile_v1.json
 ```
@@ -95,35 +95,29 @@ Key CUDA API summaries:
 | `cudaGraphicsEGLRegisterImage` | 0.2788 ms | 0.3005 ms | register cost is material |
 | `cudaLaunchKernel` | 0.0485 ms | 0.0522 ms | launch/kernel API cost is small |
 
-## What This Says About The Blogger's Idea
+## What This Says About The Profiling Method
 
-The RK3588 case had a large scheduler/runtime problem:
+The profiling method asks a simple question:
 
 ```text
-Python / locks / RKNN runtime could not feed the NPU well enough.
-Moving to C++ shared-memory dataflow gave a very large throughput win.
+Is the EIS device-stage path limited by hardware execution, or by host-side
+dataflow, wrapper lifecycle, synchronization, and memory-format transitions?
 ```
 
-The Orin result is different:
+The Orin result is:
 
 ```text
 We are already in C++ MMAPI/VPI/NVENC.
-The problem is not Python GIL or RKNN-style multi-core scheduling.
 The remaining cost is wrapper/register/free/sync/transform lifecycle.
+The current evidence does not show a large scheduler or overlap opportunity.
 ```
 
-So the transferable lesson is real:
+So the useful lesson is:
 
 ```text
 Do not trust hardware kernel timing alone.
-Measure wall-clock and host-side dataflow.
-```
-
-But the implementation idea does not transfer directly:
-
-```text
-No RKNN core mask equivalent.
-No direct rknn_create_mem equivalent.
+Measure wall-clock, host-side dataflow, synchronization, and lifecycle costs
+under the same stabilization source, matrix, and output boundary.
 No evidence yet that queue depth or double buffering will produce a large win.
 ```
 
@@ -149,7 +143,7 @@ the Nsight capture.
 Evidence:
 
 ```text
-results/rk3588_lifecycle_probe_20260723/repeat/
+results/device_stage_lifecycle_probe_20260723/repeat/
 ```
 
 Compared paths:
@@ -205,9 +199,10 @@ wall/stage gains, not a strong queue-depth or double-buffering opportunity.
 Allowed:
 
 ```text
-The RK3588 idea was tested as an Orin profiling/dataflow methodology.
-On Orin, format-matched NvBuffer pair gives a small device-stage benefit in
-log-based repeat runs.
+The device-stage profiling method was tested under frozen EIS workload
+semantics.
+Format-matched NvBuffer pair gives a small device-stage benefit in log-based
+repeat runs.
 Nsight shows the bottleneck is wrapper/sync/transform/lifecycle cost rather than
 the VPI PerspectiveWarp submit call.
 ```
@@ -215,7 +210,6 @@ the VPI PerspectiveWarp submit call.
 Forbidden:
 
 ```text
-The RK3588 zero-copy optimization was copied to Orin.
 Orin now has zero-copy.
 Queue depth / double buffering has been proven beneficial.
 Full EIS pipeline acceleration has been achieved.

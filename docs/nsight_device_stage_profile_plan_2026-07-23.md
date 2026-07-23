@@ -3,8 +3,8 @@
 ## Purpose
 
 This is the minimum experiment plan and first probe result for the current
-`nsight_device_stage_profile_v1` contract. It converts the RK3588 NPU blogger's
-methodology into an Orin NX profiling question:
+`nsight_device_stage_profile_v1` contract. It turns the device-stage profiling
+method into an Orin NX stabilization-pipeline question:
 
 ```text
 Is the accelerator path limited by hardware execution, or by host-side
@@ -72,7 +72,7 @@ no EGLImage image-wrapper reuse revival
 
 ## What To Look For
 
-The RK3588 reference is useful only if the timeline exposes a similar system
+The profiling method is useful only if the timeline exposes a concrete system
 pattern:
 
 | Observation | Meaning | Next action |
@@ -81,7 +81,7 @@ pattern:
 | VPI sync dominates with no visible overlap | synchronous stage boundary | test async or staged pipeline only under new contract |
 | transform sandwich dominates | memory layout boundary | only compare format-stable alternatives, not zero-copy claims |
 | NvBuffer pair reduces wrapper but not sync/transform | small dataflow improvement already bounded | record as current best, do not overbuild |
-| no idle bubble and no large host wait | RK3588 scheduling idea does not transfer materially | close as methodology reference |
+| no idle bubble and no large host wait | scheduler rewrite is not justified | close as methodology reference |
 
 ## Stop Rules
 
@@ -97,7 +97,7 @@ The proposed change would alter matrix quality, crop/postprocess, or output sema
 In that case, report the blocker in chat and keep the current evidence as:
 
 ```text
-stage log timing + RK3588 methodology mapping + planned Nsight contract
+stage log timing + device-stage profiling method + planned Nsight contract
 ```
 
 ## Expected Output
@@ -116,7 +116,7 @@ one claim-boundary paragraph for presentation docs
 A log-based A/B has already been run before adding NVTX:
 
 ```text
-results/rk3588_idea_probe_20260723/repeat/
+results/device_stage_profile_probe_20260723/repeat/
 ```
 
 Inputs were frozen:
@@ -138,10 +138,12 @@ Result:
 | VPI warp avg | 1.537340 ms | 1.526802 ms | 0.69% |
 | Wrapper call | 5.896924 ms | 5.442238 ms | 7.71% |
 
-The first probe answers part of the RK3588-inspired question:
+The first probe answers part of the device-stage profiling question:
 
 ```text
 The measurable gain is in wrapper/dataflow stage cost, not in the VPI warp
-kernel. This supports continuing to Nsight/NVTX profiling, but does not justify
-building a new scheduler or claiming zero-copy.
+kernel. At the time of this plan, that supported continuing to Nsight/NVTX
+profiling, but did not justify building a new scheduler or claiming zero-copy.
+That profiling has since been completed; see
+`docs/nsight_device_stage_profile_result_2026-07-23.md`.
 ```

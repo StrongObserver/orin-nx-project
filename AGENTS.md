@@ -44,14 +44,55 @@ or a declared stop reason is hit.
 4. Current task-specific Done Contract:
 
 ```text
-C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\nsight_device_stage_profile_v1.json
+C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\device_stage_lifecycle_perf_loop_v1.json
 ```
 
-This is the current recommended next engineering entry. It starts from the
-accepted C++ MMAPI/VPI/NVENC device path, the `resid_r15_s07` quality anchor,
-and the format-matched NvBuffer pair follow-up, then collects or prepares
-NVTX/Nsight-style stage profiling evidence. It does not reopen
-limiter/R/LP/residual/safe103/inclusion sweeps.
+This lifecycle follow-up is complete. It starts from the accepted
+`resid_r15_s07` quality anchor, the format-matched NvBuffer pair follow-up, the
+completed NVTX/Nsight-style stage profiling evidence, and the final evidence
+package closeout. Stream-only reuse is accepted as a
+small device-stage lifecycle optimization, and no broader scheduler work is
+triggered by current evidence.
+
+The current task-specific Done Contract is:
+
+```text
+C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\remap_mmapi_integration_probe_loop_v1.json
+```
+
+This is the current engineering extension entry. It starts from the completed
+standalone VPI C++ Remap/WarpMap operator probe and tests the minimum MMAPI
+device-stage integration boundary: replacing PerspectiveWarp with Remap on the
+pitch-linear scratch stage. It does not change the accepted `resid_r15_s07`
+quality anchor, does not reopen EIS tuning, and does not claim mesh/local-warp
+EIS success without measured evidence.
+
+The standalone C++ Remap operator contract is complete and remains supporting
+evidence:
+
+```text
+C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\vpi_remap_cpp_and_device_warp_extension_loop_v1.json
+```
+
+The portfolio/reproducibility closeout contract is complete and remains the
+current public-facing documentation state:
+
+```text
+C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\final_portfolio_and_reproducibility_loop_v1.json
+```
+
+The final evidence package closeout contract is complete and remains the current
+presentation state:
+
+```text
+C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\final_evidence_package_closeout_v1.json
+```
+
+The previous Nsight device-stage profiling contract is complete and superseded:
+
+```text
+C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\nsight_device_stage_profile_v1.json
+```
 
 The previous presentation closeout contract is complete and superseded:
 

@@ -351,8 +351,10 @@ docs/loop_engineering_v2.md
 
 The Jetson same-input CPU baseline, Regular performance baseline, VPI module
 evidence, C++ MMAPI/VPI/NVENC path, and NvBuffer pair follow-up have all been
-recorded. The current active task is no longer another quality loop; it is the
-profiling and presentation closeout route for the refined project design.
+recorded. Nsight/NVTX profiling and the lifecycle follow-up are also complete.
+The current active task is no longer another quality loop or profiling-collection
+loop; it is the final evidence-package closeout route for the refined project
+design.
 
 Use:
 
@@ -363,7 +365,7 @@ py -3.12 scripts\harness_runner.py onboard
 It should point to:
 
 ```text
-configs/harness/contracts/nsight_device_stage_profile_v1.json
+configs/harness/contracts/final_evidence_package_closeout_v1.json
 ```
 
 Anti-retreat correction:
@@ -371,8 +373,9 @@ Anti-retreat correction:
 ```text
 The accepted EIS quality baseline and NvBuffer pair closeout are not permission
 to keep tuning the same stabilization problem. The next valuable work is an
-architecture/result table plus NVTX/Nsight or equivalent device-stage profiling
-for the accepted C++ dataflow.
+architecture/result table, dataflow diagram, claim boundary, and interview-facing
+package that uses the completed NVTX/Nsight evidence. If future engineering is
+requested, open a new narrow contract first.
 ```
 
 Device-side path:

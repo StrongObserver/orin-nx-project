@@ -30,7 +30,7 @@
     "Run or read this manifest via: py -3.12 scripts/harness_runner.py onboard",
     "Read AGENTS.md only for dispatch rules and safety boundaries.",
     "Read the active loop contract: configs/harness/contracts/orin_next_engineering_loop_v1.json",
-    "Read the task-specific Done Contract before running or editing: currently configs/harness/contracts/nsight_device_stage_profile_v1.json",
+    "Read the task-specific Done Contract before running or editing: currently configs/harness/contracts/local_warp_quality_bridge_loop_v1.json",
     "Run harness static checks before experiments: doctor, check-claim, and JSON/schema checks as needed."
   ],
   "load_on_demand": [
@@ -52,6 +52,12 @@
     {
       "trigger": "Need device-side MMAPI/VPI/NVENC handoff details",
       "open": [
+        "configs/harness/contracts/local_warp_quality_bridge_loop_v1.json",
+        "configs/harness/contracts/remap_mmapi_integration_probe_loop_v1.json",
+        "configs/harness/contracts/vpi_remap_cpp_and_device_warp_extension_loop_v1.json",
+        "configs/harness/contracts/final_portfolio_and_reproducibility_loop_v1.json",
+        "configs/harness/contracts/device_stage_lifecycle_perf_loop_v1.json",
+        "configs/harness/contracts/final_evidence_package_closeout_v1.json",
         "configs/harness/contracts/nsight_device_stage_profile_v1.json",
         "configs/harness/contracts/regular_gate_inclusion_validation_v1.json",
         "configs/harness/contracts/regular_gate_stride5_viewport_stable_validation_v1.json",
@@ -83,7 +89,7 @@
     }
   ],
   "active_loop_contract": "configs/harness/contracts/orin_next_engineering_loop_v1.json",
-  "active_task_contract": "configs/harness/contracts/nsight_device_stage_profile_v1.json",
+  "active_task_contract": "configs/harness/contracts/local_warp_quality_bridge_loop_v1.json",
   "hard_rules": [
     "Do not load the full long-term context or full internal reference folders during default startup.",
     "Do not copy internal original text, images, private links, or screenshots into public GitHub outputs.",

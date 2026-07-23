@@ -87,6 +87,75 @@ Current Jetson VPI 2.2.7 Python backend probe:
 | Dense Optical Flow | fail | fail | fail | fail | fail | Python binding path unavailable |
 | Remap | native abort | native abort | native abort | native abort | native abort | Future C++/official sample route only |
 
+Updated C++ Remap result:
+
+```text
+Python Image.remap still remains a negative boundary.
+C++ Remap is a positive module/operator result on CPU/CUDA.
+```
+
+| Mode | Resolution | OpenCV CPU ms | VPI CPU ms | VPI CUDA ms | CUDA Speedup |
+|---|---:|---:|---:|---:|---:|
+| identity | 640x368 | 1.817510 | 0.988688 | 0.610031 | 2.979x |
+| identity | 1920x1088 | 8.096360 | 7.988430 | 2.410080 | 3.359x |
+| identity | 3840x2160 | 31.127200 | 31.452200 | 9.423580 | 3.303x |
+| wave | 640x368 | 1.772240 | 0.975930 | 0.704285 | 2.516x |
+| wave | 1920x1088 | 8.105170 | 7.968380 | 2.978840 | 2.721x |
+| wave | 3840x2160 | 31.064200 | 32.921700 | 9.516820 | 3.264x |
+
+NV12_ER CPU/CUDA also passes at 640x368:
+
+```text
+identity: CPU 0.753977 ms, CUDA 0.213389 ms
+wave:     CPU 0.760223 ms, CUDA 0.135011 ms
+```
+
+Interpretation:
+
+```text
+C++ Remap should be treated as a valid future operator-level route for
+pitch-linear scratch or mesh/local-warp probing. It is not full EIS acceleration,
+and MMAPI integration is not complete.
+```
+
+## Remap On MMAPI Scratch Stage
+
+The next diagnostic step replaced PerspectiveWarp with Remap inside a minimal
+MMAPI/VPI/NVENC sample.
+
+First boundary:
+
+```text
+640x360 Regular05 source failed because WarpGrid aligned height to 368.
+Remap requires output image dimensions to match the warp map.
+```
+
+Then a 640x368 padded diagnostic source succeeded:
+
+| Mode | rc | Remap Frame100 | Remap Avg | Stage Frame100 | Stage Avg |
+|---|---:|---:|---:|---:|---:|
+| identity | 0 | 1.584280 ms | 1.589380 ms | 8.529760 ms | 10.524300 ms |
+| wave | 0 | 1.630130 ms | 1.591480 ms | 8.323730 ms | 10.573700 ms |
+| wave_safe | 0 | 1.512610 ms | 1.544110 ms | 7.278550 ms | 9.769750 ms |
+
+Review asset:
+
+```text
+C:\Users\Admin\Videos\orin nx\review\diagnostic\20260723_remap_mmapi_integration_probe\20260723_remap_mmapi_regular05_jetson_source_identity_wave_triptych.mp4
+C:\Users\Admin\Videos\orin nx\review\diagnostic\20260723_remap_mmapi_integration_probe\20260723_remap_mmapi_regular05_jetson_source_identity_wave_wavesafe_quad.mp4
+```
+
+Interpretation:
+
+```text
+Remap can be inserted into the MMAPI scratch-buffer stage under compatible
+dimensions. This is a diagnostic operator integration result, not Regular EIS
+quality and not full-pipeline acceleration.
+The original wave map produced curved side black borders because zero-border
+Remap sampled outside the source. The wave_safe map adds a FOV-safe scale before
+the local wave and removes that diagnostic edge artifact in the frame-90 check.
+```
+
 ## GStreamer / NVMM Readiness
 
 Minimum Jetson path reached EOS:
@@ -254,6 +323,67 @@ full chain: block-linear main surfaces, pitch-linear scratch buffers,
 NvBufSurfTransform, VPI wrapper creation, and sync costs still remain.
 ```
 
+## Nsight / NVTX Device-Stage Profile
+
+The current profiling closeout has been completed for the accepted EGLImage path
+and the format-matched NvBuffer pair path.
+
+Key NVTX ranges:
+
+| Range | EGLImage Avg | NvBuffer Pair Avg | Interpretation |
+|---|---:|---:|---|
+| `vpi_submit_perspective_warp` | 0.0220 ms | 0.0241 ms | submit call is negligible |
+| `VPI:Perspective Warp` | 0.7630 ms | 0.8051 ms | warp is not the dominant stage |
+| `vpi_stream_sync` | 2.1403 ms | 2.2007 ms | stream sync is material |
+| wrap + submit + sync | 10.0225 ms | 10.2681 ms | dominant profiled region |
+| input transform | 0.8702 ms | 0.9008 ms | transform sandwich remains visible |
+| output transform | 0.9286 ms | 0.9664 ms | transform sandwich remains visible |
+
+Key CUDA API costs include `cudaFree`, `cudaStreamSynchronize`,
+`cudaGraphicsEGLRegisterImage`, and `cudaGraphicsUnregisterResource`.
+
+Interpretation:
+
+```text
+The accepted C++ device stage is wrapper/sync/transform/lifecycle dominated.
+The bottleneck is not vpiSubmitPerspectiveWarp alone, and current evidence does
+not justify opening a broad queue-depth or double-buffering implementation loop.
+```
+
+## Stream-Only Reuse Lifecycle Result
+
+Stream-only reuse keeps the safe policy:
+
+```text
+reuse VPI stream
+recreate EGLImage image wrappers per frame
+```
+
+Ten alternating same-source Regular05 runs:
+
+| Path | Runs | rc=0 | Fallback | Wall Mean | Stage100 | Stage Avg | Wrapper |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| accepted EGLImage | 10 | 10/10 | 0 | 1.946819 s | 7.842519 ms | 10.336381 ms | 5.877429 ms |
+| stream-only reuse | 10 | 10/10 | 0 | 1.843571 s | 7.295914 ms | 9.680414 ms | 5.365920 ms |
+
+Benefit:
+
+```text
+wall mean: +5.303%
+stage100:  +6.970%
+stage avg: +6.346%
+wrapper:   +8.703%
+warp avg:  -10.453%
+```
+
+Interpretation:
+
+```text
+The improvement is lifecycle/wrapper-side, not warp-kernel acceleration.
+Stream-only reuse is now a small accepted device-stage optimization. It does not
+revive EGLImage image-wrapper reuse and does not prove zero-copy.
+```
+
 ## Interview Wording
 
 ```text
@@ -287,4 +417,13 @@ results/regular05_submit_sync_probe_20260722/
 results/regular05_submit_sync_longrun_20260722/
 results/regular_gate_nvbuffer_pair_resid_20260723/
 results/regular05_eglimage_timing_resid_compare_20260723/
+docs/nsight_device_stage_profile_result_2026-07-23.md
+results/nsight_device_stage_profile_20260723/
+docs/device_stage_lifecycle_budget_2026-07-23.md
+docs/device_stage_lifecycle_perf_result_2026-07-23.md
+results/device_stage_lifecycle_perf_20260723/
+docs/vpi_remap_cpp_probe_2026-07-23.md
+results/vpi_remap_cpp_probe_20260723/
+docs/remap_mmapi_integration_probe_2026-07-23.md
+results/remap_mmapi_integration_probe_20260723/
 ```

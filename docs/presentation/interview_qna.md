@@ -37,6 +37,44 @@ total wall time: 8.473 s -> 7.565 s
 The speedup came from lower-resolution motion estimation plus a denser feature
 grid to recover stability.
 
+## Q: Why is this more than a normal EIS demo?
+
+A normal EIS demo usually stops at before/after video. This project keeps the
+video result as the workload and then builds a systems loop around it:
+
+```text
+quality gates
+CPU timing
+VPI module benchmark
+GStreamer/NVMM boundary
+MMAPI/VPI/NVENC device stage
+Nsight/NVTX bottleneck attribution
+small lifecycle optimization
+```
+
+That is why the main claim is heterogeneous video compute and device-side
+dataflow optimization, not "I made the best stabilizer."
+
+## Q: Why not continue improving the stabilization algorithm?
+
+Because the current Regular-gate quality issue is already closed around
+`resid_r15_s07`, and more global affine/rigid sweeps would mostly repeat a
+closed loop.
+
+The project has more value when it explains:
+
+```text
+where quality is accepted
+where global-warp EIS breaks
+where VPI helps
+where VPI does not help
+where device-stage lifecycle cost comes from
+```
+
+If the objective changes to product-grade stabilization, then the next algorithm
+class would likely be mesh, rolling-shutter-aware, or gyro-assisted work. That is
+not the current resume-facing claim.
+
 ## Q: Why keep two baselines?
 
 Because they serve different claims:
@@ -74,6 +112,25 @@ OpenCV CPU: 48.995 ms, 20.410 FPS, 12.136 W, 1.682 FPS/W
 VPI CUDA:   20.514 ms, 48.747 FPS, 11.118 W, 4.385 FPS/W
 ```
 
+## Q: Why is it still a hardware project if full-pipeline VPI was slower?
+
+Because a negative full-pipeline result prevented a false claim, and the project
+then found the correct level for acceleration:
+
+```text
+small 640x360 Python pipeline:
+  VPI backend swap is slower
+
+high-resolution PerspectiveWarp module:
+  VPI CUDA is faster and better in FPS/W
+
+C++ device stage:
+  profiling shows wrapper/sync/transform/lifecycle dominates
+```
+
+The engineering value is knowing where to use hardware acceleration and where
+not to.
+
 ## Q: What are the remaining limitations?
 
 - Global warp cannot solve all local/parallax/rolling-shutter-like artifacts.
@@ -86,8 +143,12 @@ VPI CUDA:   20.514 ms, 48.747 FPS, 11.118 W, 4.385 FPS/W
 
 ## Q: What would you do next?
 
-The next implementation direction is not another baseline tuning loop. The
-current frontier is explaining and reducing the device-side dataflow cost:
+I would not start another baseline tuning loop by default. The current stage is
+sealed for presentation: Regular quality is accepted, NvBuffer pair is measured,
+and NVTX/Nsight profiling has already localized the device-stage cost.
+
+If more engineering time is available, I would open one narrow new contract
+around wrapper/register/free/sync lifecycle cost, not a broad rewrite:
 
 ```text
 current accepted path:
@@ -100,12 +161,27 @@ measured bottlenecks:
   wrapper lifecycle
   vpiStreamSync
   NvBufSurfTransform sandwich
+  CUDA/EGL register, unregister, free, and stream synchronize lifecycle cost
 ```
 
 I would not claim zero-copy until a format-stable path removes or reduces those
 costs without reintroducing tearing, green output, or format mismatch failures.
-The highest-value next evidence is an NVTX/Nsight Systems timeline for this
-accepted C++ stage.
+P6/P7 queue-depth or double-buffering work is not currently triggered because
+the Nsight result does not show a large hidden scheduler win.
+
+In the follow-up loop, the narrow stream-only reuse candidate was promoted as a
+small device-stage lifecycle optimization. It keeps the safe rule: reuse the VPI
+stream, but recreate EGLImage image wrappers per frame.
+
+If I had more time, I would choose one scoped route instead of broad exploration:
+
+```text
+1. VPI Remap C++ official-sample probe, if the goal is another VPI operator.
+2. Longer fixed-mode perf/watt run, if the goal is stronger power evidence.
+3. Very narrow wrapper/register/free/sync probe, if the goal is dataflow cost.
+```
+
+I would not restart quality tuning unless the objective changes.
 
 ## Q: Why not continue tuning Regular05?
 
@@ -252,6 +328,51 @@ stage running avg: 9.589 ms -> 9.401 ms
 So the claim is quality-preserving dataflow improvement. It is not zero-copy,
 and it is not full-pipeline acceleration.
 
+## Q: What did stream-only reuse improve?
+
+It improved lifecycle overhead around the accepted EGLImage path without
+changing quality semantics.
+
+```text
+accepted EGLImage, 10-run same-source repeat:
+  wall mean = 1.946819 s
+  stage running avg = 10.336381 ms
+  wrapper mean = 5.877429 ms
+
+stream-only reuse:
+  wall mean = 1.843571 s
+  stage running avg = 9.680414 ms
+  wrapper mean = 5.365920 ms
+```
+
+The measured benefit was:
+
+```text
+wall mean: +5.303%
+stage avg: +6.346%
+wrapper:   +8.703%
+```
+
+The important boundary is that stream-only reuse is not image-wrapper reuse.
+Image-wrapper reuse was rejected because it caused tearing or failures.
+Stream-only reuse is a safe lifecycle improvement because it still recreates the
+image wrappers per frame.
+
+## Q: Why not implement queue depth or double buffering now?
+
+Because the current evidence does not show a large removable idle gap. The
+largest measured costs are wrapper, sync, transform, and CUDA/EGL lifecycle
+costs. Stream-only reuse already captures the safe part of lifecycle reuse and
+gives a modest gain:
+
+```text
+wall mean: +5.303%
+stage avg: +6.346%
+```
+
+That is worth recording, but it is not enough to justify a broad scheduler
+rewrite under the current project goal.
+
 ## Q: Why not use VPI PyrLK for motion estimation?
 
 I tested it because it matches the original project design. It can run on CPU
@@ -265,14 +386,74 @@ VPI CUDA:     1.672 ms, avg valid points 37
 
 That means the first useful VPI replacement is PerspectiveWarp, not PyrLK.
 
-## Q: Why not use VPI Remap?
+## Q: What happened with VPI Remap?
 
-The Python Remap path is not stable on this setup. The minimal WarpMap/Image.remap
-probe aborts in the native binding with `double free or corruption`.
+The Python Remap path is not stable on this setup. The minimal
+WarpMap/Image.remap probe aborts in the native binding with
+`double free or corruption`.
 
-That does not prove C++ Remap is impossible. It means the future route should be
-a C++/official-sample probe, using `Remap.h` or the VPI fisheye sample as a
-reference, instead of continuing to force the Python binding.
+That did not prove Remap itself was impossible. I then tested the C++ path using
+`vpiCreateRemap`, `vpiSubmitRemap`, and `VPIWarpMap`.
+
+Result:
+
+```text
+C++ Remap CPU/CUDA: pass
+VIC with BGR8: unsupported in this probe
+NV12_ER CPU/CUDA: pass
+```
+
+CUDA Remap was faster than OpenCV CPU on tested module maps:
+
+```text
+identity 640x368:  1.817510 ms -> 0.610031 ms, 2.979x
+identity 1920x1088: 8.096360 ms -> 2.410080 ms, 3.359x
+identity 3840x2160: 31.127200 ms -> 9.423580 ms, 3.303x
+wave 3840x2160:     31.064200 ms -> 9.516820 ms, 3.264x
+```
+
+The correct claim is module/operator-level C++ Remap acceleration. It is not
+yet MMAPI integration and not full EIS pipeline acceleration.
+
+## Q: Did local Remap improve parallax or local-warp EIS quality?
+
+No. I tested that bridge explicitly and it did not improve the chosen parallax
+sample.
+
+The primary sample was:
+
+```text
+results/nus_parallax_challenge_v1_curated/raw_clips/parallax10_parallax_13.mp4
+```
+
+It was a real boundary case:
+
+```text
+scene_gate: challenge_degrade
+motion_p95: 19.56 px
+local/global_p95: 1.30
+row_residual_p95: 2.23 px
+```
+
+I built a constrained local Remap correction around high-residual grid cells, but
+the metrics did not improve:
+
+```text
+baseline global_residual_p95_avg: 2.196
+gx0 gy3 strength 1.0:             2.216
+gx0 gy3 strength 0.5:             2.199
+gx3 gy3 strength 0.5:             2.201
+gx3 gy0 strength 0.5:             2.206
+```
+
+So the useful conclusion is not "local warp solved parallax." The conclusion is:
+
+```text
+The Remap operator is available, but quality improvement needs a dynamic spatial
+model such as mesh path optimization, depth/foreground separation, rolling-shutter
+awareness, or gyro-assisted constraints. A fixed per-cell offset is not enough.
+```
+
 
 ## Q: Is the device output equivalent to the CPU stabilized output?
 
@@ -305,4 +486,12 @@ results/power_probe_20260722_sudo/
 results/pyr_lk_opencv_vpi_compare_20260722_v2/
 results/regular05_submit_sync_probe_20260722/
 results/regular_gate_est0p5_grid16_validation_20260718/regular_gate_validation_summary.md
+docs/presentation/final_benchmark_table.md
+docs/presentation/dataflow_architecture.md
+docs/presentation/claim_boundary.md
+docs/nsight_device_stage_profile_result_2026-07-23.md
+results/nsight_device_stage_profile_20260723/
+docs/device_stage_lifecycle_budget_2026-07-23.md
+docs/device_stage_lifecycle_perf_result_2026-07-23.md
+results/device_stage_lifecycle_perf_20260723/
 ```

@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "contract_id": "vpi_remap_cpp_and_device_warp_extension_loop_v1",
+  "status": "completed",
+  "loop_type": "vpi_remap_cpp_probe",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Probe VPI C++ Remap/WarpMap as the next Orin NX heterogeneous-video-compute extension after Python Remap native aborts, and decide whether it can support future local/mesh warp work.",
+  "entry_context": {
+    "project_positioning": "Jetson Orin NX heterogeneous video compute and device-side dataflow optimization, with EIS as the representative workload.",
+    "why_this_route": "Python VPI Remap aborted in the native binding, but that does not prove C++ Remap is impossible. VPI C++ Remap/WarpMap is a plausible operator-level path toward future mesh/local warp and parallax-boundary work.",
+    "quality_anchor": "resid_r15_s07 remains frozen and is not modified by this loop.",
+    "current_device_boundary": "Accepted C++ MMAPI/VPI/NVENC path remains block-linear main chain plus pitch-linear NV12_ER scratch; this loop starts with standalone C++ Remap, not immediate MMAPI integration."
+  },
+  "result": {
+    "report": "docs/vpi_remap_cpp_probe_2026-07-23.md",
+    "source": "experiments/vpi_cpp_remap_probe/remap_probe.cpp",
+    "evidence_dir": "results/vpi_remap_cpp_probe_20260723/",
+    "review_dir": "C:/Users/Admin/Videos/orin nx/review/diagnostic/20260723_vpi_remap_cpp_probe/",
+    "decision": "VPI C++ Remap is a positive module/operator result on this Jetson. CPU and CUDA backends work, CUDA beats OpenCV CPU on tested identity and local-wave maps, and NV12_ER CPU/CUDA works, making Remap plausible for future pitch-linear scratch integration.",
+    "benchmark": {
+      "identity_640x368_cuda_speedup_vs_opencv": 2.979,
+      "identity_1920x1088_cuda_speedup_vs_opencv": 3.359,
+      "identity_3840x2160_cuda_speedup_vs_opencv": 3.303,
+      "wave_640x368_cuda_speedup_vs_opencv": 2.516,
+      "wave_1920x1088_cuda_speedup_vs_opencv": 2.721,
+      "wave_3840x2160_cuda_speedup_vs_opencv": 3.264
+    },
+    "format_boundary": {
+      "bgr8_cpu_cuda": "pass",
+      "bgr8_vic": "unsupported in this probe",
+      "nv12_er_cpu_cuda": "pass",
+      "nv12_er_vic": "pre-convert from BGR8 failed in this probe; native NV12/NV12_ER VIC Remap is not validated"
+    },
+    "claim_boundary": "Module/operator-level C++ Remap evidence only. No full-pipeline EIS, zero-copy, mesh-quality, or MMAPI integration claim.",
+    "completed_tasks": [
+      "P0 control-plane contract",
+      "P1 Python Remap failure boundary",
+      "P2 official C++ sample/header inspection",
+      "P3 minimal C++ Remap probe",
+      "P4 OpenCV vs VPI C++ Remap benchmark",
+      "P5 local wave map sanity",
+      "P6 NV12_ER/MMAPI scratch feasibility assessment",
+      "P7 boundary closeout",
+      "P8 diagnostic review images",
+      "P9 documentation sync"
+    ]
+  },
+  "frozen_variables": [
+    "no EIS quality tuning",
+    "no change to resid_r15_s07",
+    "no claim of full real-time EIS",
+    "no zero-copy claim",
+    "module/operator probe before MMAPI integration",
+    "official NVIDIA VPI samples and public docs are preferred references"
+  ],
+  "task_queue": [
+    {
+      "id": "P0",
+      "title": "Control-plane contract",
+      "objective": "Register the Remap C++ loop as the active engineering task.",
+      "success_criteria": [
+        "JSON parses",
+        "onboard points to this contract",
+        "doctor passes"
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "Python Remap failure boundary",
+      "objective": "Summarize existing Python Remap native-abort evidence and why C++ Remap remains worth probing.",
+      "success_criteria": [
+        "failure is classified as Python binding path, not global Remap impossibility",
+        "existing evidence paths are referenced",
+        "no new unmeasured claim is introduced"
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Official sample inspection",
+      "objective": "Inspect NVIDIA VPI C++ fisheye/remap sample and headers on Jetson.",
+      "success_criteria": [
+        "sample entry file is identified",
+        "required headers and build flags are identified",
+        "backend and format expectations are recorded"
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Minimal C++ Remap probe",
+      "objective": "Create and compile a minimal C++ Remap probe with identity or simple map.",
+      "success_criteria": [
+        "probe compiles on Jetson",
+        "probe runs at least one backend or records exact API/backend failure",
+        "output is readable if run succeeds"
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "OpenCV vs VPI C++ Remap benchmark",
+      "objective": "Compare OpenCV CPU remap and VPI C++ Remap on same input/map across small and high resolutions.",
+      "success_criteria": [
+        "latency table is produced",
+        "output sanity/diff is recorded",
+        "claim remains module-level only"
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "WarpGrid/local warp sanity",
+      "objective": "Run a small local warp or grid deformation to test whether the route can support future mesh/local warp work.",
+      "success_criteria": [
+        "output is readable or failure is classified",
+        "performance and format boundary are recorded",
+        "no product EIS claim is made"
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "MMAPI integration feasibility",
+      "objective": "Evaluate whether VPI C++ Remap can fit the current pitch-linear NV12_ER scratch and block-linear main-chain boundary.",
+      "success_criteria": [
+        "input/output formats are compared with current accepted device path",
+        "integration blockers are named",
+        "next step is either scoped integration or closeout"
+      ]
+    },
+    {
+      "id": "P7",
+      "title": "Negative-result closeout",
+      "objective": "If Remap is unavailable or not useful, explain the failure point and future conditions.",
+      "success_criteria": [
+        "failed API/build/backend/format is named",
+        "why not continue blindly is explained",
+        "prompt for internal AI is prepared if needed"
+      ]
+    },
+    {
+      "id": "P8",
+      "title": "Review evidence",
+      "objective": "If output is useful, generate a small visual evidence asset under the categorized review tree.",
+      "success_criteria": [
+        "review asset is copied to C:/Users/Admin/Videos/orin nx/review/diagnostic/...",
+        "asset is not committed",
+        "operator-demo boundary is explicit"
+      ]
+    },
+    {
+      "id": "P9",
+      "title": "Documentation sync",
+      "objective": "Update README, final benchmark, hardware boundary, and evidence map with measured Remap C++ result.",
+      "success_criteria": [
+        "only measured data is written",
+        "claim boundary remains module/operator-level",
+        "Python Remap and C++ Remap outcomes are not conflated"
+      ]
+    },
+    {
+      "id": "P10",
+      "title": "Long-term context maintenance",
+      "objective": "Record the Remap C++ loop result and next-action boundary in the long-term context.",
+      "success_criteria": [
+        "maintenance rules are respected",
+        "no raw log dumping",
+        "no internal/private material is copied"
+      ]
+    },
+    {
+      "id": "P11",
+      "title": "Final validation",
+      "objective": "Run control-plane and git hygiene checks.",
+      "success_criteria": [
+        "json.tool passes",
+        "harness doctor passes",
+        "Running main-gate claim remains forbidden",
+        "git diff --check passes"
+      ]
+    },
+    {
+      "id": "P12",
+      "title": "Commit readiness",
+      "objective": "Prepare optional commit scope without committing unless requested.",
+      "success_criteria": [
+        "git status is explained",
+        "large artifacts and secrets remain untracked",
+        "commit message suggestion includes required co-author trailer"
+      ]
+    }
+  ],
+  "forbidden_claims": [
+    "full real-time EIS",
+    "zero-copy full chain",
+    "VPI Remap accelerates full pipeline without same-input evidence",
+    "mesh/local warp solves Challenge sets",
+    "Python Remap native abort means C++ Remap is impossible"
+  ],
+  "stop_reasons": [
+    "Jetson build/runtime blocker that cannot be recovered locally",
+    "official sample/API does not support the needed operation on this VPI version",
+    "output semantics cannot be verified",
+    "route requires broad MMAPI rewrite before a module-level verifier",
+    "requires internal guidance after local/public evidence is exhausted"
+  ],
+  "evidence_output_directory": "results/vpi_remap_cpp_probe_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/diagnostic/<YYYYMMDD>_vpi_remap_cpp_probe"
+}

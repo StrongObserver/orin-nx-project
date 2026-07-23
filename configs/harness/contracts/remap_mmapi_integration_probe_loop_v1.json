@@ -1,0 +1,207 @@
+{
+  "schema_version": 1,
+  "contract_id": "remap_mmapi_integration_probe_loop_v1",
+  "status": "active",
+  "loop_type": "remap_mmapi_integration_probe",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Move the positive VPI C++ Remap operator result one step closer to the accepted MMAPI/VPI/NVENC device-stage path by replacing PerspectiveWarp with Remap on the pitch-linear scratch stage in a minimal diagnostic sample.",
+  "entry_context": {
+    "previous_result": "VPI C++ Remap works on CPU/CUDA, CUDA beats OpenCV CPU on tested identity/wave maps, and NV12_ER CPU/CUDA works in the standalone probe.",
+    "accepted_device_path": "block-linear NV12 main chain -> NvBufSurfTransform to pitch-linear NV12_ER scratch -> VPI CUDA PerspectiveWarp -> NvBufSurfTransform back -> NVENC",
+    "current_question": "Can Remap replace PerspectiveWarp at the VPI scratch stage without green output, tearing, unreadable output, or broad MMAPI rewrite?",
+    "quality_boundary": "resid_r15_s07 remains frozen; this is an operator/device-stage diagnostic, not EIS quality tuning."
+  },
+  "result": {
+    "report": "docs/remap_mmapi_integration_probe_2026-07-23.md",
+    "evidence_dir": "results/remap_mmapi_integration_probe_20260723/",
+    "review_dir": "C:/Users/Admin/Videos/orin nx/review/diagnostic/20260723_remap_mmapi_integration_probe/",
+    "decision": "Remap can replace PerspectiveWarp in a minimal MMAPI/VPI/NVENC diagnostic sample when dimensions satisfy WarpGrid/output-size requirements. The original wave black-border artifact was caused by zero-border sampling outside the source and was fixed with wave_safe FOV-safe scaling.",
+    "dimension_boundary": {
+      "regular05_640x360": "failed because WarpGrid aligned height to 368 and Remap requires output size to match the warp map",
+      "diagnostic_640x368_padded": "identity, wave, and wave_safe ran with rc=0"
+    },
+    "timing": {
+      "identity": {
+        "remap_frame100_ms": 1.58428,
+        "remap_avg_ms": 1.58938,
+        "stage_frame100_ms": 8.52976,
+        "stage_avg_ms": 10.5243
+      },
+      "wave": {
+        "remap_frame100_ms": 1.63013,
+        "remap_avg_ms": 1.59148,
+        "stage_frame100_ms": 8.32373,
+        "stage_avg_ms": 10.5737
+      },
+      "wave_safe": {
+        "remap_frame100_ms": 1.51261,
+        "remap_avg_ms": 1.54411,
+        "stage_frame100_ms": 7.27855,
+        "stage_avg_ms": 9.76975
+      }
+    },
+    "black_border_diagnosis": {
+      "wave_frame90_left_edge_black": 0.08388,
+      "wave_frame90_right_edge_black": 0.074703,
+      "wave_safe_frame90_left_edge_black": 0.0,
+      "wave_safe_frame90_right_edge_black": 0.0
+    },
+    "claim_boundary": "Diagnostic operator/device-stage integration only. No Regular EIS quality, no mesh/local-warp quality, no zero-copy, no full-pipeline acceleration."
+  },
+  "frozen_variables": [
+    "same MMAPI decode/encode structure where possible",
+    "pitch-linear NV12_ER scratch remains the first target",
+    "identity remap first, then local wave diagnostic map",
+    "no EIS quality tuning",
+    "no full real-time EIS claim",
+    "no zero-copy claim",
+    "no mesh/local-warp quality claim"
+  ],
+  "task_queue": [
+    {
+      "id": "P0",
+      "title": "Control-plane contract",
+      "objective": "Register this Remap-MMAPI integration probe as the current active task.",
+      "success_criteria": [
+        "JSON parses",
+        "onboard points to this contract",
+        "doctor passes"
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "Replacement boundary freeze",
+      "objective": "Identify the exact PerspectiveWarp replacement point and current scratch/wrapper format boundary.",
+      "success_criteria": [
+        "input/output scratch formats are named",
+        "wrapper path is named",
+        "replacement scope avoids unrelated MMAPI rewrite"
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Minimal Remap patch",
+      "objective": "Patch or create a minimal MMAPI sample that replaces vpiSubmitPerspectiveWarp with vpiSubmitRemap using an identity map.",
+      "success_criteria": [
+        "sample compiles",
+        "identity map payload is created",
+        "output is readable or failure is classified"
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Identity sanity run",
+      "objective": "Run identity Remap through the device-stage sample and compare readability/black-border behavior.",
+      "success_criteria": [
+        "rc is recorded",
+        "output frame readability is checked",
+        "green/tearing/black output is classified"
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "Local wave diagnostic",
+      "objective": "Run a local wave map through the device-stage sample if identity succeeds.",
+      "success_criteria": [
+        "output is readable",
+        "visible diagnostic warp exists",
+        "operator-demo boundary remains explicit"
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "Stage timing",
+      "objective": "Collect submit/sync/stage timing for Remap identity and wave, then compare against PerspectiveWarp boundary.",
+      "success_criteria": [
+        "timing fields are recorded",
+        "no module timing is promoted to full-pipeline claim"
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "Review artifact",
+      "objective": "Create a small diagnostic review asset for source/PerspectiveWarp/Remap identity/Remap wave if outputs are valid.",
+      "success_criteria": [
+        "review copy is under C:/Users/Admin/Videos/orin nx/review/diagnostic/",
+        "artifact is not committed",
+        "operator-demo boundary is explicit"
+      ]
+    },
+    {
+      "id": "P7",
+      "title": "Integration conclusion",
+      "objective": "Classify the integration as feasible, feasible-but-costly, blocked, or unsuitable for current MMAPI path.",
+      "success_criteria": [
+        "format/API/wrapper blockers are named if present",
+        "next step is clear",
+        "no vague conclusion"
+      ]
+    },
+    {
+      "id": "P8",
+      "title": "Knowledge recovery if blocked",
+      "objective": "Use local knowledge, official docs, public references, or internal-AI prompt only if local/sample evidence is insufficient.",
+      "success_criteria": [
+        "blocker is stated in plain language",
+        "attempts are listed",
+        "internal-AI prompt is produced only if needed"
+      ]
+    },
+    {
+      "id": "P9",
+      "title": "Documentation sync",
+      "objective": "Update measured Remap-MMAPI outcome in docs and evidence map.",
+      "success_criteria": [
+        "only measured data is written",
+        "C++ standalone Remap and MMAPI Remap outcomes are separated"
+      ]
+    },
+    {
+      "id": "P10",
+      "title": "Long-term context maintenance",
+      "objective": "Record concise result, evidence paths, and next boundary in long-term context.",
+      "success_criteria": [
+        "maintenance rules are respected",
+        "no raw log dumping"
+      ]
+    },
+    {
+      "id": "P11",
+      "title": "Final validation",
+      "objective": "Run control-plane and git hygiene checks.",
+      "success_criteria": [
+        "json.tool passes",
+        "doctor passes",
+        "Running main-gate claim remains forbidden",
+        "git diff --check passes"
+      ]
+    },
+    {
+      "id": "P12",
+      "title": "Commit readiness",
+      "objective": "Prepare optional commit scope without committing unless requested.",
+      "success_criteria": [
+        "status is explained",
+        "large artifacts and secrets remain untracked"
+      ]
+    }
+  ],
+  "forbidden_claims": [
+    "full real-time EIS",
+    "zero-copy full chain",
+    "mesh/local-warp quality solved",
+    "Remap accelerates full pipeline without same-input device-stage evidence",
+    "VIC Remap validated unless a native supported-format VIC path passes"
+  ],
+  "stop_reasons": [
+    "sample cannot compile after focused local fixes",
+    "Remap payload cannot accept the current scratch format",
+    "output is unreadable and the cause cannot be locally classified",
+    "route requires broad MMAPI rewrite before a minimal verifier",
+    "manual hardware/system action is required"
+  ],
+  "evidence_output_directory": "results/remap_mmapi_integration_probe_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/diagnostic/<YYYYMMDD>_remap_mmapi_integration_probe"
+}

@@ -1,0 +1,93 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1180" height="520" viewBox="0 0 1180 520" role="img" aria-labelledby="title desc">
+  <title id="title">Orin NX Device Dataflow Architecture</title>
+  <desc id="desc">Quality semantics, CPU matrix generation, MMAPI decode, VPI warp, NVENC encode, and profiling bottlenecks.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto">
+      <path d="M0,0 L8,3 L0,6 Z" fill="#2f3a45"/>
+    </marker>
+    <style>
+      .title { font: 700 22px Arial, sans-serif; fill: #1f2933; }
+      .label { font: 700 14px Arial, sans-serif; fill: #1f2933; }
+      .body { font: 12px Arial, sans-serif; fill: #354250; }
+      .small { font: 11px Arial, sans-serif; fill: #52606d; }
+      .box { fill: #f7f9fb; stroke: #9fb3c8; stroke-width: 1.4; rx: 8; }
+      .cpu { fill: #e8f4ff; stroke: #5f9ed1; }
+      .dev { fill: #eef8f0; stroke: #5ba46b; }
+      .warn { fill: #fff7e6; stroke: #d49b2a; }
+      .profile { fill: #f3edff; stroke: #8d6ccf; }
+      .line { stroke: #2f3a45; stroke-width: 1.6; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #7b8794; stroke-width: 1.2; fill: none; stroke-dasharray: 5 4; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect x="0" y="0" width="1180" height="520" fill="#ffffff"/>
+  <text x="40" y="42" class="title">Jetson Orin NX Heterogeneous Video Compute Dataflow</text>
+  <text x="40" y="66" class="small">EIS is the representative workload. The claim is measured device-side dataflow, not full real-time zero-copy EIS.</text>
+
+  <rect x="40" y="105" width="170" height="92" class="box cpu"/>
+  <text x="60" y="132" class="label">Regular Gate</text>
+  <text x="60" y="154" class="body">NUS Regular clips</text>
+  <text x="60" y="174" class="body">Challenge sets stay</text>
+  <text x="60" y="190" class="body">as boundaries</text>
+
+  <rect x="250" y="105" width="190" height="92" class="box cpu"/>
+  <text x="270" y="132" class="label">CPU EIS</text>
+  <text x="270" y="154" class="body">OpenCV quality baseline</text>
+  <text x="270" y="174" class="body">resid_r15_s07</text>
+  <text x="270" y="190" class="body">source_to_dest matrix</text>
+
+  <rect x="480" y="105" width="170" height="92" class="box dev"/>
+  <text x="500" y="132" class="label">MMAPI Decode</text>
+  <text x="500" y="154" class="body">H264 input</text>
+  <text x="500" y="174" class="body">block-linear NV12</text>
+  <text x="500" y="190" class="body">main surface</text>
+
+  <rect x="690" y="105" width="180" height="92" class="box warn"/>
+  <text x="710" y="132" class="label">Transform Sandwich</text>
+  <text x="710" y="154" class="body">main -> NV12_ER scratch</text>
+  <text x="710" y="174" class="body">scratch -> main</text>
+  <text x="710" y="190" class="body">layout boundary</text>
+
+  <rect x="910" y="105" width="190" height="92" class="box dev"/>
+  <text x="930" y="132" class="label">VPI CUDA Warp</text>
+  <text x="930" y="154" class="body">PerspectiveWarp</text>
+  <text x="930" y="174" class="body">EGLImage wrapper</text>
+  <text x="930" y="190" class="body">or NvBuffer pair</text>
+
+  <rect x="910" y="250" width="190" height="92" class="box dev"/>
+  <text x="930" y="277" class="label">NVENC Output</text>
+  <text x="930" y="299" class="body">block-linear NV12</text>
+  <text x="930" y="319" class="body">H264 output</text>
+  <text x="930" y="335" class="body">readable device result</text>
+
+  <rect x="690" y="250" width="180" height="92" class="box profile"/>
+  <text x="710" y="277" class="label">Profiling Result</text>
+  <text x="710" y="299" class="body">wrapper / sync</text>
+  <text x="710" y="319" class="body">transform / lifecycle</text>
+  <text x="710" y="335" class="body">dominate stage cost</text>
+
+  <rect x="480" y="250" width="170" height="92" class="box profile"/>
+  <text x="500" y="277" class="label">Lifecycle Follow-Up</text>
+  <text x="500" y="299" class="body">stream-only reuse</text>
+  <text x="500" y="319" class="body">wall +5.303%</text>
+  <text x="500" y="335" class="body">not zero-copy</text>
+
+  <rect x="250" y="250" width="190" height="92" class="box warn"/>
+  <text x="270" y="277" class="label">Rejected Routes</text>
+  <text x="270" y="299" class="body">image-wrapper reuse</text>
+  <text x="270" y="319" class="body">pitch-linear main encode</text>
+  <text x="270" y="335" class="body">block-linear VPI scratch</text>
+
+  <path d="M210 151 H250" class="line"/>
+  <path d="M440 151 H480" class="line"/>
+  <path d="M650 151 H690" class="line"/>
+  <path d="M870 151 H910" class="line"/>
+  <path d="M1005 197 V250" class="line"/>
+  <path d="M910 296 H870" class="dash"/>
+  <path d="M690 296 H650" class="dash"/>
+
+  <text x="40" y="410" class="label">Allowed claim</text>
+  <text x="40" y="432" class="body">Measured quality boundary + VPI module acceleration + profiled C++ MMAPI/VPI/NVENC device-stage dataflow.</text>
+  <text x="40" y="466" class="label">Forbidden claim</text>
+  <text x="40" y="488" class="body">Full real-time EIS, zero-copy full chain, VPI optical-flow acceleration, all-scene EIS, or queue-depth proof.</text>
+</svg>

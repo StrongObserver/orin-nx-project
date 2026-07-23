@@ -1,0 +1,161 @@
+{
+  "schema_version": 1,
+  "contract_id": "final_portfolio_and_reproducibility_loop_v1",
+  "status": "active",
+  "loop_type": "portfolio_reproducibility_closeout",
+  "loop_profile": "documentation_loop",
+  "autonomy_level": "L3",
+  "objective": "Turn the sealed Orin NX engineering evidence into a public-facing, reproducible, interview-ready portfolio package without opening new algorithm or performance experiments.",
+  "entry_context": {
+    "project_positioning": "Jetson Orin NX heterogeneous video compute and device-side dataflow optimization, with EIS as the representative workload.",
+    "quality_anchor": "resid_r15_s07",
+    "latest_lifecycle_result": "Stream-only reuse is accepted as a small device-stage lifecycle optimization under frozen Regular05 semantics.",
+    "current_blocker": "No technical blocker. The remaining work is portfolio clarity, reproducibility, evidence routing, and public hygiene."
+  },
+  "frozen_claim_boundary": {
+    "allowed": [
+      "Regular gate quality is accepted inside its operating envelope",
+      "VPI CUDA PerspectiveWarp has module-level speed and 4K perf/watt evidence",
+      "MMAPI/VPI/NVENC device-side stage is measured and profiled",
+      "NvBuffer pair is a quality-preserving dataflow follow-up with small gains",
+      "stream-only reuse is a small lifecycle optimization",
+      "Nsight/NVTX shows wrapper/sync/transform/lifecycle cost dominates"
+    ],
+    "forbidden": [
+      "full real-time EIS product",
+      "zero-copy full chain",
+      "all-scene or product-grade EIS quality",
+      "VPI optical-flow acceleration",
+      "queue-depth or double-buffering proven beneficial",
+      "reopening global affine/rigid quality tuning"
+    ]
+  },
+  "task_queue": [
+    {
+      "id": "P0",
+      "title": "Control-plane routing",
+      "objective": "Register this portfolio/reproducibility loop and keep completed engineering contracts as supporting evidence.",
+      "success_criteria": [
+        "JSON parses",
+        "onboard points to this contract",
+        "doctor passes"
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "README portfolio rewrite",
+      "objective": "Make README read like a mature engineering project entry instead of a chronological log.",
+      "success_criteria": [
+        "top section contains positioning, key results, architecture, reproduction, and claim boundary",
+        "technical numbers remain traceable to existing docs/results",
+        "no internal/private material is copied"
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Reproducibility guide",
+      "objective": "Create a layered reproducibility guide for harness, Regular baseline, VPI module, MMAPI device stage, Nsight, and lifecycle evidence.",
+      "success_criteria": [
+        "each layer has purpose, command, expected output, and claim boundary",
+        "commands are copyable",
+        "large ignored artifacts are referenced but not committed"
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Architecture assets",
+      "objective": "Create compact SVG assets for device dataflow and evidence stack.",
+      "success_criteria": [
+        "assets are tracked text SVG files",
+        "no private screenshots or internal material are included",
+        "diagrams reinforce the same claim boundaries as README"
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "Reader-oriented evidence map",
+      "objective": "Add a reader path that routes quality, performance, hardware acceleration, failure boundary, and zero-copy questions to the right evidence.",
+      "success_criteria": [
+        "human reader can find the right evidence without scanning all results",
+        "ignored results and outside review videos remain clearly labeled",
+        "sensitive paths are not exposed beyond existing local evidence references"
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "Interview Q&A strengthening",
+      "objective": "Add realistic interview questions and answers grounded in measured evidence.",
+      "success_criteria": [
+        "answers include numbers and trade-offs",
+        "forbidden claims remain explicitly forbidden",
+        "next-step answer does not imply unmeasured work is complete"
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "Resume bullets",
+      "objective": "Create short, medium, and long resume wording that preserves claim boundaries.",
+      "success_criteria": [
+        "each bullet includes platform, method, measurable result, and boundary",
+        "no full real-time or zero-copy claim",
+        "wording is suitable for campus recruitment"
+      ]
+    },
+    {
+      "id": "P7",
+      "title": "Public hygiene scan",
+      "objective": "Check for secrets, large artifacts, private/internal references, and ignored result leakage.",
+      "success_criteria": [
+        "secret scan covers tracked docs/config/source",
+        "results/raw/review assets remain ignored",
+        "passwords from oral template are not copied into tracked docs"
+      ]
+    },
+    {
+      "id": "P8",
+      "title": "Long-term context maintenance",
+      "objective": "Update the allowed long-term context sections with the portfolio/reproducibility closeout.",
+      "success_criteria": [
+        "maintenance rules are respected",
+        "only concise conclusion and paths are recorded",
+        "no raw execution log is copied"
+      ]
+    },
+    {
+      "id": "P9",
+      "title": "Final validation",
+      "objective": "Run control-plane and diff hygiene checks.",
+      "success_criteria": [
+        "json.tool passes",
+        "harness doctor passes",
+        "Running main-gate claim remains forbidden",
+        "git diff --check passes"
+      ]
+    },
+    {
+      "id": "P10",
+      "title": "Commit readiness",
+      "objective": "Prepare the project for an optional user-approved commit.",
+      "success_criteria": [
+        "git status is explained",
+        "large or secret files are not staged",
+        "commit is not created unless the user requests it"
+      ]
+    }
+  ],
+  "stop_reasons": [
+    "verification fails and cannot be fixed locally",
+    "a required public-hygiene decision needs user judgment",
+    "editing would copy internal/private material into public docs",
+    "user changes the objective"
+  ],
+  "expected_outputs": [
+    "README.md",
+    "docs/reproducibility_guide.md",
+    "docs/presentation/assets/device_dataflow_architecture.svg",
+    "docs/presentation/assets/evidence_stack.svg",
+    "docs/evidence_reader_path.md",
+    "docs/presentation/interview_qna.md",
+    "docs/presentation/resume_bullets.md"
+  ]
+}

@@ -1,0 +1,238 @@
+{
+  "schema_version": 1,
+  "contract_id": "local_warp_quality_bridge_loop_v1",
+  "status": "completed",
+  "loop_type": "local_warp_quality_bridge",
+  "loop_profile": "quality_loop",
+  "autonomy_level": "L3",
+  "objective": "Bridge the completed Remap-MMAPI operator capability toward a real EIS boundary question by testing whether a constrained local Remap correction can reduce a measurable local residual on a challenge/global-model-risk sample.",
+  "entry_context": {
+    "project_positioning": "Jetson Orin NX heterogeneous video compute and device-side dataflow optimization, with EIS as the representative workload.",
+    "previous_operator_result": "C++ Remap and Remap-MMAPI diagnostic paths work under known size/FOV boundaries.",
+    "quality_anchor": "resid_r15_s07 remains frozen for Regular-gate quality. This loop must not replace or degrade it.",
+    "current_question": "Can a small local Remap correction address one measurable global-warp boundary case, or is local warp not useful without a more complete mesh/RS/gyro model?"
+  },
+  "result": {
+    "report": "docs/local_warp_quality_bridge_2026-07-23.md",
+    "evidence_dir": "results/local_warp_quality_bridge_20260723/",
+    "review_video": "C:/Users/Admin/Videos/orin nx/review/diagnostic/20260723_local_warp_quality_bridge/20260723_local_warp_bridge_parallax10_source_vs_candidates_grid.mp4",
+    "primary_sample": "results/nus_parallax_challenge_v1_curated/raw_clips/parallax10_parallax_13.mp4",
+    "backup_sample": "results/nus_parallax_challenge_v1_curated/raw_clips/parallax09_parallax_12.mp4",
+    "decision": "Static single-cell local Remap correction did not improve the selected parallax/global-warp boundary. The route is classified as no useful quality gain from this simple local correction.",
+    "baseline_metrics": {
+      "global_residual_p95_avg": 2.196383,
+      "cell_mean_max_avg": 1.974301,
+      "cell_mean_range_avg": 1.446885
+    },
+    "tested_candidates": [
+      {
+        "target": "gx0 gy3",
+        "strength": 1.0,
+        "global_residual_p95_avg": 2.216424,
+        "cell_mean_max_avg": 2.002721,
+        "cell_mean_range_avg": 1.463025,
+        "outcome": "worse"
+      },
+      {
+        "target": "gx0 gy3",
+        "strength": 0.5,
+        "global_residual_p95_avg": 2.198613,
+        "cell_mean_max_avg": 1.986436,
+        "cell_mean_range_avg": 1.449056,
+        "outcome": "neutral/slightly worse"
+      },
+      {
+        "target": "gx3 gy3",
+        "strength": 0.5,
+        "global_residual_p95_avg": 2.200762,
+        "cell_mean_max_avg": 1.996831,
+        "cell_mean_range_avg": 1.459487,
+        "outcome": "worse"
+      },
+      {
+        "target": "gx3 gy0",
+        "strength": 0.5,
+        "global_residual_p95_avg": 2.205726,
+        "cell_mean_max_avg": 1.987898,
+        "cell_mean_range_avg": 1.448646,
+        "outcome": "worse/neutral"
+      }
+    ],
+    "p5_p6_decision": "Not triggered for implementation. CPU/OpenCV prototype did not show value, so VPI C++ Remap and Remap-MMAPI local correction were not pursued for this map.",
+    "claim_boundary": "Negative diagnostic quality bridge result only. Remap operator remains valuable, but this static local correction does not solve parallax/local EIS quality."
+  },
+  "frozen_boundaries": [
+    "Do not tune global affine/rigid EIS parameters.",
+    "Do not alter the accepted Regular-gate quality anchor.",
+    "Use one chosen diagnostic/challenge sample first.",
+    "CPU/OpenCV local correction prototype comes before VPI/MMAPI integration.",
+    "Any output is diagnostic until human review and metrics support it.",
+    "Do not claim mesh/local-warp EIS is solved."
+  ],
+  "task_queue": [
+    {
+      "id": "P0",
+      "title": "Control-plane contract",
+      "objective": "Register this local-warp quality bridge loop.",
+      "success_criteria": [
+        "JSON parses",
+        "onboard points to this contract",
+        "doctor passes"
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "Boundary sample selection",
+      "objective": "Choose one primary global-model-risk or Parallax sample and one backup sample.",
+      "success_criteria": [
+        "sample is justified by scene-gate or metadata evidence",
+        "sample path is available locally",
+        "claim role is diagnostic/challenge only"
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Local problem definition",
+      "objective": "Measure or visualize the local residual issue before applying local Remap.",
+      "success_criteria": [
+        "target region or grid is selected",
+        "baseline local residual or block motion is recorded",
+        "problem is not assumed from visual impression alone"
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Local correction map",
+      "objective": "Construct a constrained local dx/dy correction map with smooth falloff and FOV safety.",
+      "success_criteria": [
+        "map has bounded strength",
+        "map has smooth spatial falloff",
+        "black-border risk is controlled"
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "CPU OpenCV Remap prototype",
+      "objective": "Apply the correction map with OpenCV remap and evaluate local residual/visual side effects.",
+      "success_criteria": [
+        "output is readable",
+        "local metric improves or failure is clear",
+        "new artifacts are checked"
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "VPI C++ Remap reproduction",
+      "objective": "If CPU prototype is useful, reproduce the map with VPI C++ Remap as a module-level check.",
+      "success_criteria": [
+        "VPI output is readable",
+        "map direction matches OpenCV output",
+        "latency is recorded"
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "Remap-MMAPI diagnostic",
+      "objective": "If VPI module is useful, run a diagnostic MMAPI scratch-stage Remap with the correction map.",
+      "success_criteria": [
+        "rc=0",
+        "output is readable",
+        "stage timing is recorded"
+      ]
+    },
+    {
+      "id": "P7",
+      "title": "Review video",
+      "objective": "Create source / global baseline / local CPU / local VPI-or-MMAPI side-by-side evidence.",
+      "success_criteria": [
+        "review copy is in the categorized tree",
+        "artifact is not committed",
+        "operator/diagnostic boundary is explicit"
+      ]
+    },
+    {
+      "id": "P8",
+      "title": "Local quality metrics",
+      "objective": "Measure local residual, black border, and frame-diff sanity for the target region.",
+      "success_criteria": [
+        "metric is tied to the chosen local issue",
+        "visual and metric conclusions agree or mismatch is explained",
+        "no all-scene claim is made"
+      ]
+    },
+    {
+      "id": "P9",
+      "title": "Benefit classification",
+      "objective": "Classify the route as useful, useful-but-artifact-prone, not useful, or blocked.",
+      "success_criteria": [
+        "classification is explicit",
+        "next action is narrow",
+        "no vague success wording"
+      ]
+    },
+    {
+      "id": "P10",
+      "title": "Knowledge recovery if blocked",
+      "objective": "Use local knowledge, public references, or internal-AI prompt if map design cannot be justified.",
+      "success_criteria": [
+        "blocker is plain-language",
+        "attempts are listed",
+        "prompt is provided only if needed"
+      ]
+    },
+    {
+      "id": "P11",
+      "title": "Documentation sync",
+      "objective": "Update measured result and claim boundary in docs.",
+      "success_criteria": [
+        "only measured data is written",
+        "accepted Regular quality remains separate",
+        "Remap operator result is not inflated"
+      ]
+    },
+    {
+      "id": "P12",
+      "title": "Long-term context maintenance",
+      "objective": "Record concise result and next boundary in the long-term context.",
+      "success_criteria": [
+        "maintenance rules are respected",
+        "no raw log dumping"
+      ]
+    },
+    {
+      "id": "P13",
+      "title": "Final validation",
+      "objective": "Run control-plane and git hygiene checks.",
+      "success_criteria": [
+        "json.tool passes",
+        "doctor passes",
+        "Running main-gate claim remains forbidden",
+        "git diff --check passes"
+      ]
+    },
+    {
+      "id": "P14",
+      "title": "Commit readiness",
+      "objective": "Prepare optional commit scope without committing unless requested.",
+      "success_criteria": [
+        "status is explained",
+        "large artifacts and secrets remain untracked"
+      ]
+    }
+  ],
+  "forbidden_claims": [
+    "mesh/local-warp EIS solved",
+    "all-scene EIS quality",
+    "Regular-gate anchor replaced",
+    "full real-time EIS",
+    "zero-copy full chain"
+  ],
+  "stop_reasons": [
+    "no measurable local residual exists on chosen sample",
+    "local correction worsens visual quality or creates unacceptable artifacts",
+    "map design requires unverified industrial knowledge after local/public search",
+    "VPI/MMAPI integration would require broad rewrite before CPU proof"
+  ],
+  "evidence_output_directory": "results/local_warp_quality_bridge_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/diagnostic/<YYYYMMDD>_local_warp_quality_bridge"
+}

@@ -193,6 +193,21 @@ NvBuffer pair follow-up:
   This is a quality-preserving dataflow improvement, not zero-copy or full
   pipeline acceleration.
 
+Nsight/NVTX device-stage profile:
+  The profiling closeout is complete. `vpiSubmitPerspectiveWarp` is only about
+  0.022-0.024 ms, and `VPI:Perspective Warp` is about 0.763-0.805 ms under
+  capture. The dominant costs are wrap+submit+sync, stream sync, transforms,
+  and CUDA/EGL lifecycle calls such as register/unregister/free/synchronize.
+  P6/P7 queue-depth or double-buffering work is not triggered by current
+  evidence.
+
+Stream-only reuse lifecycle result:
+  A 10-run same-source Regular05 repeat promoted stream-only reuse as a small
+  accepted lifecycle optimization. It keeps the safe rule: reuse VPI stream,
+  recreate image wrappers per frame. Wall mean improved 1.946819 s -> 1.843571 s
+  and stage running avg improved 10.336381 ms -> 9.680414 ms. This does not
+  revive EGLImage image-wrapper reuse and does not prove zero-copy.
+
 Identity warp:
   Identity PerspectiveWarp is only slightly faster than the inclusion matrix
   path, so matrix complexity is not the current bottleneck.
@@ -247,9 +262,11 @@ PyrLK / Remap backend boundary:
   VPI PyrLK CPU/CUDA can run, but in the current same-keypoint probe OpenCV is
   the better motion-estimation path: OpenCV PyrLK averaged 1.378 ms with about
   111 valid points, while VPI CUDA averaged 1.672 ms with about 37 valid points.
-  Dense Optical Flow is not implemented in the current Python probe. VPI Remap
-  exists as an API, but the Python WarpMap/Image.remap path aborts in the native
-  binding; future Remap work should use a C++/official sample route.
+  Dense Optical Flow is not implemented in the current Python probe. Python VPI
+  Remap aborts in the native binding, but C++ Remap now runs on CPU/CUDA. CUDA
+  Remap is about 2.5x-3.4x faster than OpenCV CPU on tested identity/wave module
+  maps, and NV12_ER CPU/CUDA works at 640x368. This is module/operator evidence,
+  not MMAPI integration or full EIS acceleration.
 ```
 
 Conclusion:
@@ -261,8 +278,9 @@ latency/perf-watt, while the C++ MMAPI/VPI/NVENC path explains the device
 dataflow boundary. The accepted consumer/FIFO path is healthy, but it is not
 zero-copy: wrapper lifecycle, sync, and transform sandwich costs are still
 measured. The accepted quality recovery result is resid_r15_s07. The next best
-proof for the refined project design is an NVTX/Nsight timeline or equivalent
-stage-level profile for the accepted C++ device path.
+proof has now been completed: NVTX/Nsight profiling confirms that the accepted
+C++ stage is wrapper/sync/transform/lifecycle dominated, not limited by the
+PerspectiveWarp submit call alone.
 ```
 
 ## Model Boundary
@@ -294,6 +312,9 @@ is not currently worthwhile, and the MMAPI/VPI/NVENC path now has an accepted
 Regular gate EGLImage device path, a FIFO/live handoff checkpoint, and a
 format-matched NvBuffer pair follow-up that keeps the `resid_r15_s07` quality
 anchor while shaving a small measured portion of the device-side stage cost.
+Nsight/NVTX then shows why the next work should not be a broad scheduler
+rewrite: the current cost is wrapper/sync/transform/lifecycle dominated, not a
+hidden PerspectiveWarp-kernel bottleneck.
 ```
 
 ## Evidence
@@ -321,4 +342,14 @@ results/pyr_lk_opencv_vpi_compare_20260722_v2/
 results/regular05_submit_sync_probe_20260722/
 results/regular_gate_nvbuffer_pair_resid_20260723/
 results/regular05_eglimage_timing_resid_compare_20260723/
+docs/presentation/final_benchmark_table.md
+docs/presentation/dataflow_architecture.md
+docs/presentation/claim_boundary.md
+docs/nsight_device_stage_profile_result_2026-07-23.md
+results/nsight_device_stage_profile_20260723/
+docs/device_stage_lifecycle_budget_2026-07-23.md
+docs/device_stage_lifecycle_perf_result_2026-07-23.md
+results/device_stage_lifecycle_perf_20260723/
+docs/vpi_remap_cpp_probe_2026-07-23.md
+results/vpi_remap_cpp_probe_20260723/
 ```

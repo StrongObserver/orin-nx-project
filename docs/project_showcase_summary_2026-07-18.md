@@ -232,28 +232,26 @@ C:\Users\Admin\Videos\orin nx\review\performance\20260723_regular_gate_nvbuffer_
 
 The next most valuable loop is not another global LP parameter sweep.
 
-Use one of these scoped directions:
+The current stage has now reached presentation closeout:
 
 1. Keep `resid_r15_s07` as the current Regular-gate quality anchor.
-2. Use `nsight_device_stage_profile_v1` as the recommended next engineering
-   proof for the refined heterogeneous-video-compute design.
-3. Keep `presentation_closeout_v1` as the completed interview-facing
+2. Treat `nsight_device_stage_profile_v1` as completed first-stage profiling:
+   wrapper/sync/transform/lifecycle cost dominates, and P6/P7 scheduler work is
+   not triggered.
+3. Use `final_evidence_package_closeout_v1` as the current interview-facing
    synchronization checkpoint.
 4. If a future dataflow loop starts, scope it to same-source/same-matrix
-   dataflow A/B around the format-matched NvBuffer pair path.
+   lifecycle A/B around wrapper/register/free/sync cost or the format-matched
+   NvBuffer pair path.
 5. Do not use outdoor-car inverse/post_geometry results as EIS-quality progress.
 6. Do not reopen limiter/R/LP/residual-strength/safe103/inclusion sweeps for
    the accepted quality issue.
 
-Active next contracts:
+Current closeout contracts:
 
 ```text
-configs/harness/contracts/regular_performance_baseline_est0p5_grid16.json
-configs/harness/contracts/regular05_estimate_scale_quality_perf.json
-configs/harness/contracts/regular_gate_est0p5_grid16_validation_v1.json
-configs/harness/contracts/gst_nvmm_decode_convert_latency_v1.json
-configs/harness/contracts/device_matrix_warp_demo_v1.json
 configs/harness/contracts/orin_next_engineering_loop_v1.json
+configs/harness/contracts/final_evidence_package_closeout_v1.json
 configs/harness/contracts/nsight_device_stage_profile_v1.json
 configs/harness/contracts/presentation_closeout_v1.json
 ```

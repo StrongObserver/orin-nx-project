@@ -14,48 +14,122 @@ EIS representative workload
 -> honest boundary and trade-off summary for interviews
 ```
 
+## Portfolio Overview
+
+This repository is best read as a measured systems project:
+
+```text
+Quality boundary -> CPU baseline -> VPI module evidence
+-> MMAPI/VPI/NVENC device stage -> Nsight attribution
+-> small lifecycle/dataflow optimizations -> honest claim boundary
+```
+
+### Key Results
+
+| Layer | Result | Boundary |
+|---|---|---|
+| Regular quality | `lp_rigid_strength080_dynzoom106 + estimate_scale=0.5 + feature_grid_size=16` passed 5/5 NUS Regular clips and was human accepted | Regular gate only, not all-scene EIS |
+| Quality recovery | `resid_r15_s07` is the accepted Regular-gate stabilization-strength anchor | Supersedes BQP/spike_mid/safe103 for current quality comparisons |
+| CPU optimization | Regular05 estimate time `8.568 ms -> 3.022 ms`; wall `8.473 s -> 7.565 s` | CPU/OpenCV pipeline optimization |
+| VPI module acceleration | 4K PerspectiveWarp `48.995 ms -> 20.514 ms`; `1.682 -> 4.385 FPS/W` | Module-level evidence, not full-pipeline acceleration |
+| VPI C++ Remap | CUDA Remap is `2.5x-3.4x` faster than OpenCV CPU on tested BGR8 identity/wave maps | Module/operator evidence; Python Remap still failed |
+| Remap-MMAPI diagnostic | 640x368 padded source runs Remap identity/wave through MMAPI/VPI/NVENC scratch stage with `rc=0` | Device-stage operator integration evidence; not Regular EIS quality |
+| Local-warp quality bridge | Static single-cell local Remap correction on `parallax10` did not improve local residual metrics | Negative diagnostic result; richer dynamic mesh/depth/RS model needed |
+| Python dataflow boundary | appsink readback about `7.93 ms/frame`; appsink -> appsrc -> encode about `15.81 ms/frame` | Explains why Python-in-loop is not the acceleration path |
+| C++ device stage | MMAPI/NVDEC -> block-linear NV12 -> pitch-linear NV12_ER scratch -> VPI CUDA warp -> NVENC | Device-stage evidence, not full real-time EIS |
+| NvBuffer pair | Preserves `resid_r15_s07`; stage frame100 `7.535 ms -> 7.230 ms` | Small quality-preserving dataflow gain, not zero-copy |
+| Nsight/NVTX | `vpiSubmitPerspectiveWarp` about `0.02 ms`; wrapper/sync/transform/lifecycle dominates | Bottleneck attribution |
+| Stream-only reuse | 10-run repeat wall mean `1.946819 s -> 1.843571 s`; stage avg `10.336381 ms -> 9.680414 ms` | Small lifecycle optimization; image wrappers are still recreated |
+
+### Architecture
+
+```text
+Regular clips
+-> CPU/OpenCV EIS and matrix generation
+-> resid_r15_s07 source_to_dest matrices
+-> MMAPI/NVDEC block-linear NV12 main chain
+-> NvBufSurfTransform to pitch-linear NV12_ER scratch
+-> VPI CUDA PerspectiveWarp
+-> NvBufSurfTransform back to block-linear NV12
+-> NVENC output
+```
+
+Diagrams:
+
+```text
+docs/presentation/assets/device_dataflow_architecture.svg
+docs/presentation/assets/evidence_stack.svg
+```
+
+### Reproduce
+
+Start with the control plane:
+
+```powershell
+py -3.12 scripts\harness_runner.py onboard
+py -3.12 scripts\harness_runner.py doctor
+py -3.12 scripts\harness_runner.py check-claim --gate-id nus_running_gate_v1 --claim main_gate_success_rate
+```
+
+Then follow the layered guide:
+
+```text
+docs/reproducibility_guide.md
+```
+
+### Evidence Routes
+
+```text
+docs/evidence_reader_path.md
+docs/presentation/final_benchmark_table.md
+docs/presentation/dataflow_architecture.md
+docs/presentation/claim_boundary.md
+docs/device_stage_lifecycle_perf_result_2026-07-23.md
+docs/nsight_device_stage_profile_result_2026-07-23.md
+```
+
+### Claim Boundary
+
+Allowed:
+
+```text
+Regular-gate EIS quality
+module-level VPI CUDA acceleration and 4K FPS/W
+module-level VPI C++ Remap acceleration
+measured MMAPI/VPI/NVENC device-stage dataflow
+small NvBuffer pair and stream-only lifecycle improvements
+Nsight-backed wrapper/sync/transform/lifecycle attribution
+```
+
+Forbidden:
+
+```text
+full real-time EIS product
+zero-copy full chain
+full-pipeline acceleration from module-only or stage-only evidence
+VPI optical-flow acceleration
+all-scene or product-grade EIS quality
+queue-depth or double-buffering proven beneficial
+```
+
 ## Current Highlights
 
 ```text
+Current sealed stage:
+  Final evidence package closeout and lifecycle follow-up are complete.
+  Nsight/NVTX profiling has been captured and summarized.
+  Stream-only reuse is accepted as a small lifecycle optimization.
+  Queue-depth or double-buffering work is not triggered by current evidence.
+
 Regular performance baseline:
   lp_rigid_strength080_dynzoom106 + estimate_scale=0.5 + feature_grid_size=16
   NUS Regular gate: 5/5 objective pass and human accepted
-
-VPI acceleration boundary:
-  640x360 full Python EIS pipeline is slower with VPI backend swap
-  720p -> 4K warp-heavy module shows 1.35x -> 2.33x VPI CUDA speedup
-
-Challenge model boundary:
-  Running / QuickRotation / Parallax / Crowd expose global-warp FOV, rotation,
-  parallax, and foreground-motion limits
-
-GStreamer/NVMM boundary:
-  Python appsink/appsrc pass-through costs about 15.81 ms/frame before EIS work,
-  so direct Python-in-the-loop EIS integration is not the next acceleration path
 
 Device-side MMAPI/VPI/NVENC path:
   The accepted C++ EGLImage-wrapper path now runs decode -> block-linear main
   NvBufSurface -> pitch-linear NV12_ER scratch -> VPI CUDA warp -> block-linear
   NV12 -> NVENC. It is the frozen Regular gate C++ device path, not a full
   real-time or zero-copy EIS claim.
-
-Regular05 FIFO matrix handoff:
-  Regular05 now uses source_to_dest convention for EIS-quality device replay.
-  Fixed/offline-LP/delay90 CSV, fixed FIFO, delay90 FIFO, and concurrent live
-  delay90 matrices all reached zero fallback and zero frame-index mismatch
-  through the accepted C++ consumer. This validates the consumer/FIFO path, but
-  not full real-time EIS because the live producer is still too slow.
-
-Regular05 producer scheduling:
-  Producer profiling showed repeated LP prefix solving, not LK/RANSAC or FIFO
-  handoff, dominated live_delay90 wall time. The optional stride-5 producer
-  reduced Jetson producer-only time from about 68.5s to about 15.7s for 180
-  frames. The accepted EGLImage FIFO consumer kept rc=0, fallback=0,
-  frame-index mismatch=0, and black-border p95 below 1%. This remains a
-  Regular05 bounded-delay producer result. Concurrent live stride5 reduced
-  180-frame wall time from about 68.7s to 17.5s and produced the same device
-  output as precomputed stride5, but it is still not a zero-latency real-time
-  EIS claim.
 
 Regular gate viewport-stable extension:
   The user accepted Regular05 `safe103_crop98` as the viewport-stable candidate:
@@ -515,9 +589,11 @@ The current device-side acceleration path should stay scoped:
 6. do not reuse EGLImage image wrappers in this MMAPI path;
 7. treat NvBuffer pair as a small quality-preserving dataflow-stage follow-up,
    not a zero-copy or full-pipeline acceleration result;
-8. do not return to Python appsink/appsrc EIS integration;
-9. the highest-value remaining evidence is a final architecture/result table
-   and an NVTX/Nsight Systems timeline for the C++ device-side stage.
+8. treat stream-only reuse as a small lifecycle optimization only, not
+   image-wrapper reuse or zero-copy;
+9. do not return to Python appsink/appsrc EIS integration;
+10. use the final evidence package, architecture table, Nsight/NVTX result, and
+   lifecycle repeat result as the current presentation closeout.
 ```
 
 Current accepted Regular05 device path:
@@ -535,16 +611,29 @@ Current active contracts:
 
 ```text
 configs/harness/contracts/orin_next_engineering_loop_v1.json
-configs/harness/contracts/nsight_device_stage_profile_v1.json
+configs/harness/contracts/final_evidence_package_closeout_v1.json
 ```
 
 Important completed or supporting contracts:
 
 ```text
 configs/harness/contracts/presentation_closeout_v1.json
+configs/harness/contracts/nsight_device_stage_profile_v1.json
 configs/harness/contracts/regular_gate_stabilization_strength_recovery_loop_v1.json
 configs/harness/contracts/regular05_live_eglimage_path_v1.json
 configs/harness/contracts/regular05_eglimage_wrapper_reuse_root_cause_v1.json
+```
+
+Final evidence package docs:
+
+```text
+docs/presentation/final_benchmark_table.md
+docs/presentation/dataflow_architecture.md
+docs/presentation/claim_boundary.md
+docs/nsight_device_stage_profile_result_2026-07-23.md
+docs/device_stage_lifecycle_budget_2026-07-23.md
+docs/device_stage_lifecycle_perf_result_2026-07-23.md
+docs/regular_gate_nvbuffer_pair_resid_2026-07-23.md
 ```
 
 Rejected or diagnostic-only routes:

@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "contract_id": "device_stage_lifecycle_perf_loop_v1",
+  "status": "completed",
+  "loop_type": "device_stage_lifecycle_perf",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Continue the Orin NX engineering loop after final evidence closeout by running a narrow device-stage lifecycle/perf investigation under frozen Regular05 semantics.",
+  "entry_context": {
+    "quality_anchor": "resid_r15_s07",
+    "accepted_device_path": "MMAPI/NVDEC block-linear NV12 main chain -> NvBufSurfTransform to pitch-linear NV12_ER scratch -> VPI CUDA PerspectiveWarp -> NvBufSurfTransform back to block-linear NV12 -> NVENC",
+    "completed_profile": "Nsight/NVTX evidence shows wrapper/sync/transform/lifecycle cost dominates over vpiSubmitPerspectiveWarp.",
+    "current_reason_to_continue": "The final evidence package is sealed; the next engineering progress should test whether a narrow lifecycle/perf A/B can turn the profiling attribution into an additional measured result."
+  },
+  "result": {
+    "stage_budget_doc": "docs/device_stage_lifecycle_budget_2026-07-23.md",
+    "result_doc": "docs/device_stage_lifecycle_perf_result_2026-07-23.md",
+    "evidence_dir": "results/device_stage_lifecycle_perf_20260723/",
+    "promoted_candidate": "EGLImage stream-only reuse",
+    "repeat_result": {
+      "runs_per_path": 10,
+      "paths": [
+        "accepted EGLImage",
+        "EGLImage stream-only reuse"
+      ],
+      "robustness": {
+        "accepted_eglimage_rc_zero": "10/10",
+        "stream_only_reuse_rc_zero": "10/10",
+        "fallback_total": 0
+      },
+      "benefit_vs_accepted_eglimage": {
+        "wall_mean_improve_pct": 5.303,
+        "stage100_improve_pct": 6.97,
+        "stage_avg_improve_pct": 6.346,
+        "wrapper_improve_pct": 8.703,
+        "warp_avg_improve_pct": -10.453
+      }
+    },
+    "power_boundary": "tegrastats activity evidence was collected, but hard board-input FPS/W was not produced because INA rail power was not collected in this loop.",
+    "decision": "Promote stream-only reuse as a small accepted device-stage lifecycle optimization. Do not trigger queue-depth, double-buffering, zero-copy, or broad scheduler work."
+  },
+  "frozen_variables": [
+    "input source: Regular05 same-source boundary unless a new contract explicitly changes it",
+    "matrix: resid_r15_s07 for quality-preserving comparisons",
+    "matrix convention: source_to_dest",
+    "frame/FPS boundary: keep same frame-count and avoid mixed 25fps/30fps panels",
+    "crop/postprocess boundary: do not change quality semantics inside this loop",
+    "consumer path: accepted C++ EGLImage path, stream-only reuse candidate, or format-matched NvBuffer pair candidate",
+    "output must be readable and handoff fallback must stay zero"
+  ],
+  "forbidden_routes": [
+    "global affine/rigid EIS quality tuning",
+    "lim/R/LP/safe103/inclusion/residual-strength sweeps",
+    "mesh/grid warp route",
+    "VPI optical-flow acceleration claims",
+    "EGLImage image-wrapper reuse revival",
+    "pitch-linear main encoder chain",
+    "block-linear VPI scratch pair",
+    "direct mismatched NvBuffer input",
+    "broad queue-depth or double-buffering rewrite without new idle-gap evidence",
+    "zero-copy full-chain claim"
+  ],
+  "task_queue": [
+    {
+      "id": "P0",
+      "title": "Control-plane contract",
+      "objective": "Register this loop as the current active task and keep final evidence closeout as completed support.",
+      "success_criteria": [
+        "JSON parses",
+        "onboard points to this contract",
+        "doctor passes"
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "Nsight stage-budget attribution",
+      "objective": "Turn existing Nsight CSV exports into a stage-budget and actionability table.",
+      "success_criteria": [
+        "NVTX and CUDA API costs are grouped",
+        "candidate optimization routes are ranked by measured cost and risk",
+        "no new timing is invented"
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Candidate A/B selection",
+      "objective": "Select only the narrow candidates justified by P1 and existing lifecycle repeat evidence.",
+      "success_criteria": [
+        "each candidate has one verifier and one stop rule",
+        "broad scheduler rewrite remains closed unless evidence changes",
+        "quality semantics remain frozen"
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Long-run lifecycle A/B",
+      "objective": "Run or prepare a same-source long-run repeat for accepted EGLImage, stream-only reuse, and/or NvBuffer pair.",
+      "success_criteria": [
+        "same source and same matrix are used",
+        "rc=0 and fallback=0",
+        "stage/wall p50 or mean is reported",
+        "candidate is promoted only if improvement is stable and meaningful"
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "Device-stage perf-watt check",
+      "objective": "Collect or bound a device-stage power/perf result without changing system configuration broadly.",
+      "success_criteria": [
+        "power source and sampling method are explicit",
+        "no sudo password is stored",
+        "result is labeled device-stage, not full EIS pipeline perf/watt"
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "Negative-result closeout",
+      "objective": "If gains are low or unstable, record why a larger scheduler rewrite is not justified.",
+      "success_criteria": [
+        "attempted candidates and observed gains are listed",
+        "queue-depth/double-buffering trigger decision is explicit",
+        "next route is narrow or deferred"
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "Presentation and README sync",
+      "objective": "Update only final tables and wording affected by the new lifecycle/perf evidence.",
+      "success_criteria": [
+        "final benchmark table remains honest",
+        "claim boundary remains module/dataflow-level",
+        "no results/raw/review artifacts are committed"
+      ]
+    },
+    {
+      "id": "P7",
+      "title": "Long-term context maintenance",
+      "objective": "Update the allowed long-term context sections with concise conclusion, evidence path, and next-action boundary.",
+      "success_criteria": [
+        "maintenance rules are respected",
+        "no raw log dumping",
+        "no unmeasured metrics are introduced"
+      ]
+    },
+    {
+      "id": "P8",
+      "title": "Verification and git hygiene",
+      "objective": "Run control-plane checks and inspect git status/diff scope.",
+      "success_criteria": [
+        "json.tool passes for modified contracts",
+        "harness doctor passes",
+        "Running main-gate claim remains forbidden",
+        "git diff --check passes",
+        "large artifacts and secrets remain untracked"
+      ]
+    }
+  ],
+  "candidate_thresholds": {
+    "promote_to_result": "A candidate should show stable device-stage or wall improvement around 3-5% or produce a clear new attribution insight without quality/readability regression.",
+    "close_as_negative": "Low-single-digit or unstable gains should be recorded as bounded evidence and should not trigger a broad rewrite.",
+    "requires_new_contract": "Any queue-depth, double-buffering, Remap C++ probe, or power-mode change requires a new scoped contract or explicit user direction."
+  },
+  "stop_reasons": [
+    "Jetson SSH or runtime blocker that cannot be recovered locally",
+    "candidate changes output semantics",
+    "candidate revives a forbidden route",
+    "new measurement requires manual hardware or sudo action that the user must perform",
+    "no actionable candidate remains after existing evidence and knowledge-base checks"
+  ],
+  "evidence_output_directory": "results/device_stage_lifecycle_perf_<YYYYMMDD>",
+  "supporting_docs": [
+    "docs/nsight_device_stage_profile_result_2026-07-23.md",
+    "docs/presentation/final_benchmark_table.md",
+    "docs/presentation/dataflow_architecture.md",
+    "docs/presentation/claim_boundary.md",
+    "docs/regular_gate_nvbuffer_pair_resid_2026-07-23.md"
+  ]
+}
