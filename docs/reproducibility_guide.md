@@ -386,6 +386,50 @@ prove EIS quality improvement, zero-copy, full real-time EIS, or accepted MMAPI
 CUDA acceleration.
 ```
 
+## L5.6 - CUDA Affine MMAPI Diagnostic
+
+Purpose: inspect the negative boundary found when moving from safe CUDA marker
+writes to custom CUDA affine/random-sampling kernels inside the same MMAPI
+scratch path.
+
+Primary docs:
+
+```text
+docs/cuda_affine_mmapi_diagnostic_2026-07-24.md
+configs/harness/contracts/cuda_affine_mmapi_diagnostic_v1.json
+```
+
+Tracked implementation:
+
+```text
+scripts/patch_mmapi_cuda_affine_diagnostic.py
+```
+
+Primary ignored evidence:
+
+```text
+results/cuda_affine_mmapi_diagnostic_20260724/
+results/cuda_affine_mmapi_diagnostic_20260724_fix05/
+results/cuda_affine_mmapi_diagnostic_20260724_sync11/
+results/cuda_affine_mmapi_diagnostic_20260724_direct10/
+```
+
+Expected result summary:
+
+```text
+identity CUDA kernel path is readable
+translate / affine random-sampling over EGL-mapped pitch-linear NV12_ER scratch
+is rejected because visual review showed severe tearing or unrelated corruption
+NvBufSurfaceSyncForDevice on the CUDA output scratch segfaulted in this path
+```
+
+Claim boundary:
+
+```text
+This is negative integration evidence. Do not claim an accepted MMAPI CUDA affine
+warp path, zero-copy, full-pipeline acceleration, or EIS quality improvement.
+```
+
 ## L6 - Public / Interview Package
 
 Purpose: read the project as a portfolio.

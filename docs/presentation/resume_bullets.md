@@ -95,6 +95,14 @@ warp acceleration, zero-copy, and full real-time EIS claims out of scope until a
 separate same-input contract measures them.
 ```
 
+```text
+Ran a follow-up custom CUDA affine MMAPI diagnostic and closed it as negative
+integration evidence: identity kernel output was readable with black-border p95
+of 0, but translate/affine random sampling over the current EGL-mapped NV12_ER
+scratch repeatedly tore, showing that this route needs a different surface
+ownership/synchronization model before it can become an accepted warp path.
+```
+
 ## Interview One-Liner
 
 ```text

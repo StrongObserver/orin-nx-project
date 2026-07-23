@@ -1,0 +1,220 @@
+{
+  "schema_version": 1,
+  "contract_id": "cuda_affine_mmapi_diagnostic_v1",
+  "status": "blocked_negative_closeout",
+  "loop_type": "cuda_affine_mmapi_diagnostic",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Integrate a minimal custom CUDA affine warp kernel into the MMAPI pitch-linear NV12_ER scratch stage under frozen Regular05 semantics, starting from identity and stopping on any visual corruption.",
+  "entry_context": {
+    "project_positioning": "Jetson Orin NX heterogeneous video compute and device-side dataflow optimization, with EIS as the representative workload.",
+    "quality_anchor": "resid_r15_s07 remains the accepted Regular-gate stabilization-strength anchor and is not changed in this loop.",
+    "previous_safety_result": "cuda_mmapi_interop_safety_verifier_v1 passed identity/marker/dynamic_marker diagnostic writes with rc=0 and readable output; large-plane shift/dynamic_shift was rejected for tearing.",
+    "current_question": "Can a custom CUDA affine kernel safely replace the marker-only diagnostic inside the same MMAPI scratch boundary and produce readable identity, translate, static affine, and dynamic affine outputs?",
+    "claim_boundary": "Device-stage CUDA affine diagnostic only. No EIS quality improvement, no zero-copy, no full real-time EIS, and no accepted acceleration claim until same-input timing and visual checks pass."
+  },
+  "frozen_variables": [
+    "Use Regular05 source H264: /home/nvidia/orin-nx-project/results/regular_gate_safe103_crop98_validation_20260720/regular_gate05_regular_6/source.h264",
+    "Keep MMAPI main chain block-linear NV12 and scratch pitch-linear NV12_ER",
+    "Do not change resid_r15_s07 or CPU EIS quality semantics",
+    "Do not use the rejected large-plane shift/dynamic_shift verifier as a pass condition",
+    "Identity kernel must pass before translate",
+    "Translate must pass before static affine",
+    "Static affine must pass before dynamic affine",
+    "No zero-copy claim",
+    "No full-pipeline acceleration claim",
+    "No EIS quality claim from diagnostic outputs"
+  ],
+  "planned_evidence": {
+    "report": "docs/cuda_affine_mmapi_diagnostic_2026-07-24.md",
+    "evidence_dir": "results/cuda_affine_mmapi_diagnostic_20260724/",
+    "review_dir": "C:/Users/Admin/Videos/orin nx/review/diagnostic/20260724_cuda_affine_mmapi_diagnostic/",
+    "patch_script": "scripts/patch_mmapi_cuda_affine_diagnostic.py"
+  },
+  "result": {
+    "report": "docs/cuda_affine_mmapi_diagnostic_2026-07-24.md",
+    "evidence_dirs": [
+      "results/cuda_affine_mmapi_diagnostic_20260724/",
+      "results/cuda_affine_mmapi_diagnostic_20260724_fix05/",
+      "results/cuda_affine_mmapi_diagnostic_20260724_sync11/",
+      "results/cuda_affine_mmapi_diagnostic_20260724_direct10/"
+    ],
+    "decision": "Blocked at the translate/non-identity stage. The identity CUDA kernel path runs and produces readable output, but translate/affine/random-sampling CUDA kernels over the current EGL-mapped pitch-linear NV12_ER scratch produce severe tearing/distortion. A NvBufSurfaceSyncForDevice attempt on the CUDA output scratch caused a segmentation fault, matching earlier evidence that this sync route is not a usable fix in this path.",
+    "identity": {
+      "rc": 0,
+      "frame100_cuda_elapsed_ms": 1.86655,
+      "frame100_process_ms": 0.948443,
+      "frame100_total_stage_ms": 4.2206,
+      "avg_total_stage_ms": 5.28399,
+      "black_border_p95": 0.0,
+      "source_vs_identity_mean_abs_center_avg": 2.772184,
+      "decision": "identity kernel safety passed"
+    },
+    "rejected_translate_attempts": [
+      "direct EGL output write with affine kernel",
+      "temporary cudaMallocPitch input/output buffers plus copy-back",
+      "matrix passed as kernel parameters instead of constant memory",
+      "integer translate_direct kernel",
+      "map/sync and pre-unregister driver sync",
+      "NvBufSurfaceSyncForDevice on output scratch, which segfaulted"
+    ],
+    "claim_boundary": "Negative device-stage CUDA affine integration evidence. Do not claim accepted MMAPI CUDA affine warp, acceleration, zero-copy, full real-time EIS, or EIS quality improvement."
+  },
+  "task_queue": [
+    {
+      "id": "P0",
+      "title": "Control-plane registration",
+      "objective": "Register this active contract and verify onboarding, doctor, and gate boundaries.",
+      "success_criteria": [
+        "onboard reports this active task contract while running",
+        "doctor passes",
+        "Running main-gate claim remains forbidden",
+        "JSON parses"
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "Patch and build CUDA affine sample",
+      "objective": "Patch a fresh MMAPI sample with a CUDA .cu kernel object and minimal C++ bridge.",
+      "success_criteria": [
+        "patch script is idempotent",
+        "Makefile compiles cuda_affine_kernel.cu with nvcc",
+        "sample links without system package changes"
+      ],
+      "stop_reasons": [
+        "fresh MMAPI sample markers are incompatible with a focused patch",
+        "CUDA/MMAPI compile or link failure cannot be fixed without broad environment changes"
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Identity kernel run",
+      "objective": "Run the custom CUDA affine kernel in identity mode and compare against source.",
+      "success_criteria": [
+        "rc=0",
+        "output is readable 640x360",
+        "visual review shows no tearing, green output, or wrong color",
+        "black-border p95 is 0 or classified",
+        "source-vs-identity diff stays near codec/dataflow floor"
+      ],
+      "stop_reasons": [
+        "identity output visibly tears",
+        "identity output is unreadable or green",
+        "source-vs-identity diff shows obvious corruption"
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Translate kernel run",
+      "objective": "Run a small translate affine mode using per-pixel sampling rather than large-plane copy.",
+      "success_criteria": [
+        "rc=0",
+        "output is readable",
+        "visual review shows coherent geometry, not block tearing",
+        "black-border behavior matches zero-border geometry"
+      ],
+      "stop_reasons": [
+        "translate output repeats the old large-plane tearing failure",
+        "visual review shows block corruption rather than geometric border"
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "Static affine kernel run",
+      "objective": "Run a small rotate/scale/translate affine mode and compare against reference expectations.",
+      "success_criteria": [
+        "rc=0",
+        "output is readable",
+        "visual review shows coherent affine warp",
+        "timing is recorded"
+      ],
+      "stop_reasons": [
+        "static affine tears or becomes unreadable",
+        "affine direction is wrong and cannot be fixed after one focused convention check"
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "Dynamic affine kernel run",
+      "objective": "Run per-frame affine parameters to prove dynamic CUDA warp execution inside MMAPI scratch.",
+      "success_criteria": [
+        "rc=0",
+        "output is readable",
+        "per-frame parameters are visible in logs",
+        "visual review shows coherent dynamic affine motion, not tearing"
+      ],
+      "stop_reasons": [
+        "dynamic affine tears or becomes unreadable",
+        "per-frame update path fails after static affine passed"
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "Stage comparison",
+      "objective": "Compare CUDA affine diagnostic timing with VPI dynamic Remap rebuild and existing PerspectiveWarp stage boundaries.",
+      "success_criteria": [
+        "comparison names source, mode, frame count, and stage scope",
+        "no full-pipeline acceleration claim is made from diagnostic timing",
+        "small gains or lack of gains are both explained"
+      ]
+    },
+    {
+      "id": "P7",
+      "title": "Optional Regular05 matrix replay",
+      "objective": "Only if identity/translate/static/dynamic affine are visually clean, try source_to_dest matrix replay for Regular05.",
+      "success_criteria": [
+        "matrix convention is explicit",
+        "output is readable",
+        "review video exists",
+        "result is classified as device-stage replay, not full real-time EIS"
+      ],
+      "stop_reasons": [
+        "earlier affine modes are not clean",
+        "matrix convention is ambiguous",
+        "result has tearing or unexplainable black-border regression"
+      ]
+    },
+    {
+      "id": "P8",
+      "title": "Evidence closeout",
+      "objective": "Write measured result, negative boundaries, exact evidence paths, and next contract suggestion.",
+      "success_criteria": [
+        "report records measured data only",
+        "README/presentation/evidence routing are updated only where useful",
+        "long-term context is updated with high-signal result only",
+        "review assets are copied to the categorized Windows review tree"
+      ]
+    },
+    {
+      "id": "P9",
+      "title": "Final validation and commit readiness",
+      "objective": "Run harness, JSON, diff, secret, and artifact checks, then commit coherent source/config/docs changes.",
+      "success_criteria": [
+        "JSON parses",
+        "doctor passes",
+        "git diff --check passes",
+        "large artifacts and secrets remain untracked",
+        "oral template remains unstaged",
+        "commit message trailer policy is followed"
+      ]
+    }
+  ],
+  "forbidden_claims": [
+    "CUDA affine improves EIS quality",
+    "zero-copy full chain",
+    "full real-time EIS",
+    "full-pipeline acceleration from diagnostic timing alone",
+    "all-scene stabilization quality",
+    "accepted CUDA MMAPI path without visual review"
+  ],
+  "stop_reasons": [
+    "Jetson SSH or device access is unavailable and cannot be recovered locally",
+    "identity kernel output is unreadable, green, or visibly torn",
+    "CUDA affine sample requires broad MMAPI rewrite before a minimal verifier",
+    "local and public knowledge cannot classify a CUDA/MMAPI blocker",
+    "manual hardware/system action is required"
+  ],
+  "evidence_output_directory": "results/cuda_affine_mmapi_diagnostic_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/diagnostic/<YYYYMMDD>_cuda_affine_mmapi_diagnostic"
+}

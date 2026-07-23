@@ -243,6 +243,7 @@ docs/vpi_remap_cpp_probe_2026-07-23.md
 docs/remap_mmapi_integration_probe_2026-07-23.md
 docs/remap_native_size_pad_crop_probe_2026-07-23.md
 docs/cuda_mmapi_interop_safety_verifier_2026-07-24.md
+docs/cuda_affine_mmapi_diagnostic_2026-07-24.md
 experiments/vpi_cpp_remap_probe/remap_probe.cpp
 ```
 
@@ -253,6 +254,7 @@ results/vpi_remap_cpp_probe_20260723/
 results/remap_mmapi_integration_probe_20260723/
 results/remap_native_size_pad_crop_probe_20260723/
 results/cuda_mmapi_interop_safety_verifier_20260724/
+results/cuda_affine_mmapi_diagnostic_20260724/
 C:\Users\Admin\Videos\orin nx\review\diagnostic\20260723_vpi_remap_cpp_probe\
 C:\Users\Admin\Videos\orin nx\review\diagnostic\20260723_remap_mmapi_integration_probe\
 C:\Users\Admin\Videos\orin nx\review\diagnostic\20260723_remap_native_size_pad_crop_probe\
@@ -287,6 +289,12 @@ CUDA/MMAPI interop safety verifier:
   all three corrected modes have black-border p95 0
   the older large-plane shift/dynamic_shift modes are rejected after visual
   review because they caused severe tearing/distortion despite rc=0
+
+CUDA affine MMAPI diagnostic:
+  identity CUDA kernel path is readable and has black-border p95 0
+  translate / affine random-sampling kernels over the current EGL-mapped NV12_ER
+  scratch repeatedly tear or show unrelated visual corruption
+  this is negative integration evidence, not an accepted CUDA warp path
 ```
 
 Claim:

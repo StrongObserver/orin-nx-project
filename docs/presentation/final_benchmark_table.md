@@ -19,6 +19,7 @@ separate.
 | Dynamic Remap payload | 640x368 standalone and MMAPI pad/crop diagnostics | dynamic payload rebuild works; MMAPI stage avg about `13.14-13.16 ms` | Viability and cost boundary; not quality or acceleration claim |
 | CUDA dynamic warp | Standalone 640x368 affine warp kernel | RGBA dynamic `0.194 ms`; Y8 dynamic `0.138 ms` | Standalone execution evidence; not MMAPI integration or quality claim |
 | CUDA/MMAPI interop safety | Regular05 MMAPI scratch diagnostic | corrected identity/marker/dynamic_marker `rc=0`, p95 black-border `0`; older shift modes rejected for tearing | Safety/dataflow verifier only; not accepted acceleration |
+| CUDA affine MMAPI diagnostic | Regular05 MMAPI scratch diagnostic | identity CUDA kernel readable; translate/affine random sampling tears on current EGL-mapped NV12_ER scratch | Negative integration evidence; needs a different surface/ownership route |
 | Local-warp quality bridge | Parallax10 static local correction prototype | No residual improvement; baseline `global_residual_p95_avg=2.196`, best attempted local corrections stayed about `2.199-2.216` | Negative diagnostic result; static local offset is not enough |
 | Python dataflow boundary | GStreamer appsink/appsrc | appsink readback `7.93 ms/frame`; appsrc encode pass-through `15.81 ms/frame` | Explains why Python-in-loop is not the next acceleration path |
 | C++ device path | MMAPI/VPI/NVENC Regular05 stage | Accepted EGLImage wrapper path; stage around `7.5-10.5 ms/frame` depending probe/capture | Device-stage evidence, not full real-time EIS |
@@ -223,6 +224,23 @@ Rejected first attempt:
 |---|---:|---:|---|
 | shift_dx8 | 0 | 0.191930556 | rejected, severe tearing/distortion |
 | dynamic_shift | 0 | 0.237383898 | rejected, severe tearing/distortion |
+
+## CUDA Affine MMAPI Diagnostic
+
+The next scoped loop attempted to turn CUDA scratch interop into a real custom
+CUDA affine kernel inside the MMAPI transcode scratch boundary.
+
+| Attempt | Result | Decision |
+|---|---|---|
+| identity CUDA kernel | `rc=0`, readable 640x360, black-border p95 `0`, source-vs-identity mean_abs_center_avg `2.772184` | pass |
+| translate / affine random sampling over EGL-mapped NV12_ER scratch | `rc=0` but severe tearing or unrelated visual corruption | reject |
+| temporary `cudaMallocPitch` buffers plus copy-back | still tears | reject |
+| Y-only / integer translate / matrix-argument variants | still tears | reject |
+| `NvBufSurfaceSyncForDevice` on output scratch | segfault | reject |
+
+This is negative integration evidence: standalone CUDA is fast and scratch
+interop identity is safe, but the current EGL-mapped pitch-linear NV12_ER route
+is not an accepted CUDA affine warp path.
 
 ## Local-Warp Quality Bridge
 

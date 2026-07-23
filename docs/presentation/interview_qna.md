@@ -460,6 +460,48 @@ Forbidden claim:
 CUDA has accelerated the full MMAPI EIS pipeline.
 ```
 
+## Q: Did the custom CUDA affine kernel work inside MMAPI?
+
+Not as an accepted warp path.
+
+The identity CUDA kernel path did work:
+
+```text
+rc=0
+readable 640x360 output
+black-border p95 = 0
+source-vs-identity mean_abs_center_avg = 2.772184
+```
+
+But non-identity random sampling failed visually:
+
+```text
+translate / affine kernels over the current EGL-mapped pitch-linear NV12_ER
+scratch produced severe tearing or unrelated visual corruption.
+```
+
+I tried focused fixes before closing it:
+
+```text
+temporary cudaMallocPitch buffers plus copy-back
+matrix as kernel arguments instead of constant memory
+Y-only and integer translate diagnostics
+extra cuCtxSynchronize points
+NvBufSurfaceSyncForDevice on the output scratch
+```
+
+The sync attempt even segfaulted, which matches the earlier project evidence
+that this sync route is not a reliable fix here.
+
+Correct conclusion:
+
+```text
+Standalone CUDA is promising, and CUDA marker writes into MMAPI scratch are
+safe, but the current EGL-mapped NV12_ER scratch route is not an accepted
+full-frame CUDA affine warp path. The next route needs a different surface
+ownership model or official/internal guidance.
+```
+
 ## Q: Why do source, identity_pad_crop, and wave_safe_pad_crop not show stabilization?
 
 Because that review video is not a stabilization-quality candidate. It is a
