@@ -11,12 +11,12 @@
     "default_rule": "Use progressive disclosure. Read lightweight routing and active contracts first; load long project context, internal references, and external knowledge only when the active task or blocker requires them.",
     "token_budget_intent": "Reduce repeated startup token cost while preserving enough current-state evidence to avoid stale decisions."
   },
-  "active_task_contract": "configs/harness/contracts/local_warp_quality_bridge_loop_v1.json",
+  "active_task_contract": "none",
   "current_loop_state": {
-    "last_completed_task": "final_evidence_package_closeout_v1",
-    "current_task": "local_warp_quality_bridge_loop_v1",
-    "latest_result": "The project positioning was refined on 2026-07-23: EIS is the representative real-time vision workload, while the resume-facing project is Jetson Orin NX heterogeneous video compute and device-side dataflow optimization. Existing evidence covers Regular quality boundaries, VPI PerspectiveWarp module speed/perf-watt, MMAPI/VPI/NVENC accepted device path, wrapper/sync/transform dataflow breakdown, format-matched NvBuffer pair small stage gains, completed NVTX/Nsight profiling, final evidence package closeout, completed stream-only reuse lifecycle follow-up, portfolio/reproducibility closeout, standalone VPI C++ Remap operator probe, Remap-MMAPI scratch-stage diagnostic insertion, and local-warp quality bridge negative evidence.",
-    "current_blocker": "No active quality-recovery blocker is open. The latest quality bridge showed that static single-cell local Remap correction does not improve the selected parallax boundary; future quality work needs a richer dynamic mesh/depth/RS/gyro model and a new scoped contract.",
+    "last_completed_task": "remap_native_size_pad_crop_probe_v1",
+    "current_task": "none",
+    "latest_result": "The project positioning was refined on 2026-07-23: EIS is the representative real-time vision workload, while the resume-facing project is Jetson Orin NX heterogeneous video compute and device-side dataflow optimization. Existing evidence covers Regular quality boundaries, VPI PerspectiveWarp module speed/perf-watt, MMAPI/VPI/NVENC accepted device path, wrapper/sync/transform dataflow breakdown, format-matched NvBuffer pair small stage gains, completed NVTX/Nsight profiling, final evidence package closeout, completed stream-only reuse lifecycle follow-up, portfolio/reproducibility closeout, standalone VPI C++ Remap operator probe, Remap-MMAPI scratch-stage diagnostic insertion, local-warp quality bridge negative evidence, and native-size Remap pad/crop closure.",
+    "current_blocker": "No active engineering blocker is open. The native 640x360 Remap-MMAPI size boundary has been closed for a minimal diagnostic path by padding only the VPI scratch stage to 640x368 and cropping/transforming back before NVENC.",
     "recommended_next_contract": "none"
   },
   "global_claim_boundary": {
@@ -305,7 +305,7 @@
     "defer_until_after_alignment": [
       "broad C++ MMAPI/VPI/NVENC rewrite",
       "VPI optical-flow acceleration",
-      "mesh/grid warp route",
+      "mesh/grid warp route unless a new dynamic model contract replaces the static local correction and has a verifier",
       "more quality tuning sweeps around lim/R/LP/safe103/inclusion"
     ]
   },

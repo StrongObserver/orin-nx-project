@@ -34,6 +34,7 @@ Quality boundary -> CPU baseline -> VPI module evidence
 | VPI module acceleration | 4K PerspectiveWarp `48.995 ms -> 20.514 ms`; `1.682 -> 4.385 FPS/W` | Module-level evidence, not full-pipeline acceleration |
 | VPI C++ Remap | CUDA Remap is `2.5x-3.4x` faster than OpenCV CPU on tested BGR8 identity/wave maps | Module/operator evidence; Python Remap still failed |
 | Remap-MMAPI diagnostic | 640x368 padded source runs Remap identity/wave through MMAPI/VPI/NVENC scratch stage with `rc=0` | Device-stage operator integration evidence; not Regular EIS quality |
+| Remap native-size pad/crop | Native 640x360 main chain can use a 640x368 padded Remap scratch stage and crop back before NVENC with `rc=0` | Size/layout diagnostic; not EIS quality or full-pipeline acceleration |
 | Local-warp quality bridge | Static single-cell local Remap correction on `parallax10` did not improve local residual metrics | Negative diagnostic result; richer dynamic mesh/depth/RS model needed |
 | Python dataflow boundary | appsink readback about `7.93 ms/frame`; appsink -> appsrc -> encode about `15.81 ms/frame` | Explains why Python-in-loop is not the acceleration path |
 | C++ device stage | MMAPI/NVDEC -> block-linear NV12 -> pitch-linear NV12_ER scratch -> VPI CUDA warp -> NVENC | Device-stage evidence, not full real-time EIS |
@@ -119,7 +120,10 @@ Current sealed stage:
   Final evidence package closeout and lifecycle follow-up are complete.
   Nsight/NVTX profiling has been captured and summarized.
   Stream-only reuse is accepted as a small lifecycle optimization.
+  Remap-MMAPI diagnostic insertion and local-warp quality bridge are complete.
+  Static single-cell local Remap correction did not improve parallax residuals.
   Queue-depth or double-buffering work is not triggered by current evidence.
+  The native-size Remap pad/crop diagnostic is complete.
 
 Regular performance baseline:
   lp_rigid_strength080_dynzoom106 + estimate_scale=0.5 + feature_grid_size=16
@@ -611,12 +615,19 @@ Current active contracts:
 
 ```text
 configs/harness/contracts/orin_next_engineering_loop_v1.json
-configs/harness/contracts/final_evidence_package_closeout_v1.json
+none
 ```
 
 Important completed or supporting contracts:
 
 ```text
+configs/harness/contracts/remap_native_size_pad_crop_probe_v1.json
+configs/harness/contracts/final_evidence_package_closeout_v1.json
+configs/harness/contracts/final_portfolio_and_reproducibility_loop_v1.json
+configs/harness/contracts/device_stage_lifecycle_perf_loop_v1.json
+configs/harness/contracts/local_warp_quality_bridge_loop_v1.json
+configs/harness/contracts/remap_mmapi_integration_probe_loop_v1.json
+configs/harness/contracts/vpi_remap_cpp_and_device_warp_extension_loop_v1.json
 configs/harness/contracts/presentation_closeout_v1.json
 configs/harness/contracts/nsight_device_stage_profile_v1.json
 configs/harness/contracts/regular_gate_stabilization_strength_recovery_loop_v1.json

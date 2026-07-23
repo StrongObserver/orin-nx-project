@@ -14,6 +14,7 @@ separate.
 | VPI module acceleration | High-resolution PerspectiveWarp | 4K `48.995 ms -> 20.514 ms`; `1.682 -> 4.385 FPS/W` | Module-level warp-heavy evidence |
 | VPI C++ Remap | Standalone BGR8 identity/wave maps | CUDA Remap is `2.5x-3.4x` faster than OpenCV CPU; NV12_ER CPU/CUDA works | Module/operator evidence, not full EIS acceleration |
 | Remap-MMAPI diagnostic | 640x368 padded H264 through MMAPI/VPI/NVENC scratch path | Remap identity/wave both `rc=0`; stage avg about `10.52-10.57 ms` | Device-stage operator integration evidence, not Regular EIS quality |
+| Remap native-size pad/crop | Native 640x360 main chain with 640x368 VPI scratch | identity and wave_safe both `rc=0`; output remains 640x360 and readable | Size/layout diagnostic; not EIS quality or full-pipeline acceleration |
 | Local-warp quality bridge | Parallax10 static local correction prototype | No residual improvement; baseline `global_residual_p95_avg=2.196`, best attempted local corrections stayed about `2.199-2.216` | Negative diagnostic result; static local offset is not enough |
 | Python dataflow boundary | GStreamer appsink/appsrc | appsink readback `7.93 ms/frame`; appsrc encode pass-through `15.81 ms/frame` | Explains why Python-in-loop is not the next acceleration path |
 | C++ device path | MMAPI/VPI/NVENC Regular05 stage | Accepted EGLImage wrapper path; stage around `7.5-10.5 ms/frame` depending probe/capture | Device-stage evidence, not full real-time EIS |
@@ -131,6 +132,22 @@ This proves diagnostic Remap insertion is feasible under WarpGrid-compatible
 dimensions. It does not prove Regular EIS quality, mesh/local-warp quality, or
 full-pipeline acceleration.
 
+## Remap Native-Size Pad/Crop
+
+The follow-up native-size probe keeps the encoder-facing main chain at 640x360
+and pads only the pitch-linear VPI scratch stage to the WarpGrid-compatible
+640x368 size.
+
+| Mode | rc | Remap Frame100 | Remap Avg | Stage Frame100 | Stage Avg | Black Border P95 |
+|---|---:|---:|---:|---:|---:|---:|
+| identity | 0 | 1.594870 ms | 1.614520 ms | 8.196200 ms | 11.039800 ms | 0.000000000 |
+| wave_safe | 0 | 1.575290 ms | 1.652440 ms | 7.269890 ms | 10.751300 ms | 0.000000000 |
+
+This closes the Remap size/layout diagnostic boundary: native 640x360 input can
+use a padded 640x368 Remap scratch stage and crop/transform back to 640x360
+before NVENC. It is still diagnostic operator/dataflow evidence, not EIS quality
+or full-pipeline acceleration.
+
 ## Local-Warp Quality Bridge
 
 The next diagnostic question was whether a constrained local Remap correction can
@@ -222,6 +239,7 @@ docs/device_stage_lifecycle_budget_2026-07-23.md
 docs/device_stage_lifecycle_perf_result_2026-07-23.md
 docs/vpi_remap_cpp_probe_2026-07-23.md
 docs/remap_mmapi_integration_probe_2026-07-23.md
+docs/remap_native_size_pad_crop_probe_2026-07-23.md
 docs/local_warp_quality_bridge_2026-07-23.md
 docs/presentation/hardware_acceleration_boundary.md
 results/regular_gate_est0p5_grid16_validation_20260718/
@@ -233,5 +251,6 @@ results/nsight_device_stage_profile_20260723/
 results/device_stage_lifecycle_perf_20260723/
 results/vpi_remap_cpp_probe_20260723/
 results/remap_mmapi_integration_probe_20260723/
+results/remap_native_size_pad_crop_probe_20260723/
 results/local_warp_quality_bridge_20260723/
 ```

@@ -19,7 +19,7 @@ py -3.12 scripts\harness_runner.py check-claim --gate-id nus_running_gate_v1 --c
 Expected:
 
 ```text
-onboard points to final_portfolio_and_reproducibility_loop_v1
+onboard points to no active task contract and names remap_native_size_pad_crop_probe_v1 as the latest completed contract
 doctor_status: pass
 nus_running_gate_v1 main_gate_success_rate: forbidden
 ```

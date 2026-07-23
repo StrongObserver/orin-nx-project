@@ -156,6 +156,34 @@ Remap sampled outside the source. The wave_safe map adds a FOV-safe scale before
 the local wave and removes that diagnostic edge artifact in the frame-90 check.
 ```
 
+Native-size pad/crop follow-up:
+
+```text
+main chain:    640x360 block-linear NV12 decode/encode
+VPI scratch:   640x368 pitch-linear NV12_ER
+Remap payload: 640x368 WarpGrid-compatible map
+return path:   crop/transform scratch back to 640x360 before NVENC
+```
+
+| Mode | rc | Remap Frame100 | Remap Avg | Stage Frame100 | Stage Avg | Black Border P95 |
+|---|---:|---:|---:|---:|---:|---:|
+| identity | 0 | 1.594870 ms | 1.614520 ms | 8.196200 ms | 11.039800 ms | 0.000000000 |
+| wave_safe | 0 | 1.575290 ms | 1.652440 ms | 7.269890 ms | 10.751300 ms | 0.000000000 |
+
+Review asset:
+
+```text
+C:\Users\Admin\Videos\orin nx\review\diagnostic\20260723_remap_native_size_pad_crop_probe\20260723_remap_native_size_pad_crop_regular05_jetson_source_identity_wavesafe_grid.mp4
+```
+
+Interpretation:
+
+```text
+The Remap size/layout issue can be handled without changing the encoder-facing
+native 640x360 main chain. This is still a diagnostic operator/dataflow result,
+not Regular EIS quality and not full-pipeline acceleration.
+```
+
 ## GStreamer / NVMM Readiness
 
 Minimum Jetson path reached EOS:
@@ -426,4 +454,6 @@ docs/vpi_remap_cpp_probe_2026-07-23.md
 results/vpi_remap_cpp_probe_20260723/
 docs/remap_mmapi_integration_probe_2026-07-23.md
 results/remap_mmapi_integration_probe_20260723/
+docs/remap_native_size_pad_crop_probe_2026-07-23.md
+results/remap_native_size_pad_crop_probe_20260723/
 ```

@@ -1,0 +1,357 @@
+{
+  "schema_version": 1,
+  "contract_id": "remap_native_size_pad_crop_probe_v1",
+  "status": "completed",
+  "loop_type": "remap_native_size_pad_crop_probe",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Close the native-size Remap-MMAPI size boundary by testing whether a 640x360 Regular05 input can be padded to a WarpGrid-compatible 640x368 pitch-linear scratch stage, processed by VPI Remap, cropped/transformed back to the native 640x360 encoder main chain, and remain readable without green output, tearing, or inflated claims.",
+  "entry_context": {
+    "project_positioning": "Jetson Orin NX heterogeneous video compute and device-side dataflow optimization, with EIS as the representative workload.",
+    "previous_operator_result": "VPI C++ Remap works on CPU/CUDA, and NV12_ER CPU/CUDA works in the standalone probe.",
+    "previous_mmapi_result": "Remap can replace PerspectiveWarp in a minimal MMAPI/VPI/NVENC diagnostic sample when the input is padded to 640x368. Native 640x360 failed because VPI WarpGrid aligned height to 368 and Remap requires output image size to match the warp map.",
+    "previous_quality_bridge_result": "Static single-cell local Remap correction did not improve the selected parallax/global-warp boundary and is not a current quality route.",
+    "accepted_device_path": "H264 input -> MMAPI/NVDEC block-linear NV12 main chain -> NvBufSurfTransform to pitch-linear NV12_ER scratch -> VPI CUDA stage -> NvBufSurfTransform back to block-linear NV12 -> NVENC.",
+    "current_question": "Can the native 640x360 source keep the encoder-facing main chain at 640x360 while only the VPI Remap scratch stage is padded to 640x368 and cropped back after Remap?",
+    "quality_boundary": "This is a size/layout/dataflow diagnostic. It does not change resid_r15_s07, does not reopen EIS tuning, and does not claim mesh/local-warp quality."
+  },
+  "frozen_variables": [
+    "Regular05 native 640x360 source remains the primary input",
+    "MMAPI decode and NVENC encoder-facing main chain remain native 640x360 block-linear NV12",
+    "VPI scratch stage is pitch-linear NV12_ER",
+    "scratch padding target is WarpGrid-compatible 640x368 unless the patch logs a different VPI requirement",
+    "identity Remap runs before wave_safe",
+    "no EIS quality tuning",
+    "no zero-copy claim",
+    "no full-pipeline acceleration claim",
+    "no mesh/local-warp quality claim"
+  ],
+  "planned_evidence": {
+    "report": "docs/remap_native_size_pad_crop_probe_2026-07-23.md",
+    "evidence_dir": "results/remap_native_size_pad_crop_probe_20260723/",
+    "review_dir": "C:/Users/Admin/Videos/orin nx/review/diagnostic/20260723_remap_native_size_pad_crop_probe/",
+    "patch_script": "scripts/patch_mmapi_vpi_transcode_eglimage_remap_pad_crop_probe.py",
+    "modes": [
+      "identity",
+      "wave_safe"
+    ]
+  },
+  "result": {
+    "report": "docs/remap_native_size_pad_crop_probe_2026-07-23.md",
+    "evidence_dir": "results/remap_native_size_pad_crop_probe_20260723/",
+    "review_video": "C:/Users/Admin/Videos/orin nx/review/diagnostic/20260723_remap_native_size_pad_crop_probe/20260723_remap_native_size_pad_crop_regular05_jetson_source_identity_wavesafe_grid.mp4",
+    "decision": "The native-size Remap-MMAPI size boundary is closed for a minimal diagnostic path: keep the encoder-facing 640x360 main chain native, pad only the pitch-linear VPI scratch stage to 640x368, run Remap, then transform/crop back to 640x360 before NVENC.",
+    "runs": {
+      "identity": {
+        "rc": 0,
+        "frames_read_by_validation": 180,
+        "scratch_width": 640,
+        "scratch_height": 368,
+        "remap_frame100_ms": 1.59487,
+        "remap_avg_ms": 1.61452,
+        "stage_frame100_ms": 8.1962,
+        "stage_avg_ms": 11.0398,
+        "black_border_p95": 0.0
+      },
+      "wave_safe": {
+        "rc": 0,
+        "frames_read_by_validation": 180,
+        "scratch_width": 640,
+        "scratch_height": 368,
+        "remap_frame100_ms": 1.57529,
+        "remap_avg_ms": 1.65244,
+        "stage_frame100_ms": 7.26989,
+        "stage_avg_ms": 10.7513,
+        "black_border_p95": 0.0
+      }
+    },
+    "identity_vs_source_diff": {
+      "frames_compared": 180,
+      "mean_abs_center_avg": 2.426476,
+      "p95_abs_center_avg": 6.111111
+    },
+    "claim_boundary": "Diagnostic operator/dataflow evidence only. No Regular EIS quality improvement, no mesh/local-warp quality, no zero-copy, and no full-pipeline acceleration."
+  },
+  "success_criteria": [
+    "patched sample compiles on Jetson",
+    "identity mode returns rc=0",
+    "wave_safe mode returns rc=0",
+    "outputs are readable",
+    "no green output or visible block tearing is observed in generated review asset",
+    "identity mode does not add large edge black-border beyond the source/dataflow baseline",
+    "timing logs include input transform, wrapper/remap/sync, output transform, total stage, and running average",
+    "review copy is under C:/Users/Admin/Videos/orin nx/review/diagnostic/20260723_remap_native_size_pad_crop_probe/",
+    "documentation separates native-size pad/crop dataflow evidence from Regular EIS quality and full-pipeline acceleration"
+  ],
+  "task_queue": [
+    {
+      "id": "P0-1",
+      "title": "Entrypoint state cleanup",
+      "objective": "Update AGENTS, README, and reproducibility expectations so completed Remap-MMAPI/local-warp work is no longer presented as the active task.",
+      "success_criteria": [
+        "entrypoint names this contract during execution and later as latest completed",
+        "completed contracts remain supporting evidence",
+        "user-updated oral template is not modified"
+      ]
+    },
+    {
+      "id": "P0-2",
+      "title": "Control-plane registration",
+      "objective": "Register this contract in the onboarding manifest and overall engineering loop.",
+      "success_criteria": [
+        "onboard prints this contract",
+        "overall loop points to this contract while active",
+        "overall loop returns to no active task after completion"
+      ]
+    },
+    {
+      "id": "P0-3",
+      "title": "Static health check",
+      "objective": "Run doctor, check-claim, and JSON parsing before device work.",
+      "success_criteria": [
+        "doctor passes",
+        "Running main-gate claim remains forbidden",
+        "new JSON parses"
+      ]
+    },
+    {
+      "id": "P1-1",
+      "title": "Replacement boundary freeze",
+      "objective": "Freeze the pad/crop Remap replacement point and all main-chain versus scratch dimensions.",
+      "success_criteria": [
+        "main width/height and scratch width/height are named",
+        "main chain remains block-linear NV12",
+        "scratch remains pitch-linear NV12_ER"
+      ]
+    },
+    {
+      "id": "P1-2",
+      "title": "Patch-script implementation",
+      "objective": "Create a minimal patch script for EGLImage Remap pad/crop on the MMAPI transcode sample.",
+      "success_criteria": [
+        "script is idempotent or safely detects an already patched file",
+        "script avoids broad MMAPI rewrite",
+        "script preserves existing Remap identity and wave_safe modes"
+      ]
+    },
+    {
+      "id": "P1-3",
+      "title": "Transform ROI implementation",
+      "objective": "Transform native 640x360 main buffers into the top-left native ROI of a 640x368 scratch buffer and transform/crop the scratch result back to 640x360 main.",
+      "success_criteria": [
+        "input transform and output transform use explicit source/destination dimensions",
+        "scratch padding does not change encoder-facing dimensions",
+        "failure logs identify transform-stage failures"
+      ]
+    },
+    {
+      "id": "P1-4",
+      "title": "Remap payload sizing",
+      "objective": "Build the VPI Remap payload at the scratch size and log WarpGrid dimensions.",
+      "success_criteria": [
+        "payload width and height are logged",
+        "grid width and height are logged",
+        "output wrapper size matches the Remap payload"
+      ]
+    },
+    {
+      "id": "P1-5",
+      "title": "Stage timing instrumentation",
+      "objective": "Record timing for the padded Remap stage.",
+      "success_criteria": [
+        "input_transform_ms is logged",
+        "wrapper_call_ms is logged",
+        "output_transform_ms is logged",
+        "total_stage_ms and running average are logged"
+      ]
+    },
+    {
+      "id": "P2-1",
+      "title": "Remote sample preparation",
+      "objective": "Prepare a copied Jetson multimedia transcode sample for this diagnostic without disturbing accepted samples.",
+      "success_criteria": [
+        "sample directory is separate from accepted EGLImage path",
+        "source patch script is uploaded",
+        "build commands are recorded"
+      ],
+      "stop_reasons": [
+        "jetson_ssh_or_device_blocker"
+      ]
+    },
+    {
+      "id": "P2-2",
+      "title": "Compile patched sample",
+      "objective": "Compile the patched sample on Jetson.",
+      "success_criteria": [
+        "compile returns rc=0",
+        "binary exists",
+        "any warnings are classified if material"
+      ],
+      "stop_reasons": [
+        "sample cannot compile after focused local fixes"
+      ]
+    },
+    {
+      "id": "P2-3",
+      "title": "Identity native-size run",
+      "objective": "Run identity Remap on the native 640x360 source through the padded scratch stage.",
+      "success_criteria": [
+        "rc=0",
+        "output is non-empty",
+        "payload/grid dimensions are logged",
+        "stage timing is logged"
+      ]
+    },
+    {
+      "id": "P2-4",
+      "title": "Identity readability check",
+      "objective": "Check identity output readability and basic edge-black behavior.",
+      "success_criteria": [
+        "output opens locally or via ffprobe/OpenCV",
+        "no green output",
+        "no obvious block tearing",
+        "edge-black result is summarized"
+      ]
+    },
+    {
+      "id": "P2-5",
+      "title": "Wave-safe native-size run",
+      "objective": "Run wave_safe Remap through the native-size pad/crop path if identity succeeds.",
+      "success_criteria": [
+        "rc=0",
+        "output is non-empty",
+        "visible diagnostic warp exists",
+        "edge black is controlled"
+      ]
+    },
+    {
+      "id": "P2-6",
+      "title": "Timing summary",
+      "objective": "Summarize identity and wave_safe timing into a small CSV or Markdown table.",
+      "success_criteria": [
+        "frame100 or equivalent timing is captured",
+        "running average is captured",
+        "timing is not promoted to full-pipeline acceleration"
+      ]
+    },
+    {
+      "id": "P3-1",
+      "title": "Review asset generation",
+      "objective": "Create a small diagnostic review video for source, identity, and wave_safe outputs.",
+      "success_criteria": [
+        "review video exists in project results",
+        "review video is copied to the categorized Windows review tree",
+        "artifact is not tracked by Git"
+      ]
+    },
+    {
+      "id": "P3-2",
+      "title": "Visual classification",
+      "objective": "Classify output as pass, conditional, blocked, or unsuitable.",
+      "success_criteria": [
+        "green/tearing/readability status is explicit",
+        "identity and wave_safe roles are separated",
+        "diagnostic-only boundary is explicit"
+      ]
+    },
+    {
+      "id": "P4-1",
+      "title": "Probe report",
+      "objective": "Write a concise report with commands, timing, outputs, review path, and claim boundary.",
+      "success_criteria": [
+        "report contains only measured data",
+        "failure causes are named if any",
+        "no raw log dumping"
+      ]
+    },
+    {
+      "id": "P4-2",
+      "title": "Presentation boundary update",
+      "objective": "Update hardware acceleration and final benchmark docs only if the result produces useful measured evidence.",
+      "success_criteria": [
+        "module/stage/full-pipeline claims remain separate",
+        "Remap operator, Remap-MMAPI padded diagnostic, and native-size pad/crop result are separated"
+      ]
+    },
+    {
+      "id": "P4-3",
+      "title": "Evidence map update",
+      "objective": "Register the new contract, report, evidence directory, and review asset path.",
+      "success_criteria": [
+        "tracked and ignored evidence roles are clear",
+        "review video path is outside repo or ignored results",
+        "no large artifact is committed"
+      ]
+    },
+    {
+      "id": "P4-4",
+      "title": "Long-term context maintenance",
+      "objective": "Record only high-signal result, command path, evidence path, and next boundary in the long-term context.",
+      "success_criteria": [
+        "maintenance rules are respected",
+        "no secrets are written",
+        "Orin NX context path is used, not another project context"
+      ]
+    },
+    {
+      "id": "P5-1",
+      "title": "JSON and harness validation",
+      "objective": "Run final JSON and harness checks.",
+      "success_criteria": [
+        "new contract parses",
+        "manifest parses",
+        "overall loop parses",
+        "doctor passes",
+        "Running main-gate claim remains forbidden"
+      ]
+    },
+    {
+      "id": "P5-2",
+      "title": "Diff hygiene",
+      "objective": "Check formatting and dirty worktree scope.",
+      "success_criteria": [
+        "git diff --check passes",
+        "only intended source/config/docs/context changes are present",
+        "oral template remains user-modified and unstaged"
+      ]
+    },
+    {
+      "id": "P5-3",
+      "title": "Secret and artifact guard",
+      "objective": "Check that docs/source/config changes do not include secrets or committed large artifacts.",
+      "success_criteria": [
+        "no plaintext password/token is introduced in tracked changes",
+        "results/raw/review videos remain ignored or untracked",
+        "internal original text is not copied"
+      ]
+    },
+    {
+      "id": "P5-4",
+      "title": "Commit readiness",
+      "objective": "Prepare a coherent commit scope when the loop is complete.",
+      "success_criteria": [
+        "commit scope is explainable",
+        "commit is only created if stage is coherent or user requests it",
+        "commit message trailer policy is followed if committing"
+      ]
+    }
+  ],
+  "forbidden_claims": [
+    "full real-time EIS",
+    "zero-copy full chain",
+    "full-pipeline acceleration from this diagnostic",
+    "mesh/local-warp EIS quality solved",
+    "Regular-gate quality improved by this Remap pad/crop probe",
+    "queue-depth or double-buffering proven useful"
+  ],
+  "stop_reasons": [
+    "Jetson SSH or device access is unavailable and cannot be recovered locally",
+    "patched sample cannot compile after focused local fixes",
+    "native-size pad/crop output is unreadable and cause cannot be classified",
+    "transform ROI requires broad MMAPI rewrite before a minimal verifier",
+    "manual hardware/system action is required"
+  ],
+  "evidence_output_directory": "results/remap_native_size_pad_crop_probe_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/diagnostic/<YYYYMMDD>_remap_native_size_pad_crop_probe"
+}

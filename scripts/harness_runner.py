@@ -131,6 +131,8 @@ def command_onboard(args: argparse.Namespace) -> int:
     print(f"mode: {manifest.get('default_onboarding_mode', '')}")
     print(f"active_loop_contract: {manifest.get('active_loop_contract', '')}")
     print(f"active_task_contract: {manifest.get('active_task_contract', '')}")
+    if manifest.get("latest_completed_task_contract"):
+        print(f"latest_completed_task_contract: {manifest.get('latest_completed_task_contract', '')}")
     print("\nstartup_sequence:")
     for item in manifest.get("startup_sequence", []):
         print(f"- {item}")

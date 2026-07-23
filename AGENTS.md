@@ -41,7 +41,7 @@ This contract owns the current P0-P3 task sequence. Unless the user changes the
 objective, future agents should continue that loop until all tasks are complete
 or a declared stop reason is hit.
 
-4. Current task-specific Done Contract:
+4. Current task-specific Done Contracts:
 
 ```text
 C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\device_stage_lifecycle_perf_loop_v1.json
@@ -54,18 +54,41 @@ package closeout. Stream-only reuse is accepted as a
 small device-stage lifecycle optimization, and no broader scheduler work is
 triggered by current evidence.
 
-The current task-specific Done Contract is:
+The Remap-MMAPI diagnostic contract is complete and remains supporting
+evidence:
 
 ```text
 C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\remap_mmapi_integration_probe_loop_v1.json
 ```
 
-This is the current engineering extension entry. It starts from the completed
-standalone VPI C++ Remap/WarpMap operator probe and tests the minimum MMAPI
-device-stage integration boundary: replacing PerspectiveWarp with Remap on the
-pitch-linear scratch stage. It does not change the accepted `resid_r15_s07`
-quality anchor, does not reopen EIS tuning, and does not claim mesh/local-warp
-EIS success without measured evidence.
+It starts from the completed standalone VPI C++ Remap/WarpMap operator probe
+and tests the minimum MMAPI device-stage integration boundary: replacing
+PerspectiveWarp with Remap on the pitch-linear scratch stage. It does not change
+the accepted `resid_r15_s07` quality anchor, does not reopen EIS tuning, and
+does not claim mesh/local-warp EIS success without measured evidence.
+
+The local-warp quality bridge contract is complete and remains negative
+diagnostic evidence:
+
+```text
+C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\local_warp_quality_bridge_loop_v1.json
+```
+
+It showed that static single-cell local Remap correction does not improve the
+selected parallax boundary, so future quality work requires a richer dynamic
+mesh/depth/RS/gyro model and a new scoped contract.
+
+The latest completed task-specific Done Contract is:
+
+```text
+C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\remap_native_size_pad_crop_probe_v1.json
+```
+
+This completed engineering extension kept the accepted MMAPI/VPI/NVENC
+scratch-stage boundary and closed the narrow native-size Remap question:
+a 640x360 Regular05 input can keep the encoder-facing main chain native, pad
+only the VPI Remap scratch stage to 640x368, run Remap, crop/transform back to
+640x360 before NVENC, and remain readable without green output or tearing.
 
 The standalone C++ Remap operator contract is complete and remains supporting
 evidence:
