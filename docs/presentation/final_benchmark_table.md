@@ -16,6 +16,7 @@ separate.
 | Remap-MMAPI diagnostic | 640x368 padded H264 through MMAPI/VPI/NVENC scratch path | Remap identity/wave both `rc=0`; stage avg about `10.52-10.57 ms` | Device-stage operator integration evidence, not Regular EIS quality |
 | Remap native-size pad/crop | Native 640x360 main chain with 640x368 VPI scratch | identity and wave_safe both `rc=0`; output remains 640x360 and readable | Size/layout diagnostic; not EIS quality or full-pipeline acceleration |
 | Remap NvBuffer wrapper | Native 640x360 main chain, 640x368 pitch-linear NV12_ER scratch | identity/wave_safe `rc=0`, p95 black border `0`, stage avg improves about `3-6%` vs EGLImage baseline in diagnostic timing | Small diagnostic dataflow gain; not zero-copy or quality improvement |
+| Dynamic Remap payload | 640x368 standalone and MMAPI pad/crop diagnostics | dynamic payload rebuild works; MMAPI stage avg about `13.14-13.16 ms` | Viability and cost boundary; not quality or acceleration claim |
 | Local-warp quality bridge | Parallax10 static local correction prototype | No residual improvement; baseline `global_residual_p95_avg=2.196`, best attempted local corrections stayed about `2.199-2.216` | Negative diagnostic result; static local offset is not enough |
 | Python dataflow boundary | GStreamer appsink/appsrc | appsink readback `7.93 ms/frame`; appsrc encode pass-through `15.81 ms/frame` | Explains why Python-in-loop is not the next acceleration path |
 | C++ device path | MMAPI/VPI/NVENC Regular05 stage | Accepted EGLImage wrapper path; stage around `7.5-10.5 ms/frame` depending probe/capture | Device-stage evidence, not full real-time EIS |
@@ -161,6 +162,28 @@ The useful result is that Remap pad/crop can also use
 scratch pair. This remains a diagnostic dataflow result, not a zero-copy or EIS
 quality claim.
 
+## Dynamic Remap Payload
+
+Dynamic per-frame Remap payload rebuild was measured as the next boundary after
+static Remap integration.
+
+Standalone 640x368 CUDA probe:
+
+| Format | Static Payload Total | Dynamic Rebuild Total | Main Added Cost |
+|---|---:|---:|---|
+| BGR8 | 0.839870 ms | 2.250150 ms | payload create 1.544170 ms |
+| NV12_ER | 0.181523 ms | 2.913010 ms | payload create 2.155590 ms |
+
+MMAPI native-size pad/crop diagnostic:
+
+| Path | rc | Payload Create Frame100 | Remap Avg | Stage Avg | Black P95 |
+|---|---:|---:|---:|---:|---:|
+| EGLImage dynamic Remap | 0 | 1.761130 ms | 1.586130 ms | 13.139300 ms | 0.002375217 |
+| NvBuffer dynamic Remap | 0 | 1.878210 ms | 1.550540 ms | 13.159600 ms | 0.002375217 |
+
+Dynamic Remap works, but per-frame payload rebuild is material and dominates the
+added cost. This is a future mesh/local-warp cost boundary, not a quality win.
+
 ## Local-Warp Quality Bridge
 
 The next diagnostic question was whether a constrained local Remap correction can
@@ -254,6 +277,7 @@ docs/vpi_remap_cpp_probe_2026-07-23.md
 docs/remap_mmapi_integration_probe_2026-07-23.md
 docs/remap_native_size_pad_crop_probe_2026-07-23.md
 docs/device_stage_lifecycle_dataflow_v2_2026-07-23.md
+docs/vpi_dynamic_remap_payload_probe_2026-07-23.md
 docs/local_warp_quality_bridge_2026-07-23.md
 docs/presentation/hardware_acceleration_boundary.md
 results/regular_gate_est0p5_grid16_validation_20260718/
@@ -267,5 +291,6 @@ results/vpi_remap_cpp_probe_20260723/
 results/remap_mmapi_integration_probe_20260723/
 results/remap_native_size_pad_crop_probe_20260723/
 results/device_stage_lifecycle_dataflow_v2_20260723/
+results/vpi_dynamic_remap_payload_probe_20260723/
 results/local_warp_quality_bridge_20260723/
 ```

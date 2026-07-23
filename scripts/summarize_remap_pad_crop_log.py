@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 REMAP_RE = re.compile(
-    r"VPI_(?:EGLIMAGE_REMAP(?:_STREAM_REUSE)?|NVBUFFER_REMAP)_PAD_CROP\s+frame=(?P<frame>\d+)\s+"
+    r"VPI_(?:EGLIMAGE_(?:DYNAMIC_)?REMAP(?:_STREAM_REUSE)?|NVBUFFER_(?:DYNAMIC_)?REMAP)_PAD_CROP\s+frame=(?P<frame>\d+)\s+"
     r"mode=(?P<mode>\S+)\s+scratch_width=(?P<scratch_width>\d+)\s+"
     r"scratch_height=(?P<scratch_height>\d+)\s+elapsed_ms=(?P<elapsed>[0-9.]+)\s+"
     r"avg_ms=(?P<avg>[0-9.]+)"
@@ -17,13 +17,13 @@ STAGE_RE = re.compile(
     r"(?:REMAP|NVBUFFER_REMAP)_PAD_CROP_STAGE_TIMING\s+frame=(?P<frame>\d+)\s+"
     r"main_width=(?P<main_width>\d+)\s+main_height=(?P<main_height>\d+)\s+"
     r"scratch_width=(?P<scratch_width>\d+)\s+scratch_height=(?P<scratch_height>\d+)\s+"
-    r"input_transform_ms=(?P<input>[0-9.]+)\s+wrapper_call_ms=(?P<wrapper>[0-9.]+)\s+"
+    r"input_transform_ms=(?P<input>[0-9.]+)\s+(?:payload_create_ms=(?P<payload>[0-9.]+)\s+)?wrapper_call_ms=(?P<wrapper>[0-9.]+)\s+"
     r"output_transform_ms=(?P<output>[0-9.]+)\s+total_stage_ms=(?P<total>[0-9.]+)\s+"
     r"avg_total_stage_ms=(?P<avg>[0-9.]+)"
 )
 
 PAYLOAD_RE = re.compile(
-    r"VPI_(?:REMAP|NVBUFFER_REMAP)_PAD_CROP_PAYLOAD_READY\s+mode=(?P<mode>\S+)\s+"
+    r"VPI_(?:REMAP|NVBUFFER_REMAP|DYNAMIC_REMAP|NVBUFFER_DYNAMIC_REMAP)_PAD_CROP_PAYLOAD_READY(?:\s+frame=(?P<frame>\d+))?\s+mode=(?P<mode>\S+)\s+(?:payload_create_ms=(?P<payload>[0-9.]+)\s+)?"
     r"width=(?P<width>\d+)\s+height=(?P<height>\d+)\s+"
     r"grid_width=(?P<grid_width>\d+)\s+grid_height=(?P<grid_height>\d+)\s+"
     r"points=(?P<points>\S+)"
@@ -78,6 +78,7 @@ def main() -> int:
                     "scratch_width": int(match.group("scratch_width")),
                     "scratch_height": int(match.group("scratch_height")),
                     "input_transform_ms": f"{float(match.group('input')):.6f}",
+                    "payload_create_ms": f"{float(match.group('payload') or 0.0):.6f}",
                     "wrapper_call_ms": f"{float(match.group('wrapper')):.6f}",
                     "output_transform_ms": f"{float(match.group('output')):.6f}",
                     "total_stage_ms": f"{float(match.group('total')):.6f}",
@@ -106,6 +107,7 @@ def main() -> int:
                 "scratch_width",
                 "scratch_height",
                 "input_transform_ms",
+                "payload_create_ms",
                 "wrapper_call_ms",
                 "output_transform_ms",
                 "total_stage_ms",
@@ -133,6 +135,7 @@ def main() -> int:
         "last_remap_elapsed_ms": last_remap.get("elapsed_ms", "0.000000"),
         "last_remap_running_avg_ms": last_remap.get("running_avg_ms", "0.000000"),
         "last_input_transform_ms": last_stage.get("input_transform_ms", "0.000000"),
+        "last_payload_create_ms": last_stage.get("payload_create_ms", "0.000000"),
         "last_wrapper_call_ms": last_stage.get("wrapper_call_ms", "0.000000"),
         "last_output_transform_ms": last_stage.get("output_transform_ms", "0.000000"),
         "last_total_stage_ms": last_stage.get("total_stage_ms", "0.000000"),
@@ -158,6 +161,7 @@ def main() -> int:
                 f"- last sample frame: {summary['last_sample_frame']}",
                 f"- last Remap elapsed: {summary['last_remap_elapsed_ms']} ms",
                 f"- last Remap running avg: {summary['last_remap_running_avg_ms']} ms",
+                f"- last payload create: {summary['last_payload_create_ms']} ms",
                 f"- last total stage: {summary['last_total_stage_ms']} ms",
                 f"- last stage running avg: {summary['last_running_avg_total_stage_ms']} ms",
                 "",

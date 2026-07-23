@@ -1,0 +1,186 @@
+{
+  "schema_version": 1,
+  "contract_id": "vpi_dynamic_remap_payload_probe_v1",
+  "status": "completed",
+  "loop_type": "vpi_dynamic_remap_payload_probe",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Measure whether VPI Remap can move from static diagnostic maps to dynamic per-frame maps that could support future mesh/local-warp EIS work, while keeping the current Orin NX MMAPI/VPI/NVENC dataflow and quality boundaries honest.",
+  "entry_context": {
+    "project_positioning": "Jetson Orin NX heterogeneous video compute and device-side dataflow optimization, with EIS as the representative workload.",
+    "latest_positive_result": "Remap pad/crop can use VPI_IMAGE_BUFFER_NVBUFFER wrappers on format-matched pitch-linear NV12_ER scratch and shows a small diagnostic stage-average gain.",
+    "latest_negative_result": "Remap pad/crop stream-only reuse is healthy but slower, so it must not be carried forward as an optimization candidate.",
+    "current_question": "If Remap maps must change per frame, what is the cost and API boundary for rebuilding map data and/or Remap payloads, and can a device-stage diagnostic still run under native-size pad/crop semantics?",
+    "quality_boundary": "Do not change resid_r15_s07, do not claim Remap improves EIS quality, and do not reopen global affine/rigid tuning."
+  },
+  "frozen_variables": [
+    "No EIS quality tuning",
+    "No change to resid_r15_s07",
+    "Dynamic Remap is measured first as operator/dataflow capability",
+    "Remap stream-only reuse remains negative evidence, not an active candidate",
+    "MMAPI Remap diagnostics keep 640x360 main chain and 640x368 VPI scratch unless a measured API constraint requires otherwise",
+    "No zero-copy claim",
+    "No full-pipeline acceleration claim",
+    "No mesh/local-warp quality claim without measured quality verifier"
+  ],
+  "planned_evidence": {
+    "report": "docs/vpi_dynamic_remap_payload_probe_2026-07-23.md",
+    "evidence_dir": "results/vpi_dynamic_remap_payload_probe_20260723/",
+    "review_dir": "C:/Users/Admin/Videos/orin nx/review/diagnostic/20260723_vpi_dynamic_remap_payload_probe/",
+    "source": "experiments/vpi_cpp_remap_dynamic_probe/dynamic_remap_probe.cpp"
+  },
+  "result": {
+    "report": "docs/vpi_dynamic_remap_payload_probe_2026-07-23.md",
+    "evidence_dir": "results/vpi_dynamic_remap_payload_probe_20260723/",
+    "review_video": "C:/Users/Admin/Videos/orin nx/review/diagnostic/20260723_vpi_dynamic_remap_payload_probe/20260723_dynamic_remap_regular05_eglimage_nvbuffer_grid.mp4",
+    "decision": "Dynamic Remap is viable in standalone and MMAPI pad/crop diagnostics, but per-frame payload rebuild is a material cost.",
+    "api_boundary": "Local VPI C API exposes vpiCreateRemap and vpiSubmitRemap; no in-place Remap payload update API was found.",
+    "standalone": {
+      "bgr8_static_total_ms": 0.83987,
+      "bgr8_dynamic_total_ms": 2.25015,
+      "bgr8_dynamic_payload_create_ms": 1.54417,
+      "nv12_er_static_total_ms": 0.181523,
+      "nv12_er_dynamic_total_ms": 2.91301,
+      "nv12_er_dynamic_payload_create_ms": 2.15559
+    },
+    "matrix_direction": {
+      "identity_mean_abs": 0.0,
+      "translate_mean_abs": 0.0,
+      "scale_rotate_mean_abs": 0.180803,
+      "decision": "VPIWarpMap stores output-to-input coordinates; source_to_dest matrices must be inverted before filling keypoints."
+    },
+    "mmapi_dynamic": {
+      "eglimage_rc": 0,
+      "eglimage_payload_create_frame100_ms": 1.76113,
+      "eglimage_stage_avg_ms": 13.1393,
+      "eglimage_black_p95": 0.002375217,
+      "nvbuffer_rc": 0,
+      "nvbuffer_payload_create_frame100_ms": 1.87821,
+      "nvbuffer_stage_avg_ms": 13.1596,
+      "nvbuffer_black_p95": 0.002375217,
+      "egl_vs_nvbuffer_diff_mean_center": 0.0
+    },
+    "claim_boundary": "Operator/dataflow cost boundary only. No EIS quality improvement, no mesh/local-warp solved, no zero-copy, and no full real-time EIS."
+  },
+  "task_queue": [
+    {
+      "id": "P0",
+      "title": "Contract and negative-route cleanup",
+      "objective": "Register this loop and mark Remap stream-only reuse as negative evidence rather than a future optimization candidate.",
+      "success_criteria": [
+        "onboard points to this contract while active",
+        "doctor passes",
+        "Remap stream-only is documented as healthy but slower",
+        "Running main-gate claim remains forbidden"
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "VPI Remap API boundary",
+      "objective": "Inspect local VPI headers/samples/docs enough to determine whether map data or payload can be reused or must be rebuilt per frame.",
+      "success_criteria": [
+        "vpiWarpMap data ownership is understood",
+        "payload creation and reuse boundary is stated",
+        "dynamic update route is selected before coding"
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Standalone dynamic Remap probe",
+      "objective": "Build a C++ probe that measures static payload reuse versus per-frame WarpMap/payload rebuild cost on BGR8 and NV12_ER.",
+      "success_criteria": [
+        "probe compiles on Jetson",
+        "identity/static mode passes",
+        "dynamic recreate mode passes or failure is classified",
+        "CSV records map build, payload create, submit/sync, and total timing"
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Matrix-to-WarpMap correctness",
+      "objective": "Convert representative 3x3 EIS matrices into Remap keypoints and verify map direction against an OpenCV remap or image-level sanity check.",
+      "success_criteria": [
+        "source-to-dest versus output-to-input convention is explicit",
+        "identity matrix produces identity output",
+        "a non-identity matrix produces an explainable direction",
+        "black-border behavior is classified"
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "MMAPI dynamic Remap diagnostic",
+      "objective": "If P2/P3 are viable, run a minimal MMAPI Remap diagnostic with dynamic per-frame payload/map behavior under native-size pad/crop semantics.",
+      "success_criteria": [
+        "short run returns rc=0",
+        "full 180-frame run returns rc=0 if short run succeeds",
+        "stage timing separates map/payload cost when possible",
+        "output readability and black-border are checked"
+      ],
+      "stop_reasons": [
+        "standalone dynamic Remap cost is already prohibitive",
+        "matrix-to-WarpMap direction cannot be validated",
+        "MMAPI route requires broad rewrite before a minimal verifier"
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "NvBuffer dynamic Remap branch",
+      "objective": "Only if P4 is viable, test whether the existing Remap NvBuffer wrapper route remains viable for dynamic maps.",
+      "success_criteria": [
+        "NvBuffer branch is attempted only after EGLImage dynamic path is classified",
+        "rc/readability/timing are recorded",
+        "small gains or failure boundary are stated"
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "Knowledge recovery if blocked",
+      "objective": "Use local knowledge, public/official docs, and an internal-AI prompt if the dynamic Remap API route remains unclear.",
+      "success_criteria": [
+        "blocker is plain-language",
+        "local attempts are listed",
+        "internal-AI prompt is produced only if needed"
+      ]
+    },
+    {
+      "id": "P7",
+      "title": "Evidence closeout",
+      "objective": "Write measured dynamic Remap result and claim boundary into concise docs.",
+      "success_criteria": [
+        "report contains only measured data",
+        "final benchmark/hardware boundary/evidence map are updated if useful",
+        "long-term context is updated with high-signal result",
+        "review assets are copied to the categorized Windows review tree"
+      ]
+    },
+    {
+      "id": "P8",
+      "title": "Final validation and commit",
+      "objective": "Run JSON, harness, diff, secret, and artifact checks, then commit coherent source/config/docs changes.",
+      "success_criteria": [
+        "JSON parses",
+        "doctor passes",
+        "git diff --check passes",
+        "large artifacts and secrets remain untracked",
+        "oral template remains unstaged",
+        "commit message trailer policy is followed"
+      ]
+    }
+  ],
+  "forbidden_claims": [
+    "Remap improves EIS quality",
+    "mesh/local-warp stabilization solved",
+    "zero-copy full chain",
+    "full real-time EIS",
+    "full-pipeline acceleration from dynamic Remap operator timing alone"
+  ],
+  "stop_reasons": [
+    "Jetson SSH or device access is unavailable and cannot be recovered locally",
+    "VPI Remap API requires per-frame rebuild cost that is too high for current project scope and no lower-cost route is found",
+    "matrix-to-WarpMap convention cannot be validated after focused local and reference search",
+    "manual hardware/system action is required"
+  ],
+  "evidence_output_directory": "results/vpi_dynamic_remap_payload_probe_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/diagnostic/<YYYYMMDD>_vpi_dynamic_remap_payload_probe"
+}

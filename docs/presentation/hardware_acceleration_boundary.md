@@ -212,6 +212,37 @@ tegrastats wrapper: stage avg about 10.36 ms for both, wall about 1.91-1.92 s,
 GR3D avg about 25.8%. This is activity evidence only, not FPS/W.
 ```
 
+Dynamic Remap payload boundary:
+
+```text
+VPI Remap has create/submit APIs, but no local C API for updating a payload in
+place was found. The measured dynamic path rebuilds WarpMap data and Remap
+payload per frame.
+```
+
+Standalone 640x368 CUDA result:
+
+| Format | Static Payload Total | Dynamic Rebuild Total | Payload Create Avg |
+|---|---:|---:|---:|
+| BGR8 | 0.839870 ms | 2.250150 ms | 1.544170 ms |
+| NV12_ER | 0.181523 ms | 2.913010 ms | 2.155590 ms |
+
+MMAPI dynamic wave_safe result:
+
+| Path | rc | Payload Create Frame100 | Stage Avg | Black P95 |
+|---|---:|---:|---:|---:|
+| EGLImage | 0 | 1.761130 ms | 13.139300 ms | 0.002375217 |
+| NvBuffer | 0 | 1.878210 ms | 13.159600 ms | 0.002375217 |
+
+Interpretation:
+
+```text
+Dynamic Remap is viable, but per-frame payload rebuild is a material cost.
+NvBuffer remains output-equivalent to EGLImage, but it does not erase dynamic
+payload rebuild overhead. Treat this as a cost boundary before opening a real
+mesh/local-warp quality loop.
+```
+
 ## GStreamer / NVMM Readiness
 
 Minimum Jetson path reached EOS:
@@ -486,4 +517,6 @@ docs/remap_native_size_pad_crop_probe_2026-07-23.md
 results/remap_native_size_pad_crop_probe_20260723/
 docs/device_stage_lifecycle_dataflow_v2_2026-07-23.md
 results/device_stage_lifecycle_dataflow_v2_20260723/
+docs/vpi_dynamic_remap_payload_probe_2026-07-23.md
+results/vpi_dynamic_remap_payload_probe_20260723/
 ```

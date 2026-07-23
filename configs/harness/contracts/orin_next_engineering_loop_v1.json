@@ -13,10 +13,10 @@
   },
   "active_task_contract": "none",
   "current_loop_state": {
-    "last_completed_task": "device_stage_lifecycle_dataflow_v2",
+    "last_completed_task": "vpi_dynamic_remap_payload_probe_v1",
     "current_task": "none",
-    "latest_result": "The project positioning was refined on 2026-07-23: EIS is the representative real-time vision workload, while the resume-facing project is Jetson Orin NX heterogeneous video compute and device-side dataflow optimization. Existing evidence covers Regular quality boundaries, VPI PerspectiveWarp module speed/perf-watt, MMAPI/VPI/NVENC accepted device path, wrapper/sync/transform dataflow breakdown, format-matched NvBuffer pair small gains, completed NVTX/Nsight profiling, final evidence package closeout, stream-only reuse lifecycle follow-up, portfolio/reproducibility closeout, C++ Remap operator probe, Remap-MMAPI scratch-stage insertion, local-warp quality bridge negative evidence, native-size Remap pad/crop closure, and device-stage lifecycle/dataflow V2.",
-    "current_blocker": "No active engineering blocker is open. The latest V2 loop showed that Remap NvBuffer wrappers are viable with small diagnostic stage gains, Remap stream-only reuse is healthy but slower, and PerspectiveWarp stream-only reuse remains device-consumer healthy across five Regular clips.",
+    "latest_result": "The project positioning was refined on 2026-07-23: EIS is the representative real-time vision workload, while the resume-facing project is Jetson Orin NX heterogeneous video compute and device-side dataflow optimization. Existing evidence covers Regular quality boundaries, VPI PerspectiveWarp module speed/perf-watt, MMAPI/VPI/NVENC accepted device path, wrapper/sync/transform dataflow breakdown, format-matched NvBuffer pair small gains, completed NVTX/Nsight profiling, final evidence package closeout, stream-only reuse lifecycle follow-up, portfolio/reproducibility closeout, C++ Remap operator probe, Remap-MMAPI scratch-stage insertion, local-warp quality bridge negative evidence, native-size Remap pad/crop closure, device-stage lifecycle/dataflow V2, and dynamic Remap payload cost boundary.",
+    "current_blocker": "No active engineering blocker is open. The dynamic Remap loop showed that per-frame Remap payload rebuild is viable but materially costly, and source_to_dest matrices must be inverted to fill output-to-input WarpMap keypoints.",
     "recommended_next_contract": "none"
   },
   "global_claim_boundary": {
