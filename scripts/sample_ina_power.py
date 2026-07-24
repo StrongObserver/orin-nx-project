@@ -3,6 +3,7 @@ from __future__ import annotations
 import argparse
 import base64
 import csv
+import json
 import os
 import subprocess
 import time
@@ -13,6 +14,8 @@ DEFAULT_HWMON = Path("/sys/devices/platform/c240000.i2c/i2c-1/1-0040/hwmon/hwmon
 
 
 def sudo_cat(path: Path, sudo_password: str | None) -> str:
+    if os.geteuid() == 0 or os.access(path, os.R_OK):
+        return path.read_text(encoding="utf-8").strip()
     command = ["sudo", "-S", "-p", "", "cat", str(path)]
     completed = subprocess.run(
         command,
@@ -31,6 +34,13 @@ def sudo_cat(path: Path, sudo_password: str | None) -> str:
 def read_int(path: Path, sudo_password: str | None) -> int:
     value = sudo_cat(path, sudo_password)
     return int(value)
+
+
+def read_optional(path: Path, sudo_password: str | None) -> str:
+    try:
+        return sudo_cat(path, sudo_password)
+    except RuntimeError:
+        return ""
 
 
 def decode_password() -> str | None:
@@ -67,6 +77,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--interval", type=float, default=1.0)
     parser.add_argument("--duration", type=float, default=0.0, help="0 means run until interrupted.")
     parser.add_argument("--hwmon", type=Path, default=DEFAULT_HWMON)
+    parser.add_argument("--metadata-out", type=Path, default=None)
     return parser.parse_args()
 
 
@@ -74,6 +85,26 @@ def main() -> int:
     args = parse_args()
     args.out.parent.mkdir(parents=True, exist_ok=True)
     sudo_password = decode_password()
+    if args.metadata_out is not None:
+        args.metadata_out.parent.mkdir(parents=True, exist_ok=True)
+        metadata = {
+            "hwmon": str(args.hwmon),
+            "name": read_optional(args.hwmon / "name", sudo_password),
+            "voltage_unit": "millivolt",
+            "current_unit": "milliamp",
+            "derived_power_unit": "watt",
+            "rails": [
+                {
+                    "channel": index,
+                    "label": read_optional(args.hwmon / f"in{index}_label", sudo_password),
+                    "shunt_resistor_microohm": read_optional(
+                        args.hwmon / f"shunt{index}_resistor", sudo_password
+                    ),
+                }
+                for index in range(1, 4)
+            ],
+        }
+        args.metadata_out.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
     fieldnames = [
         "timestamp_ms",
         "in1_mv",

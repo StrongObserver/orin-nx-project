@@ -103,6 +103,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--ransac-threshold", type=float, default=3.0)
     parser.add_argument("--flush-each-row", action="store_true")
     parser.add_argument(
+        "--incremental-prefix-output",
+        action="store_true",
+        help=(
+            "For bounded_delay_lp_rigid, write each matrix as soon as its scheduled LP prefix "
+            "has been solved. Matrix math is unchanged; only output scheduling changes."
+        ),
+    )
+    parser.add_argument(
         "--timing-summary",
         type=Path,
         default=None,
@@ -262,6 +270,22 @@ def add_ms(timing: dict[str, float], key: str, start: float) -> None:
     timing[key] = timing.get(key, 0.0) + (time.perf_counter() - start) * 1000.0
 
 
+def scheduled_prefix_len(frame_number: int, total_motions: int, delay: int, prefix_stride: int) -> int:
+    if frame_number < 1:
+        raise ValueError("frame_number must be at least 1")
+    if total_motions < 1:
+        raise ValueError("total_motions must be at least 1")
+    delay = max(0, int(delay))
+    prefix_stride = max(1, int(prefix_stride))
+    prefix_len = min(total_motions, frame_number + delay)
+    if prefix_stride > 1 and prefix_len < total_motions:
+        first_prefix = min(total_motions, 1 + delay)
+        if prefix_len > first_prefix:
+            offset = prefix_len - first_prefix
+            prefix_len = first_prefix + (offset // prefix_stride) * prefix_stride
+    return prefix_len
+
+
 def gaussian_average(values: np.ndarray, radius: int, stdev: float) -> np.ndarray:
     if radius <= 0:
         return values.copy()
@@ -330,6 +354,7 @@ def write_offline_lp_rigid(
         "output_convention": args.output_convention,
         "producer_delay_frames": int(args.producer_delay_frames),
         "lp_prefix_stride": max(1, int(args.lp_prefix_stride)),
+        "incremental_prefix_output": bool(args.incremental_prefix_output),
         "lock_published_prefix": bool(args.lock_published_prefix),
         "intent_reference_weight": float(args.intent_reference_weight),
         "intent_reference_radius": int(args.intent_reference_radius),
@@ -349,6 +374,10 @@ def write_offline_lp_rigid(
         "estimate_total_ms": 0.0,
         "interpolate_limit_total_ms": 0.0,
         "output_matrix_total_ms": 0.0,
+        "preprocess_complete_ms": 0.0,
+        "first_row_elapsed_ms": 0.0,
+        "first_solved_row_elapsed_ms": 0.0,
+        "last_row_elapsed_ms": 0.0,
     }
     prev_gray = first_gray
     transforms = []
@@ -406,6 +435,7 @@ def write_offline_lp_rigid(
         accel_limit_deg=0.5,
     )
     add_ms(timing, "interpolate_limit_total_ms", t_pre_lp)
+    timing["preprocess_complete_ms"] = (time.perf_counter() - total_t0) * 1000.0
     strength = float(np.clip(args.stabilization_strength, 0.0, 1.0))
     identity = np.eye(3, dtype=np.float32)
     published_prefix_weight = float(args.published_prefix_weight)
@@ -469,6 +499,119 @@ def write_offline_lp_rigid(
         add_ms(timing, "mask_safety_total_ms", t_mask)
         return output_mats
 
+    log_fieldnames = [
+        "frame_index",
+        "matrix_mode",
+        "output_convention",
+        "detected",
+        "tracked",
+        "inliers",
+        "inlier_ratio",
+        "fallback_reason",
+        "estimate_ms",
+        "producer_elapsed_us",
+        "producer_delay_frames",
+    ]
+
+    def write_identity_row(writer: csv.writer, log_writer: csv.DictWriter) -> None:
+        writer.writerow([0, *matrix_cells(np.eye(3, dtype=np.float64))])
+        log_writer.writerow(
+            {
+                "frame_index": 0,
+                "matrix_mode": "identity_first",
+                "output_convention": args.output_convention,
+                "detected": 0,
+                "tracked": 0,
+                "inliers": 0,
+                "inlier_ratio": "0.000000",
+                "fallback_reason": "",
+                "estimate_ms": "0.000000",
+                "producer_elapsed_us": "0.000000",
+                "producer_delay_frames": (
+                    int(args.producer_delay_frames)
+                    if args.matrix_mode in {"bounded_delay_lp_rigid", "local_window_lp_rigid"}
+                    else 0
+                ),
+            }
+        )
+
+    def write_output_row(
+        writer: csv.writer,
+        log_writer: csv.DictWriter,
+        mat: np.ndarray,
+        detail_row: tuple[int, dict[str, object], float],
+    ) -> None:
+        idx, details, estimate_ms = detail_row
+        t_row = time.perf_counter()
+        device_mat = prepare_output_matrix(post_geometry @ mat, args.output_convention)
+        writer.writerow([idx, *matrix_cells(device_mat)])
+        row_elapsed_us = (time.perf_counter() - t_row) * 1_000_000.0
+        log_writer.writerow(
+            {
+                "frame_index": idx,
+                "matrix_mode": args.matrix_mode,
+                "output_convention": args.output_convention,
+                "detected": details["detected_features"],
+                "tracked": details["tracked_features"],
+                "inliers": details["inliers"],
+                "inlier_ratio": f"{details['inlier_ratio']:.6f}",
+                "fallback_reason": details["fallback_reason"],
+                "estimate_ms": f"{estimate_ms:.6f}",
+                "producer_elapsed_us": f"{row_elapsed_us:.6f}",
+                "producer_delay_frames": (
+                    int(args.producer_delay_frames)
+                    if args.matrix_mode in {"bounded_delay_lp_rigid", "local_window_lp_rigid"}
+                    else 0
+                ),
+            }
+        )
+        timing["matrix_write_total_ms"] = float(timing["matrix_write_total_ms"]) + row_elapsed_us / 1000.0
+
+    if args.incremental_prefix_output:
+        if args.matrix_mode != "bounded_delay_lp_rigid":
+            raise ValueError("--incremental-prefix-output requires --matrix-mode bounded_delay_lp_rigid")
+        delay = max(0, int(args.producer_delay_frames))
+        prefix_stride = max(1, int(args.lp_prefix_stride))
+        prefix_cache: dict[int, list[np.ndarray]] = {}
+        args.log.parent.mkdir(parents=True, exist_ok=True)
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        t_output_matrix = time.perf_counter()
+        with args.output.open("w", newline="", encoding="utf-8") as out, args.log.open(
+            "w", newline="", encoding="utf-8"
+        ) as log:
+            writer = csv.writer(out)
+            writer.writerow(MATRIX_HEADER)
+            log_writer = csv.DictWriter(log, fieldnames=log_fieldnames)
+            log_writer.writeheader()
+            write_identity_row(writer, log_writer)
+            if args.flush_each_row:
+                out.flush()
+                log.flush()
+            timing["first_row_elapsed_ms"] = (time.perf_counter() - total_t0) * 1000.0
+            for frame_number in range(1, len(transforms_limited) + 1):
+                prefix_len = scheduled_prefix_len(
+                    frame_number, len(transforms_limited), delay, prefix_stride
+                )
+                if prefix_len not in prefix_cache:
+                    locked = published_solver_mats if lock_published_prefix else None
+                    prefix_cache[prefix_len] = solve_output_mats_for_prefix(prefix_len, locked)
+                output_mat = prefix_cache[prefix_len][frame_number - 1]
+                if lock_published_prefix:
+                    published_solver_mats.append(output_to_solver_domain(output_mat))
+                write_output_row(writer, log_writer, output_mat, details_rows[frame_number - 1])
+                if args.flush_each_row:
+                    out.flush()
+                    log.flush()
+                if frame_number == 1:
+                    timing["first_solved_row_elapsed_ms"] = (time.perf_counter() - total_t0) * 1000.0
+            timing["last_row_elapsed_ms"] = (time.perf_counter() - total_t0) * 1000.0
+        add_ms(timing, "output_matrix_total_ms", t_output_matrix)
+        timing["motion_rows"] = len(details_rows)
+        timing["frames_written"] = len(details_rows) + 1
+        timing["total_elapsed_ms"] = (time.perf_counter() - total_t0) * 1000.0
+        write_timing_summary(args.timing_summary, timing)
+        return len(details_rows) + 1
+
     if args.matrix_mode == "offline_lp_rigid":
         output_mats = solve_output_mats_for_prefix(len(transforms_limited))
     elif args.matrix_mode == "local_window_lp_rigid":
@@ -493,12 +636,9 @@ def write_offline_lp_rigid(
         t_output_matrix = time.perf_counter()
         output_mats = []
         for frame_number in range(1, len(transforms_limited) + 1):
-            prefix_len = min(len(transforms_limited), frame_number + delay)
-            if args.matrix_mode == "bounded_delay_lp_rigid" and prefix_stride > 1 and prefix_len < len(transforms_limited):
-                first_prefix = min(len(transforms_limited), 1 + delay)
-                if prefix_len > first_prefix:
-                    offset = prefix_len - first_prefix
-                    prefix_len = first_prefix + (offset // prefix_stride) * prefix_stride
+            prefix_len = scheduled_prefix_len(
+                frame_number, len(transforms_limited), delay, prefix_stride
+            )
             if prefix_len not in prefix_cache:
                 locked = published_solver_mats if lock_published_prefix else None
                 prefix_cache[prefix_len] = solve_output_mats_for_prefix(prefix_len, locked)
@@ -513,64 +653,19 @@ def write_offline_lp_rigid(
     with args.output.open("w", newline="", encoding="utf-8") as out, args.log.open("w", newline="", encoding="utf-8") as log:
         writer = csv.writer(out)
         writer.writerow(MATRIX_HEADER)
-        log_writer = csv.DictWriter(
-            log,
-            fieldnames=[
-                "frame_index",
-                "matrix_mode",
-                "output_convention",
-                "detected",
-                "tracked",
-                "inliers",
-                "inlier_ratio",
-                "fallback_reason",
-                "estimate_ms",
-                "producer_elapsed_us",
-                "producer_delay_frames",
-            ],
-        )
+        log_writer = csv.DictWriter(log, fieldnames=log_fieldnames)
         log_writer.writeheader()
-        writer.writerow([0, *matrix_cells(np.eye(3, dtype=np.float64))])
-        log_writer.writerow(
-            {
-                "frame_index": 0,
-                "matrix_mode": "identity_first",
-                "output_convention": args.output_convention,
-                "detected": 0,
-                "tracked": 0,
-                "inliers": 0,
-                "inlier_ratio": "0.000000",
-                "fallback_reason": "",
-                "estimate_ms": "0.000000",
-                "producer_elapsed_us": "0.000000",
-                "producer_delay_frames": int(args.producer_delay_frames) if args.matrix_mode in {"bounded_delay_lp_rigid", "local_window_lp_rigid"} else 0,
-            }
-        )
+        write_identity_row(writer, log_writer)
+        timing["first_row_elapsed_ms"] = (time.perf_counter() - total_t0) * 1000.0
         if len(output_mats) != len(details_rows):
             raise RuntimeError(f"matrix/detail length mismatch: {len(output_mats)} vs {len(details_rows)}")
-        for mat, (idx, details, estimate_ms) in zip(output_mats, details_rows):
-            t_row = time.perf_counter()
-            device_mat = prepare_output_matrix(post_geometry @ mat, args.output_convention)
-            writer.writerow([idx, *matrix_cells(device_mat)])
+        for row_index, (mat, detail_row) in enumerate(zip(output_mats, details_rows), start=1):
+            write_output_row(writer, log_writer, mat, detail_row)
             if args.flush_each_row:
                 out.flush()
-            row_elapsed_us = (time.perf_counter() - t_row) * 1_000_000.0
-            log_writer.writerow(
-                {
-                    "frame_index": idx,
-                    "matrix_mode": args.matrix_mode,
-                    "output_convention": args.output_convention,
-                    "detected": details["detected_features"],
-                    "tracked": details["tracked_features"],
-                    "inliers": details["inliers"],
-                    "inlier_ratio": f"{details['inlier_ratio']:.6f}",
-                    "fallback_reason": details["fallback_reason"],
-                    "estimate_ms": f"{estimate_ms:.6f}",
-                    "producer_elapsed_us": f"{row_elapsed_us:.6f}",
-                    "producer_delay_frames": int(args.producer_delay_frames) if args.matrix_mode in {"bounded_delay_lp_rigid", "local_window_lp_rigid"} else 0,
-                }
-            )
-            timing["matrix_write_total_ms"] = float(timing["matrix_write_total_ms"]) + row_elapsed_us / 1000.0
+            if row_index == 1:
+                timing["first_solved_row_elapsed_ms"] = (time.perf_counter() - total_t0) * 1000.0
+        timing["last_row_elapsed_ms"] = (time.perf_counter() - total_t0) * 1000.0
     timing["motion_rows"] = len(details_rows)
     timing["frames_written"] = len(output_mats) + 1
     timing["total_elapsed_ms"] = (time.perf_counter() - total_t0) * 1000.0

@@ -4,6 +4,7 @@ import argparse
 import csv
 import os
 import re
+import shutil
 import statistics
 import subprocess
 import time
@@ -33,6 +34,11 @@ DEFAULT_BINARIES = {
 
 TEGRATS_GR3D_RE = re.compile(r"GR3D_FREQ\s+(\d+)%")
 TEGRATS_TEMP_RE = re.compile(r"([A-Za-z0-9_]+)@([0-9.]+)C")
+HANDOFF_RE = re.compile(
+    r"MATRIX_HANDOFF\s+frame=(?P<frame>\d+)\s+matrix_index=(?P<matrix_index>-?\d+)\s+"
+    r"fallback=(?P<fallback>[01])\s+elapsed_us=(?P<elapsed>[0-9.]+)"
+)
+MATRIX_COUNT_RE = re.compile(r"VPI_MATRIX_LOADED\s+.*?\s+count=(\d+)")
 
 
 def percentile(values: list[float], pct: float) -> float:
@@ -63,6 +69,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--duration-sec", type=float, default=1200.0)
     parser.add_argument("--tegrastats", action="store_true")
     parser.add_argument("--tegrastats-interval-ms", type=int, default=1000)
+    parser.add_argument("--expected-frames", type=int, default=180)
+    parser.add_argument(
+        "--retain-outputs",
+        choices=["all", "samples", "failures"],
+        default="samples",
+        help="Keep every output, first/last-cycle samples, or failed outputs only.",
+    )
     return parser.parse_args()
 
 
@@ -89,7 +102,94 @@ def stop_process(proc: subprocess.Popen[str] | None) -> None:
         proc.wait(timeout=5)
 
 
-def run_one(root: Path, out_dir: Path, name: str, run_index: int, source: str, matrix: str) -> dict[str, object]:
+def parse_handoff(log_text: str) -> dict[str, int]:
+    samples = [match.groupdict() for match in HANDOFF_RE.finditer(log_text)]
+    return {
+        "handoff_samples": len(samples),
+        "fallback_count": sum(int(sample["fallback"]) for sample in samples),
+        "frame_index_mismatch_count": sum(
+            1
+            for sample in samples
+            if int(sample["matrix_index"]) >= 0
+            and int(sample["matrix_index"]) != int(sample["frame"]) - 1
+        ),
+        "max_handoff_frame": max((int(sample["frame"]) for sample in samples), default=0),
+    }
+
+
+def probe_frame_count(path: Path) -> tuple[int, int]:
+    ffprobe = shutil.which("ffprobe")
+    if ffprobe is None or not path.exists() or path.stat().st_size == 0:
+        return 0, 0
+    proc = subprocess.run(
+        [
+            ffprobe,
+            "-v",
+            "error",
+            "-count_frames",
+            "-select_streams",
+            "v:0",
+            "-show_entries",
+            "stream=nb_read_frames",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
+            str(path),
+        ],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        check=False,
+    )
+    if proc.returncode != 0:
+        return 0, 0
+    try:
+        return 1, int(proc.stdout.strip().splitlines()[-1])
+    except (ValueError, IndexError):
+        return 0, 0
+
+
+def classify_failure(
+    return_code: int,
+    success: bool,
+    handoff: dict[str, int],
+    handoff_required: bool,
+    readable: int,
+    frame_count: int,
+    expected_frames: int,
+    timing_required: bool,
+    timing_present: bool,
+) -> str:
+    reasons: list[str] = []
+    if return_code != 0:
+        reasons.append(f"rc={return_code}")
+    if not success:
+        reasons.append("success_marker_missing")
+    if handoff_required and handoff["handoff_samples"] == 0:
+        reasons.append("handoff_instrumentation_missing")
+    if handoff["fallback_count"]:
+        reasons.append(f"fallback={handoff['fallback_count']}")
+    if handoff["frame_index_mismatch_count"]:
+        reasons.append(f"mismatch={handoff['frame_index_mismatch_count']}")
+    if not readable:
+        reasons.append("output_unreadable")
+    elif expected_frames > 0 and frame_count != expected_frames:
+        reasons.append(f"frames={frame_count}")
+    if timing_required and not timing_present:
+        reasons.append("stage_timing_missing")
+    return ";".join(reasons)
+
+
+def run_one(
+    root: Path,
+    out_dir: Path,
+    name: str,
+    run_index: int,
+    sequence: int,
+    order_position: int,
+    source: str,
+    matrix: str,
+    expected_frames: int,
+) -> dict[str, object]:
     binary = root / DEFAULT_BINARIES[name]
     output_path = out_dir / f"{name}_{run_index:04d}.h264"
     log_path = out_dir / f"{name}_{run_index:04d}.log"
@@ -122,12 +222,34 @@ def run_one(root: Path, out_dir: Path, name: str, run_index: int, source: str, m
         wrapper_ms = f"{float(match.group(1)):.6f}"
         stage100_ms = f"{float(match.group(2)):.6f}"
         stageavg_ms = f"{float(match.group(3)):.6f}"
+    handoff = parse_handoff(proc.stdout)
+    matrix_match = MATRIX_COUNT_RE.search(proc.stdout)
+    matrix_count = int(matrix_match.group(1)) if matrix_match else 0
+    readable, frame_count = probe_frame_count(output_path)
+    success = "App run was successful" in proc.stdout
+    failure_reason = classify_failure(
+        return_code=proc.returncode,
+        success=success,
+        handoff=handoff,
+        handoff_required=True,
+        readable=readable,
+        frame_count=frame_count,
+        expected_frames=expected_frames,
+        timing_required=name != "egl",
+        timing_present=match is not None,
+    )
     return {
         "path": name,
         "run": run_index,
+        "sequence": sequence,
+        "order_position": order_position,
         "rc": proc.returncode,
-        "success": int("App run was successful" in proc.stdout),
-        "fallback_count": proc.stdout.count("fallback=1"),
+        "success": int(success),
+        **handoff,
+        "matrix_count": matrix_count,
+        "readable": readable,
+        "frame_count": frame_count,
+        "failure_reason": failure_reason,
         "wall_s": f"{wall_s:.6f}",
         "wrapper_ms": wrapper_ms,
         "stage100_ms": stage100_ms,
@@ -144,6 +266,12 @@ def summarize_path(name: str, rows: list[dict[str, object]]) -> dict[str, object
         "rc0": sum(1 for row in group if int(row["rc"]) == 0),
         "success": sum(int(row["success"]) for row in group),
         "fallback_total": sum(int(row["fallback_count"]) for row in group),
+        "mismatch_total": sum(int(row["frame_index_mismatch_count"]) for row in group),
+        "readable": sum(int(row["readable"]) for row in group),
+        "frame_count_ok": sum(
+            1 for row in group if int(row["frame_count"]) > 0 and not str(row["failure_reason"])
+        ),
+        "failed_runs": sum(1 for row in group if str(row["failure_reason"])),
     }
     for key in ["wall_s", "wrapper_ms", "stage100_ms", "stageavg_ms"]:
         values = [float(row[key]) for row in group if row[key] != ""]
@@ -208,19 +336,42 @@ def main() -> int:
     rows: list[dict[str, object]] = []
     started = time.perf_counter()
     run_index = 1
+    sequence = 1
     try:
         while True:
             if args.runs > 0 and run_index > args.runs:
                 break
             if args.runs <= 0 and rows and (time.perf_counter() - started) >= args.duration_sec:
                 break
-            for name in paths:
-                row = run_one(root, out_dir, name, run_index, args.source, args.matrix)
+            offset = (run_index - 1) % len(paths)
+            cycle_paths = paths[offset:] + paths[:offset]
+            for order_position, name in enumerate(cycle_paths, start=1):
+                row = run_one(
+                    root,
+                    out_dir,
+                    name,
+                    run_index,
+                    sequence,
+                    order_position,
+                    args.source,
+                    args.matrix,
+                    args.expected_frames,
+                )
                 rows.append(row)
                 print(row, flush=True)
+                sequence += 1
             run_index += 1
     finally:
         stop_process(tegra_proc)
+
+    final_cycle = run_index - 1
+    if args.retain_outputs != "all":
+        for row in rows:
+            keep = bool(str(row["failure_reason"]))
+            if args.retain_outputs == "samples":
+                keep = keep or int(row["run"]) in {1, final_cycle}
+            if not keep:
+                (out_dir / f"{row['path']}_{int(row['run']):04d}.h264").unlink(missing_ok=True)
 
     summary = [summarize_path(name, rows) for name in paths]
     tegra = parse_tegrastats(out_dir)
@@ -234,7 +385,7 @@ def main() -> int:
     for row in summary:
         print(row)
 
-    failed = [row for row in rows if int(row["rc"]) != 0 or int(row["success"]) != 1]
+    failed = [row for row in rows if str(row["failure_reason"])]
     return 1 if failed else 0
 
 
