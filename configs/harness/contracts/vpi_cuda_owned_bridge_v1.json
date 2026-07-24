@@ -1,0 +1,261 @@
+{
+  "schema_version": 1,
+  "contract_id": "vpi_cuda_owned_bridge_v1",
+  "status": "blocked_negative_closeout",
+  "loop_type": "vpi_cuda_owned_bridge",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Move spatial random sampling off the rejected EGL-mapped NV12_ER scratch path: copy the mapped input sequentially into persistent CUDA-owned pitch-linear NV12 buffers, run VPI CUDA PerspectiveWarp on those owned buffers, then copy the result sequentially back to the mapped output scratch before NvBufSurfTransform and NVENC.",
+  "entry_context": {
+    "project_positioning": "Jetson Orin NX heterogeneous video compute and device-side dataflow optimization, with EIS as the representative workload.",
+    "quality_anchor": "resid_r15_s07 remains the accepted Regular-gate stabilization-strength anchor and is not changed in this loop.",
+    "previous_positive_evidence": [
+      "cuda_double_surface_debug_v1 Test1 proved full-frame sequential CUDA copy between two EGL-mapped pitch-linear NV12_ER scratch surfaces is visually clean.",
+      "experiments/vpi_cuda_mem_warp proved VPI CUDA PerspectiveWarp works on CUDA-owned pitch-linear memory.",
+      "The accepted MMAPI/VPI/NVENC path proved source_to_dest PerspectiveWarp semantics and encoder-compatible output."
+    ],
+    "previous_negative_evidence": "Custom CUDA integer translate and affine random sampling over the current EGL-mapped NV12_ER scratch path tear even when basic full-frame copy is clean.",
+    "root_hypothesis": "Keep EGL-mapped surfaces only as sequential copy boundaries. Let persistent CUDA-owned buffers carry random access, and let VPI own PerspectiveWarp execution and synchronization.",
+    "device_availability": "The Jetson is disconnected for the current local session. Local work may prepare and validate source generation only; build, video correctness, and timing claims require a later Jetson run."
+  },
+  "knowledge_base_refs": [
+    "public:nvidia_vpi_samples",
+    "public:jetson_multimedia_api"
+  ],
+  "frozen_variables": [
+    "Use the Regular05 H264 source from the existing MMAPI evidence path on Jetson",
+    "Run the MMAPI sample with num_files=1 only",
+    "Use source_to_dest matrix convention",
+    "Do not change resid_r15_s07",
+    "Do not tune EIS quality parameters",
+    "Keep the block-linear main decode/encode chain and pitch-linear NV12_ER MMAPI scratch boundary",
+    "Do not run a custom random-sampling CUDA kernel on EGL-mapped scratch",
+    "Use persistent CUDA-owned input/output Y and UV allocations",
+    "Use persistent VPI CUDA wrappers and stream for the CUDA-owned buffers",
+    "Copy EGL input to CUDA-owned input sequentially before VPI",
+    "Copy CUDA-owned output to EGL output sequentially after VPI sync",
+    "No zero-copy claim",
+    "No full real-time EIS claim",
+    "No accepted acceleration claim before same-input Jetson timing and visual review"
+  ],
+  "planned_evidence": {
+    "report": "docs/vpi_cuda_owned_bridge_2026-07-24.md",
+    "evidence_dir": "results/vpi_cuda_owned_bridge_20260724/",
+    "review_dir": "C:/Users/Admin/Videos/orin nx/review/performance/20260724_vpi_cuda_owned_bridge/",
+    "patch_script": "removed after negative closeout",
+    "accepted_comparison": "accepted EGLImage PerspectiveWarp path using the same Regular05 source and resid_r15_s07 matrix"
+  },
+  "local_validation_result": {
+    "status": "completed",
+    "platform": "windows_local_static_validation",
+    "patcher_py_compile": "pass",
+    "patcher_fixture_self_test": "pass",
+    "patch_idempotence": "pass",
+    "generated_cpp_stub_compile": "pass with g++ -std=c++14 -Wall -Wextra -Werror -fsyntax-only",
+    "custom_global_warp_kernel_present": false,
+    "historical_clean_copy_regression": {
+      "decision": "pass",
+      "band_shift_spread_p95_px": 0.075069,
+      "expected_shift_error_p95_px": 0.073032,
+      "expected_reference_mae_p95": 3.108052
+    },
+    "historical_torn_translate_regression": {
+      "decision": "correctly rejected",
+      "band_shift_spread_p95_px": 0.84173,
+      "expected_shift_error_p95_px": 0.860972,
+      "expected_reference_mae_p95": 42.612007,
+      "failed_gate": "expected_reference_gate"
+    },
+    "remaining_blocker": "Jetson is disconnected; real MMAPI/VPI/CUDA compilation, video correctness, manual review, and stage timing are pending."
+  },
+  "jetson_result": {
+    "status": "blocked_negative_closeout",
+    "sample_dir": "/home/nvidia/orin-nx-project/_mmapi_work/jetson_multimedia_api/samples/99_vpi_cuda_owned_bridge_20260724_08",
+    "evidence_dir": "results/vpi_cuda_owned_bridge_20260724/",
+    "identity": {
+      "rc": 0,
+      "frames": 180,
+      "black_border_p95": 0.0,
+      "source_vs_identity_center_mae": 2.821918,
+      "spatial_coherence": "pass"
+    },
+    "non_identity": {
+      "decision": "rejected",
+      "direct_nv12_dx8": "lower-half/content corruption, ideal-reference MAE p95 about 35.235669",
+      "direct_nv12_plane_size_fix": "still corrupt, ideal-reference MAE p95 about 31.444161",
+      "rgba_with_vpi_convert_back": "black border clean but content/color error, ideal-reference MAE p95 about 51.682096",
+      "rgba_with_custom_nv12_writeback": "bridge-internal RGBA warp is correct, but final NV12/encoded output has large color/content error"
+    },
+    "standalone_rgba_vpi": {
+      "identity_mean_abs": 0.0,
+      "translate_dx8_mean_abs": 0.0,
+      "translate_dxneg8_mean_abs": 0.0,
+      "meaning": "VPI CUDA PerspectiveWarp over CUDA-owned RGBA pitch memory is correct by itself; the bridge failure is in the MMAPI return-to-NV12/NVENC portion."
+    },
+    "accepted_path_recheck": {
+      "review_video": "C:/Users/Admin/Videos/orin nx/review/performance/20260724_vpi_cuda_owned_bridge_and_accepted_path/20260724_regular05_accepted_paths_source_egl_stream_nvbuf_grid.mp4",
+      "stream_wall_benefit_vs_egl_percent": 2.864,
+      "nvbuffer_wall_benefit_vs_egl_percent": 0.662,
+      "stream_stageavg_benefit_vs_egl_timing_percent": 1.169
+    },
+    "startup_black_fix": {
+      "decision": "accepted_candidate_pending_human_review",
+      "matrix": "results/vpi_cuda_owned_bridge_20260724/startup_black_fix_v2/resid_r15_s07_startup_fov_v2.csv",
+      "path": "accepted stream-only reuse",
+      "old_stream_left80_max_first90": 0.044722222,
+      "fixed_left80_max_first90": 0.0,
+      "fixed_left80_mean_first90": 0.0,
+      "fixed_black_border_p95": 0.0,
+      "fixed_black_border_max": 0.000633681,
+      "review_video": "C:/Users/Admin/Videos/orin nx/review/performance/20260724_regular05_startup_black_fix/20260724_regular05_startup_black_fix_source_old_fixed_grid_30fps.mp4"
+    },
+    "claim_boundary": "Do not claim this CUDA-owned bridge solves non-identity MMAPI device-stage warp, preserves resid_r15_s07, or provides acceleration. Accepted fallback remains the VPI-managed EGLImage/stream-only/NvBuffer pair path with low-single-digit measured gains."
+  },
+  "expected_metrics": {
+    "identity_gate": [
+      "rc=0",
+      "180 readable frames",
+      "no green output, block tearing, unrelated content, or color-channel corruption",
+      "black_border_p95 below 0.01",
+      "source_vs_identity_mean_abs_center_avg at or below 6.0"
+    ],
+    "translate_gate": [
+      "rc=0",
+      "coherent configured integer shift with no per-band or block-dependent displacement",
+      "visual review passes",
+      "difference against a software-generated translate reference is recorded"
+    ],
+    "matrix_gate": [
+      "fallback_count equals 0",
+      "frame_index_mismatch_count equals 0",
+      "resid_r15_s07 output is readable",
+      "manual visual review finds no regression against the accepted EGLImage path",
+      "black_border_p95 below 0.01 or explicitly classified as the known gray-threshold conditional case"
+    ],
+    "performance_gate": [
+      "same-input total device-stage timing is recorded",
+      "copy-in, VPI warp, copy-out, EGL registration, and NvBufSurfTransform timing are separated",
+      "accepted only if total stage running average improves by at least 10 percent over the same-run accepted EGLImage baseline without visual regression"
+    ]
+  },
+  "task_queue": [
+    {
+      "id": "P0",
+      "title": "Control-plane registration",
+      "objective": "Register this contract as the active task and keep the previous CUDA double-surface result closed as negative evidence.",
+      "success_criteria": [
+        "onboard reports this active task contract",
+        "doctor passes",
+        "Running main-gate claim remains forbidden",
+        "all edited JSON parses"
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "Local route implementation",
+      "objective": "Create an idempotent MMAPI patcher that implements the CUDA-owned VPI bridge without a custom random-sampling CUDA kernel.",
+      "success_criteria": [
+        "identity is the default mode",
+        "translate and matrix modes are explicit environment-controlled diagnostics",
+        "CUDA-owned allocations and VPI wrappers are persistent",
+        "EGL input and output are touched only by sequential copies",
+        "logs separate copy-in, VPI warp, copy-out, registration, transform, and total stage time"
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Local static and fixture validation",
+      "objective": "Validate Python syntax, patch idempotence, generated-source invariants, JSON, harness, and public hygiene without the Jetson.",
+      "success_criteria": [
+        "py_compile passes",
+        "patcher self-test passes",
+        "a synthetic MMAPI fixture is patched exactly once",
+        "generated source contains no custom random-sampling CUDA kernel",
+        "git diff --check passes",
+        "oral template remains unstaged"
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Jetson fresh-sample build",
+      "objective": "When the Jetson is available, patch a fresh multivideo_transcode sample copy and build with the installed CUDA and VPI toolchain.",
+      "success_criteria": [
+        "fresh sample patch succeeds",
+        "second patch is idempotent",
+        "build succeeds without system package changes"
+      ],
+      "stop_reasons": [
+        "Jetson remains disconnected",
+        "installed MMAPI sample markers differ and require broad rewrite",
+        "headers or libraries are missing and cannot be resolved minimally"
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "Identity and translate correctness",
+      "objective": "Run identity first, then a bounded integer translate only if identity passes.",
+      "success_criteria": [
+        "identity meets the contract identity gate",
+        "translate is spatially coherent across the full frame",
+        "frame extraction and manual visual review pass"
+      ],
+      "stop_reasons": [
+        "identity is unreadable or visibly corrupt",
+        "translate still tears or shows band-dependent displacement",
+        "cache or ownership behavior is ambiguous"
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "Regular05 resid matrix replay",
+      "objective": "Run the accepted resid_r15_s07 matrix with source_to_dest semantics and compare with the accepted EGLImage output.",
+      "success_criteria": [
+        "matrix handoff has no fallback or index mismatch",
+        "output passes visual veto",
+        "black-border and video-difference summaries are recorded",
+        "review video is copied to the categorized Windows review tree"
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "Same-run performance decision",
+      "objective": "Measure the new bridge and accepted EGLImage baseline in an interleaved same-input run.",
+      "success_criteria": [
+        "both routes run successfully at least five times",
+        "timing scopes are identical",
+        "the 10 percent total-stage acceptance threshold is evaluated",
+        "kernel-only timing is not presented as full-pipeline speedup"
+      ]
+    },
+    {
+      "id": "P7",
+      "title": "Evidence closeout",
+      "objective": "Record the measured result, migration boundary, exact commands, and claim boundary.",
+      "success_criteria": [
+        "report contains measured Jetson data only",
+        "long-term context receives a concise high-signal update",
+        "presentation files are changed only if the path passes correctness and performance gates",
+        "results, review videos, secrets, and the oral template remain outside the public commit"
+      ]
+    }
+  ],
+  "forbidden_claims": [
+    "custom CUDA affine MMAPI path accepted",
+    "zero-copy full chain",
+    "full real-time EIS",
+    "full-pipeline acceleration before same-input end-to-end timing",
+    "EIS quality improvement from a device-stage bridge",
+    "all-scene or product-grade stabilization"
+  ],
+  "stop_reasons": [
+    "Jetson SSH or device access unavailable after local validation completes",
+    "identity output is unreadable, green, or torn",
+    "translate output is spatially incoherent",
+    "same-input total stage does not improve by at least 10 percent",
+    "visual review regresses against the accepted EGLImage path",
+    "implementation would require a broad MMAPI rewrite"
+  ],
+  "evidence_output_directory": "results/vpi_cuda_owned_bridge_<YYYYMMDD>",
+  "review_copy_directory": "C:/Users/Admin/Videos/orin nx/review/performance/<YYYYMMDD>_vpi_cuda_owned_bridge"
+}

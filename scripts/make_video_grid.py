@@ -50,7 +50,7 @@ def main() -> int:
     frames_written = 0
     while True:
         frames = []
-        for (label, _), cap in zip(items, caps, strict=True):
+        for (label, _), cap in zip(items, caps):
             ok, frame = cap.read()
             if not ok:
                 frames = []

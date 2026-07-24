@@ -90,24 +90,16 @@ mesh/depth/RS/gyro model and a new scoped contract.
 The latest completed task-specific Done Contract is:
 
 ```text
-C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\cuda_mmapi_interop_safety_verifier_v1.json
+C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\vpi_cuda_owned_bridge_v1.json
 ```
 
-This completed engineering extension started from the standalone CUDA dynamic
-warp result and verified the minimum MMAPI/NvBufSurface/EGLImage/CUDA scratch
-interop safety boundary. The first non-identity attempt, `shift_dx8` /
-`dynamic_shift`, returned `rc=0` but was rejected after visual review because it
-created severe tearing/distortion. The corrected verifier uses `identity`,
-`marker`, and `dynamic_marker`: all three return `rc=0` with readable 640x360
-outputs and p95 black-border ratio 0. Identity is the primary safety gate;
-marker modes only prove small ROI CUDA write activity without large-plane
-tearing. This remains safety/dataflow evidence only: not accepted MMAPI CUDA
-acceleration, not zero-copy, not full real-time EIS, and not EIS quality
-improvement.
-
-There is currently no active task-specific Done Contract. If engineering
-continues, create a new narrow contract instead of automatically extending this
-CUDA interop verifier.
+This contract is closed as negative bridge evidence: identity passes, and
+standalone CUDA-owned RGBA VPI PerspectiveWarp is exact, but the full
+MMAPI/NVENC bridge still fails non-identity visual/color correctness when
+returning to NV12/NVENC. The accepted fallback remains the VPI-managed
+EGLImage / stream-only reuse / NvBuffer pair path. There is currently no active
+task-specific Done Contract; if engineering continues, create a new narrow
+contract instead of extending this bridge.
 
 The standalone CUDA dynamic warp contract is complete and remains supporting
 evidence:

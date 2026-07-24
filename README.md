@@ -39,6 +39,7 @@ Quality boundary -> CPU baseline -> VPI module evidence
 | CUDA dynamic warp | Standalone 640x368 CUDA affine warp: RGBA dynamic `0.194 ms`, Y8 dynamic `0.138 ms` | Standalone operator evidence; MMAPI integration still needs safety verifier |
 | CUDA affine MMAPI diagnostic | Identity CUDA kernel path is readable, but translate/affine random-sampling over current EGL-mapped NV12_ER scratch tears | Negative integration evidence; needs different CUDA surface route |
 | CUDA double-surface debug | VIC round-trip and dual-surface CUDA full-frame copy pass; integer translate still tears | Narrows blocker to spatial random sampling over current EGL scratch route |
+| VPI CUDA-owned bridge | Identity passes and standalone CUDA-owned RGBA VPI warp is exact, but non-identity MMAPI bridge output fails NV12/NVENC visual correctness | Negative bridge evidence; accepted fallback remains VPI-managed paths |
 | Local-warp quality bridge | Static single-cell local Remap correction on `parallax10` did not improve local residual metrics | Negative diagnostic result; richer dynamic mesh/depth/RS model needed |
 | Python dataflow boundary | appsink readback about `7.93 ms/frame`; appsink -> appsrc -> encode about `15.81 ms/frame` | Explains why Python-in-loop is not the acceleration path |
 | C++ device stage | MMAPI/NVDEC -> block-linear NV12 -> pitch-linear NV12_ER scratch -> VPI CUDA warp -> NVENC | Device-stage evidence, not full real-time EIS |
@@ -653,21 +654,17 @@ configs/harness/contracts/regular05_live_eglimage_path_v1.json
 configs/harness/contracts/regular05_eglimage_wrapper_reuse_root_cause_v1.json
 ```
 
-Current active verifier:
+Latest completed device-stage route:
 
 ```text
-configs/harness/contracts/cuda_mmapi_interop_safety_verifier_v1.json
+configs/harness/contracts/vpi_cuda_owned_bridge_v1.json
 ```
 
-This verifier is now complete. It started from the standalone CUDA dynamic warp
-result and checked only whether CUDA can safely write through the current MMAPI
-scratch boundary. The first `shift` / `dynamic_shift` diagnostics returned
-rc=0, but visual review rejected those outputs because they had severe
-tearing/distortion. The corrected verifier uses identity plus small ROI marker
-diagnostics: identity, marker, and dynamic_marker all return rc=0 with readable
-640x360 outputs and p95 black-border ratio 0. Marker modes prove CUDA write
-activity without large-plane tearing. This remains a safety/dataflow verifier,
-not a quality loop, not zero-copy, and not a full-pipeline acceleration claim.
+This route is closed as negative evidence. It proved identity safety and showed
+standalone CUDA-owned RGBA VPI warp is exact, but the full MMAPI bridge cannot
+return a visually correct non-identity frame to NV12/NVENC. Same-input recheck
+of accepted VPI-managed paths stayed healthy: stream-only reuse and NvBuffer
+pair both ran 5/5 with fallback=0, with low-single-digit wall/stage gains.
 
 Final evidence package docs:
 

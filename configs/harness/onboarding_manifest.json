@@ -67,7 +67,7 @@
     "Independently keep the full oral-template content in view before planning or execution; do not substitute git, cache, memory, manifest text, or partial excerpts for the real TXT.",
     "Read AGENTS.md only for dispatch rules and safety boundaries.",
     "Read the active loop contract: configs/harness/contracts/orin_next_engineering_loop_v1.json",
-    "Read the latest task-specific Done Contract before new engineering: currently configs/harness/contracts/cuda_double_surface_debug_v1.json. It is closed as negative evidence at Test2 integer translate; choose a new scoped contract before more experiments.",
+    "Read the latest completed task-specific Done Contract before new engineering: currently configs/harness/contracts/vpi_cuda_owned_bridge_v1.json. It is closed as negative evidence for non-identity MMAPI bridge output; accepted fallback remains VPI-managed EGLImage/stream-only/NvBuffer pair.",
     "Run harness static checks before experiments: doctor, check-claim, and JSON/schema checks as needed."
   ],
   "load_on_demand": [
@@ -92,6 +92,7 @@
         "configs/harness/contracts/cuda_dynamic_warp_probe_v1.json",
         "configs/harness/contracts/cuda_mmapi_interop_safety_verifier_v1.json",
         "configs/harness/contracts/cuda_affine_mmapi_diagnostic_v1.json",
+        "configs/harness/contracts/vpi_cuda_owned_bridge_v1.json",
         "configs/harness/contracts/cuda_double_surface_debug_v1.json",
         "configs/harness/contracts/vpi_dynamic_remap_payload_probe_v1.json",
         "configs/harness/contracts/device_stage_lifecycle_dataflow_v2.json",
@@ -134,7 +135,7 @@
   ],
   "active_loop_contract": "configs/harness/contracts/orin_next_engineering_loop_v1.json",
   "active_task_contract": "none",
-  "latest_completed_task_contract": "configs/harness/contracts/cuda_double_surface_debug_v1.json",
+  "latest_completed_task_contract": "configs/harness/contracts/vpi_cuda_owned_bridge_v1.json",
   "hard_rules": [
     "The oral-template TXT is exempt from progressive-disclosure shortcuts: it must be full-read from the real path at every startup before planning or execution.",
     "If the live user prompt conflicts with generated handoff files, the live user prompt and the current oral-template TXT win.",

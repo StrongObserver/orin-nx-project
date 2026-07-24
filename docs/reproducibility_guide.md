@@ -19,7 +19,7 @@ py -3.12 scripts\harness_runner.py check-claim --gate-id nus_running_gate_v1 --c
 Expected:
 
 ```text
-onboard prints oral_template_full_text_begin/end, oral_template_full_read: True, rules_first: True, required_sections: pass, execution_mode, active_task_contract: none, and the latest completed contract
+onboard prints oral_template_full_text_begin/end, oral_template_full_read: True, rules_first: True, required_sections: pass, execution_mode, the active task contract, and the latest completed contract
 doctor_status: pass
 nus_running_gate_v1 main_gate_success_rate: forbidden
 ```
@@ -469,6 +469,69 @@ Claim boundary:
 This narrows the blocker to spatial random sampling/remap over the current
 EGL-mapped NV12_ER scratch route. It is not an accepted CUDA warp or acceleration
 result.
+```
+
+## L5.8 - VPI CUDA-Owned Bridge
+
+Purpose: record the negative bridge result and prevent future agents from
+reusing the failed implementation as an optimization path.
+
+Primary files:
+
+```text
+configs/harness/contracts/vpi_cuda_owned_bridge_v1.json
+scripts/measure_spatial_shift_coherence.py
+docs/vpi_cuda_owned_bridge_2026-07-24.md
+```
+
+Status:
+
+```text
+identity over the bridge: pass
+standalone CUDA-owned RGBA VPI warp: exact
+non-identity MMAPI bridge output: reject
+implementation script removed after negative closeout
+```
+
+Claim boundary:
+
+```text
+Do not claim the CUDA-owned bridge solves device-stage warp or provides
+acceleration. Accepted fallback remains the VPI-managed EGLImage /
+stream-only reuse / NvBuffer pair path.
+```
+
+## L5.9 - Regular05 Startup Black Fix
+
+Purpose: remove the brief left-edge black exposure found in the first seconds
+of the Regular05 accepted-path review.
+
+Primary files:
+
+```text
+scripts/diagnose_left_edge_black.py
+scripts/fade_in_inclusion_scale.py
+```
+
+Remote evidence:
+
+```text
+results/vpi_cuda_owned_bridge_20260724/startup_black_fix_v2/
+```
+
+Review copy:
+
+```text
+C:\Users\Admin\Videos\orin nx\review\performance\20260724_regular05_startup_black_fix\20260724_regular05_startup_black_fix_source_old_fixed_grid_30fps.mp4
+```
+
+Result:
+
+```text
+old stream left-edge max first 90 frames: 0.044722222
+startup FOV v2 left-edge max first 90 frames: 0.000000000
+startup FOV v2 black-border p95: 0.000000000
+startup FOV v2 max black-border ratio: 0.000633681
 ```
 
 ## L6 - Public / Interview Package
