@@ -7,6 +7,7 @@ out/
 results/
 logs/
 .local_knowledge/
+orin nx 项目口播模板.txt
 
 # Raw input data and large media
 data/raw/

@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "contract_id": "orin_engineering_execution_loop_v2",
-  "status": "active",
+  "status": "completed",
   "loop_type": "engineering_execution_p0_p12",
   "loop_profile": "performance_loop",
   "autonomy_level": "L3",

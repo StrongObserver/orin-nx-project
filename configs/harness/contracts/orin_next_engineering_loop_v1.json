@@ -26,13 +26,13 @@
     ],
     "token_budget_intent": "Reduce repeated startup token cost while preserving enough current-state evidence to avoid stale decisions."
   },
-  "active_task_contract": "configs/harness/contracts/orin_engineering_execution_loop_v2.json",
+  "active_task_contract": "configs/harness/contracts/orin_hardening_execution_loop_v3.json",
   "current_loop_state": {
-    "last_completed_task": "orin_autumn_recruitment_engineering_loop_v1",
-    "current_task": "orin_engineering_execution_loop_v2",
-    "latest_result": "The project positioning was refined on 2026-07-23: EIS is the representative real-time vision workload, while the resume-facing project is Jetson Orin NX heterogeneous video compute and device-side dataflow optimization. Existing evidence covers Regular quality boundaries, VPI PerspectiveWarp module speed/perf-watt, MMAPI/VPI/NVENC accepted device path, wrapper/sync/transform dataflow breakdown, format-matched NvBuffer pair small gains, completed NVTX/Nsight profiling, final evidence package closeout, stream-only reuse lifecycle follow-up, portfolio/reproducibility closeout, C++ Remap operator probe, Remap-MMAPI scratch-stage insertion, local-warp quality bridge negative evidence, native-size Remap pad/crop closure, device-stage lifecycle/dataflow V2, dynamic Remap payload cost boundary, standalone CUDA dynamic warp benchmark, CUDA/NvBufSurface/EGLImage interop safety verification, vpi_cuda_owned_bridge negative bridge closeout, and the autumn evidence organization loop. The user has now accepted the Regular05 const_full startup-black fix and approved a P0-P12 engineering execution loop.",
-    "current_blocker": "No single blocker yet. The active loop now targets const_full acceptance closeout, Regular-gate extension or preparation, endurance/P99 evidence, CUDA-MMAPI official-sample-shaped verifier recovery, producer first-row latency audit, and final docs/checkpoint.",
-    "recommended_next_contract": "configs/harness/contracts/orin_engineering_execution_loop_v2.json"
+    "last_completed_task": "orin_engineering_execution_loop_v2",
+    "current_task": "orin_hardening_execution_loop_v3",
+    "latest_result": "The P0-P44 hardening loop has completed its engineering measurements: true 1802-second endurance with 243 healthy runs per path; INA3221 VDD_IN device-stage efficiency; complete Y/U/V copy, translate, and affine verification in the official encoder ownership shape; CUDA-array transcode ownership diagnosis; and byte-identical producer incremental delivery with first-solved-row latency reduced from 15.799s to 1.036s. Normal inter-frame H264 in-place CUDA bridging is rejected because it pollutes decoder reference surfaces.",
+    "current_blocker": "No engineering blocker. Regular01 constant-FOV-full remains visual-conditional pending one focused human review of frames 11 and 13. Normal-H264 CUDA transcode promotion would require a separate encoder surface pool and a new broad lifecycle contract.",
+    "recommended_next_contract": "configs/harness/contracts/orin_hardening_execution_loop_v3.json"
   },
   "global_claim_boundary": {
     "allowed": [

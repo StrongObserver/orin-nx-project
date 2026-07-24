@@ -67,7 +67,7 @@
     "Independently keep the full oral-template content in view before planning or execution; do not substitute git, cache, memory, manifest text, or partial excerpts for the real TXT.",
     "Read AGENTS.md only for dispatch rules and safety boundaries.",
     "Read the active loop contract: configs/harness/contracts/orin_next_engineering_loop_v1.json",
-    "Read the current task-specific Done Contract before new engineering: currently configs/harness/contracts/orin_engineering_execution_loop_v2.json. It owns the approved P0-P12 engineering execution loop, including the user-accepted const_full startup-black fix, endurance/P99 follow-up, CUDA-MMAPI verifier route, and producer first-row latency audit.",
+    "Read the current task-specific Done Contract before new engineering: currently configs/harness/contracts/orin_hardening_execution_loop_v3.json. It owns the approved P0-P44 hardening loop for endurance, power, chroma-aware CUDA verification, bounded transcode bridging, producer first-row latency, Regular01 review evidence, and final closeout.",
     "Run harness static checks before experiments: doctor, check-claim, and JSON/schema checks as needed."
   ],
   "load_on_demand": [
@@ -134,8 +134,8 @@
     }
   ],
   "active_loop_contract": "configs/harness/contracts/orin_next_engineering_loop_v1.json",
-  "active_task_contract": "configs/harness/contracts/orin_engineering_execution_loop_v2.json",
-  "latest_completed_task_contract": "configs/harness/contracts/vpi_cuda_owned_bridge_v1.json",
+  "active_task_contract": "configs/harness/contracts/orin_hardening_execution_loop_v3.json",
+  "latest_completed_task_contract": "configs/harness/contracts/orin_engineering_execution_loop_v2.json",
   "hard_rules": [
     "The oral-template TXT is exempt from progressive-disclosure shortcuts: it must be full-read from the real path at every startup before planning or execution.",
     "If the live user prompt conflicts with generated handoff files, the live user prompt and the current oral-template TXT win.",
