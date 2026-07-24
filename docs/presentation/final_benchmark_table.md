@@ -27,6 +27,11 @@ separate.
 | NvBuffer pair follow-up | Same Regular05 source, same `resid_r15_s07` matrix | stage frame100 `7.535 -> 7.230 ms`; running avg `9.589 -> 9.401 ms` | Small quality-preserving dataflow gain, not zero-copy |
 | Nsight/NVTX attribution | Accepted EGLImage and NvBuffer pair samples | `VPI:Perspective Warp` about `0.76-0.81 ms`; wrap+submit+sync about `10 ms` under capture | Bottleneck attribution; P6/P7 scheduler work not triggered |
 | Stream-only reuse lifecycle | Same Regular05 source, same `resid_r15_s07` matrix | 10-run repeat: wall mean `1.947 -> 1.844 s`, stage avg `10.336 -> 9.680 ms` | Small accepted lifecycle optimization, not image-wrapper reuse |
+| Stream-only repeat tail | Same 10-run repeat | EGLImage wall p99 `1.981 s`, stream wall p99 `2.041 s`; EGLImage stage p99 `10.600 ms`, stream stage p99 `10.638 ms` | Mean gain only; tail-latency win is not proven |
+| Regular05 startup black fix | Accepted stream-only reuse path, `resid_r15_s07` startup FOV variants | `constant FOV full`: left80 max `0`, black-border p95/max `0` | Objective black-border fix candidate, pending human visual acceptance |
+| Backend decision table | All major OpenCV/VPI/CUDA/MMAPI routes | Routes classified as main result, supporting evidence, negative evidence, or deferred | Prevents runnable-but-low-value routes from being overclaimed |
+| CUDA-MMAPI route recovery | After CUDA-owned bridge negative closeout | Next route is official-sample-shaped CUDA-to-encoder verifier, identity first | Route decision only, not implementation success |
+| Producer boundary | FIFO/consumer plus bounded-delay/stride producer | producer-only `68.5 s -> 15.7 s`; concurrent live stride5 `17.5 s` for 180 frames | Scheduling trade-off, not full real-time EIS |
 
 ## Regular Baselines
 
@@ -337,6 +342,20 @@ Benefit:
 This promotes stream-only reuse as a small accepted lifecycle optimization
 inside the current device-stage boundary. It does not revive EGLImage
 image-wrapper reuse and does not justify queue-depth or double-buffering work.
+
+Short-repeat tail boundary:
+
+| Path | Runs | Wall p50 | Wall p95 | Wall p99 | Stage avg p50 | Stage avg p95 | Stage avg p99 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| accepted EGLImage | 10 | 1.956897 s | 1.981455 s | 1.981455 s | 10.365000 ms | 10.599900 ms | 10.599900 ms |
+| stream-only reuse | 10 | 1.789785 s | 2.040837 s | 2.040837 s | 9.378920 ms | 10.638100 ms | 10.638100 ms |
+
+Interpretation:
+
+```text
+stream-only reuse improves mean wall/stage cost, but this repeat does not prove
+a tail-latency win and is not a 30-minute endurance run.
+```
 
 ## Evidence Pointers
 

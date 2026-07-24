@@ -46,6 +46,10 @@ Quality boundary -> CPU baseline -> VPI module evidence
 | NvBuffer pair | Preserves `resid_r15_s07`; stage frame100 `7.535 ms -> 7.230 ms` | Small quality-preserving dataflow gain, not zero-copy |
 | Nsight/NVTX | `vpiSubmitPerspectiveWarp` about `0.02 ms`; wrapper/sync/transform/lifecycle dominates | Bottleneck attribution |
 | Stream-only reuse | 10-run repeat wall mean `1.946819 s -> 1.843571 s`; stage avg `10.336381 ms -> 9.680414 ms` | Small lifecycle optimization; image wrappers are still recreated |
+| Device-stage repeat / P99 | 10-run stream-only repeat has `rc=0`, fallback `0`, and mean gains, but stream p99 is not better than EGLImage in this small sample | Stability boundary, not a 30-minute endurance claim |
+| Regular05 startup black fix | `constant FOV full` removes measured left-edge startup black exposure: left80 max `0`, black-border p95/max `0` | Objective pass, still pending human visual acceptance because it trades FOV for safety |
+| CUDA-MMAPI route recovery | Failed CUDA-owned bridge is not reused; next candidate is an official-sample-shaped CUDA-to-encoder verifier, identity first | Route decision only, not implementation success |
+| Producer boundary | FIFO/consumer is healthy; stride5 cuts producer-only time `68.5 s -> 15.7 s` for 180 frames | Scheduling trade-off, not full real-time EIS |
 
 ### Architecture
 
@@ -137,6 +141,14 @@ Current sealed stage:
   CUDA/MMAPI scratch interop safety verification is complete.
   CUDA affine MMAPI diagnostic is closed as negative evidence at non-identity warp.
   CUDA double-surface debug narrows the blocker: full-frame copy is clean, integer translate still tears.
+  VPI CUDA-owned bridge is closed as negative evidence and must not be reused
+  as an accepted optimization path.
+  Startup black fix constant-FOV-full candidate is objectively clean on measured
+  black-border metrics, but remains pending human visual acceptance.
+  Device-stage repeat/P99 evidence supports a small mean stream-only lifecycle
+  gain, not a proven tail-latency or 30-minute endurance claim.
+  Backend decision and CUDA-MMAPI route recovery docs now define which routes
+  are main results, supporting evidence, negative evidence, or deferred.
 
 Regular performance baseline:
   lp_rigid_strength080_dynzoom106 + estimate_scale=0.5 + feature_grid_size=16
@@ -675,8 +687,13 @@ docs/presentation/claim_boundary.md
 docs/nsight_device_stage_profile_result_2026-07-23.md
 docs/device_stage_lifecycle_budget_2026-07-23.md
 docs/device_stage_lifecycle_perf_result_2026-07-23.md
+docs/device_stage_stability_p99_repeat_2026-07-24.md
 docs/regular_gate_nvbuffer_pair_resid_2026-07-23.md
 docs/cuda_mmapi_interop_safety_verifier_2026-07-24.md
+docs/backend_decision_table_2026-07-24.md
+docs/cuda_mmapi_route_recovery_2026-07-24.md
+docs/producer_boundary_and_next_route_2026-07-24.md
+docs/regular05_startup_black_fix_closeout_2026-07-24.md
 ```
 
 Rejected or diagnostic-only routes:

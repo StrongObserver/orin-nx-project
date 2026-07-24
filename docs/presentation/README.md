@@ -30,80 +30,96 @@ identity.
 7. `../evidence_reader_path.md`
    - Reader-oriented route from common questions to the right evidence.
 
-8. `project_story.md`
+8. `../backend_decision_table_2026-07-24.md`
+   - One-page decision matrix for runnable, useful, negative, and deferred
+     backend routes.
+
+9. `../device_stage_stability_p99_repeat_2026-07-24.md`
+   - Short-repeat p50/p95/p99 boundary for stream-only reuse and NvBuffer pair.
+
+10. `../cuda_mmapi_route_recovery_2026-07-24.md`
+   - CUDA-MMAPI route recovery after the CUDA-owned bridge negative closeout.
+
+11. `../producer_boundary_and_next_route_2026-07-24.md`
+   - Producer/FIFO/live boundary and why full real-time EIS remains unclaimed.
+
+12. `../regular05_startup_black_fix_closeout_2026-07-24.md`
+   - Objective startup black fix candidate and pending human-acceptance boundary.
+
+13. `project_story.md`
    - Project motivation, current result, and three-minute explanation.
 
-9. `baseline_and_metrics.md`
+14. `baseline_and_metrics.md`
    - Regular gate, dual baseline wording, and metric meanings.
 
-10. `performance_optimization.md`
+15. `performance_optimization.md`
    - How `estimate_scale=0.5 + feature_grid_size=16` became the Regular
      performance baseline.
 
-11. `hardware_acceleration_boundary.md`
+16. `hardware_acceleration_boundary.md`
    - VPI module acceleration, full-pipeline negative result, GStreamer/NVMM
      dataflow boundary, the current MMAPI/VPI/NVENC device-side warp path, and
      the NvBuffer pair, stream-only reuse, and C++ Remap follow-ups.
 
-12. `../vpi_remap_cpp_probe_2026-07-23.md`
+17. `../vpi_remap_cpp_probe_2026-07-23.md`
    - C++ Remap/WarpMap module probe after Python Remap native abort; includes
      OpenCV vs VPI CUDA timing and NV12_ER feasibility.
 
-13. `../remap_mmapi_integration_probe_2026-07-23.md`
+18. `../remap_mmapi_integration_probe_2026-07-23.md`
    - Minimal MMAPI/VPI/NVENC scratch-stage Remap insertion; records the
      original 640x360 WarpGrid size boundary and the 640x368 diagnostic path.
 
-14. `../remap_native_size_pad_crop_probe_2026-07-23.md`
+19. `../remap_native_size_pad_crop_probe_2026-07-23.md`
    - Native 640x360 main-chain pad/crop closure for the 640x368 VPI Remap
      scratch-stage requirement.
 
-15. `../nsight_device_stage_profile_result_2026-07-23.md`
+20. `../nsight_device_stage_profile_result_2026-07-23.md`
    - Completed NVTX/Nsight result: wrapper/sync/transform/lifecycle cost
      dominates, and P6/P7 scheduler work is not triggered.
 
-16. `../device_stage_lifecycle_perf_result_2026-07-23.md`
+21. `../device_stage_lifecycle_perf_result_2026-07-23.md`
    - Stream-only reuse lifecycle follow-up with a 10-run same-source repeat.
 
-17. `resume_bullets.md`
+22. `resume_bullets.md`
    - Short, medium, and long resume wording with claim boundaries.
 
-18. `../../configs/harness/contracts/final_evidence_package_closeout_v1.json`
+23. `../../configs/harness/contracts/final_evidence_package_closeout_v1.json`
    - Current final evidence package closeout contract.
 
-19. `../regular_gate_residual_closed_loop_2026-07-21.md`
+24. `../regular_gate_residual_closed_loop_2026-07-21.md`
    - The accepted `resid_r15_s07` Regular-gate quality recovery result.
 
-20. `../regular_gate_nvbuffer_pair_resid_2026-07-23.md`
+25. `../regular_gate_nvbuffer_pair_resid_2026-07-23.md`
    - Format-matched NvBuffer pair follow-up that preserves the quality anchor
      and gives a small measured device-stage gain.
 
-21. `../device_stage_demo_handoff_2026-07-19.md`
+26. `../device_stage_demo_handoff_2026-07-19.md`
    - Accepted device-side stage demo, review assets, result table, and claim
      boundaries.
 
-22. `../hybrid_realtime_eis_plan_2026-07-19.md`
+27. `../hybrid_realtime_eis_plan_2026-07-19.md`
    - Hybrid real-time plan, updated to use Regular05 source_to_dest for
      EIS-quality work.
 
-23. `../hybrid_realtime_matrix_handoff_2026-07-19.md`
+28. `../hybrid_realtime_matrix_handoff_2026-07-19.md`
    - Historical outdoor-car mock/FIFO/live handoff result; dataflow smoke only.
 
-24. `../layered_artifact_diagnosis_2026-07-19.md`
+29. `../layered_artifact_diagnosis_2026-07-19.md`
    - Why outdoor-car is dataflow smoke only, and how Regular05 should be used
      for EIS quality review.
 
-25. `../../configs/harness/contracts/presentation_closeout_v1.json`
+30. `../../configs/harness/contracts/presentation_closeout_v1.json`
    - Previous closeout contract, superseded by Nsight and final evidence
      package closeout.
 
-26. `../../configs/harness/contracts/regular05_hybrid_matrix_handoff_v1.json`
+31. `../../configs/harness/contracts/regular05_hybrid_matrix_handoff_v1.json`
    - Current Regular05 source_to_dest handoff contract and quality boundary.
 
-27. `challenge_boundary.md`
+32. `challenge_boundary.md`
    - Operating envelope: where Regular succeeds and where challenge sets expose
      model limits.
 
-28. `interview_qna.md`
+33. `interview_qna.md`
    - Concise answers to likely interview questions.
 
 Do not present local `results/` videos or CSV files as repository artifacts.

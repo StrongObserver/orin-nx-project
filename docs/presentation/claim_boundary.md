@@ -25,12 +25,16 @@ wrapper lifecycle, sync, transform cost, and perf/watt trade-offs.
 | NvBuffer pair preserves `resid_r15_s07` and gives a small stage gain | Five Regular runs and same-source Regular05 timing |
 | Nsight shows wrapper/sync/transform/lifecycle cost dominates | `nsight_device_stage_profile_result_2026-07-23.md` |
 | Stream-only reuse gives a small lifecycle gain | 10-run same-source Regular05 repeat: wall mean `1.947 -> 1.844 s`, stage avg `10.336 -> 9.680 ms` |
+| Stream-only reuse has clean short-repeat health but not proven tail improvement | 10-run repeat: `rc=0`, fallback `0`; stream p99 is not better than EGLImage p99 |
 | VPI Remap can be wired into the native-size MMAPI scratch stage | `remap_native_size_pad_crop_probe_2026-07-23.md`: 640x360 main chain, 640x368 VPI scratch, identity/wave_safe `rc=0` |
 | Dynamic Remap payload rebuild is viable but costly | `vpi_dynamic_remap_payload_probe_2026-07-23.md`: MMAPI dynamic Remap stage avg about `13.14-13.16 ms` |
 | Standalone CUDA dynamic warp is a promising operator candidate | `cuda_dynamic_warp_probe_2026-07-23.md`: RGBA dynamic `0.194 ms`, Y8 dynamic `0.138 ms` |
 | CUDA/MMAPI scratch interop safety is verified at diagnostic level | `cuda_mmapi_interop_safety_verifier_2026-07-24.md`: corrected identity/marker/dynamic_marker `rc=0`, p95 black-border `0`; older shift modes rejected for tearing |
 | CUDA affine MMAPI diagnostic found a non-identity integration boundary | `cuda_affine_mmapi_diagnostic_2026-07-24.md`: identity kernel passes, translate/affine random sampling tears |
 | CUDA double-surface debug narrows the blocker | `cuda_double_surface_debug_2026-07-24.md`: VIC round-trip and CUDA copy pass, integer translate tears |
+| CUDA-owned VPI bridge is negative closeout evidence | `vpi_cuda_owned_bridge_2026-07-24.md`: identity passes and standalone RGBA VPI warp is exact, but non-identity return to NV12/NVENC fails |
+| Regular05 startup black fix has an objective candidate | `regular05_startup_black_fix_closeout_2026-07-24.md`: constant-FOV-full removes measured left-edge black exposure, pending human visual acceptance |
+| Producer/FIFO handoff is healthy but not full real-time | `producer_boundary_and_next_route_2026-07-24.md`: stride5 reduces producer cost, but latency-quality trade-off remains |
 
 ## Forbidden Claims
 
@@ -43,6 +47,7 @@ The project has zero-copy full chain.
 NvBuffer pair is zero-copy.
 Queue depth or double buffering has been proven beneficial.
 Stream-only reuse proves zero-copy.
+Stream-only reuse proves tail-latency improvement or 30-minute endurance.
 VPI optical flow accelerates our motion estimation.
 Running / Parallax / Crowd are solved.
 The result is product-grade or all-scene EIS quality.
@@ -54,6 +59,9 @@ CUDA dynamic warp proves full-pipeline EIS acceleration.
 CUDA/MMAPI interop safety proves accepted CUDA acceleration.
 CUDA affine MMAPI diagnostic proves an accepted warp path.
 CUDA double-surface debug proves CUDA warp acceleration.
+VPI CUDA-owned bridge is an accepted MMAPI warp path.
+The startup black fix is accepted before human review.
+Producer stride5 proves full real-time EIS.
 ```
 
 ## Precise Wording

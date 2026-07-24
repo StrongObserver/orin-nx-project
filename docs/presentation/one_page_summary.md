@@ -208,6 +208,11 @@ Stream-only reuse lifecycle result:
   and stage running avg improved 10.336381 ms -> 9.680414 ms. This does not
   revive EGLImage image-wrapper reuse and does not prove zero-copy.
 
+Stream-only repeat / P99 boundary:
+  The same 10-run repeat has clean rc/fallback behavior and mean gains, but it
+  does not prove a tail-latency win: EGLImage wall p99 is 1.981455 s while
+  stream-only wall p99 is 2.040837 s. This is not a 30-minute endurance claim.
+
 Identity warp:
   Identity PerspectiveWarp is only slightly faster than the inclusion matrix
   path, so matrix complexity is not the current bottleneck.
@@ -245,6 +250,8 @@ Producer scheduling:
   device output kept fallback=0, mismatch=0, VPI warp avg about 1.53 ms, and
   black-border p95=0.000784288. Concurrent live stride5 wall time was 17.5 s
   for 180 frames and produced the same device output as precomputed stride5.
+  This remains a latency-quality and scheduling trade-off story, not full
+  real-time EIS.
 
 Five Regular viewport-stable check:
   The accepted EGLImage FIFO consumer ran all five stride5 fixed-scale/crop98
@@ -271,6 +278,20 @@ PyrLK / Remap backend boundary:
   stage to 640x368, then returns to 640x360 before NVENC; identity and wave_safe
   both ran with rc=0 and black-border p95=0. This is module/operator and
   dataflow evidence, not EIS quality or full pipeline acceleration.
+
+Backend decision / CUDA route recovery:
+  The current backend decision table separates main results, supporting
+  operator evidence, negative evidence, and deferred routes. The failed
+  VPI CUDA-owned bridge remains negative evidence: identity and standalone RGBA
+  VPI warp are correct, but non-identity return to NV12/NVENC fails visually.
+  Any future CUDA-MMAPI work should start from an official-sample-shaped
+  CUDA-to-encoder verifier with identity first, not from the failed bridge.
+
+Regular05 startup black fix:
+  The final constant-FOV-full candidate removes the measured left-edge startup
+  black exposure on objective checks: left80 max is 0 and black-border p95/max
+  are 0. It remains pending human visual acceptance because it trades extra
+  constant FOV-safe scale for black-edge removal.
 ```
 
 Conclusion:

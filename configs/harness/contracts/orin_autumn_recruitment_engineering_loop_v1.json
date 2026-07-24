@@ -1,0 +1,393 @@
+{
+  "schema_version": 1,
+  "contract_id": "orin_autumn_recruitment_engineering_loop_v1",
+  "status": "active",
+  "loop_type": "autumn_recruitment_long_engineering_loop",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Execute the approved P0.1-P7.3 Orin NX engineering loop as one long-running contract: close current state drift, finish the startup black-border follow-up, add stability/P99 evidence where hardware allows, strengthen backend and CUDA-MMAPI route decisions, preserve producer boundary evidence, synchronize presentation materials, and prepare a clean checkpoint.",
+  "entry_context": {
+    "project_positioning": "Jetson Orin NX heterogeneous video compute and device-side dataflow optimization, with EIS as the representative real-time workload.",
+    "quality_anchor": "resid_r15_s07",
+    "accepted_device_path": "MMAPI/NVDEC block-linear NV12 main chain -> NvBufSurfTransform to pitch-linear NV12_ER scratch -> VPI CUDA PerspectiveWarp -> NvBufSurfTransform back to block-linear NV12 -> NVENC",
+    "latest_completed_contract": "configs/harness/contracts/vpi_cuda_owned_bridge_v1.json",
+    "latest_negative_boundary": "The CUDA-owned VPI bridge is closed as negative evidence for non-identity MMAPI/NVENC output. Identity passes and standalone CUDA-owned RGBA VPI warp is exact, but the full return path to NV12/NVENC is not visually correct.",
+    "current_reason_to_continue": "The first evidence package is strong, but the project still benefits from higher-density autumn-recruitment evidence: state cleanup, startup-black-fix closeout, stability/P99 evidence, backend decision tables, CUDA-MMAPI route recovery, producer boundary explanation, and final interview artifacts."
+  },
+  "frozen_variables": [
+    "Do not change the accepted Regular quality anchor resid_r15_s07 unless a new explicit quality contract is created.",
+    "Use source_to_dest matrices for Regular05 and Regular gate device replay.",
+    "Keep Regular as the main quality gate and Running/Parallax/QuickRotation/Crowd as challenge or diagnostic boundaries.",
+    "Do not reopen global affine/rigid parameter sweeps as part of this loop.",
+    "Do not revive the failed CUDA-owned VPI bridge as an accepted optimization path.",
+    "Do not claim zero-copy, full real-time EIS, full-pipeline acceleration, VPI optical-flow acceleration, or all-scene/product-grade EIS.",
+    "Keep oral-template TXT and local secrets out of Git."
+  ],
+  "external_observation": [
+    "harness command exit codes",
+    "JSON parse checks",
+    "git status and diff scope",
+    "existing and newly collected summary CSV/log fields",
+    "black-border and direct-diff summaries",
+    "review-copy paths under C:/Users/Admin/Videos/orin nx/review",
+    "Jetson command exit codes when hardware access is available",
+    "manual visual review status when a subjective quality decision is required"
+  ],
+  "current_results": {
+    "P0": {
+      "status": "completed",
+      "onboard": "pass",
+      "doctor": "pass",
+      "running_main_gate_claim": "forbidden_as_expected",
+      "active_task_contract": "configs/harness/contracts/orin_autumn_recruitment_engineering_loop_v1.json"
+    },
+    "P1": {
+      "status": "objective_pass_pending_human_visual_acceptance",
+      "report": "docs/regular05_startup_black_fix_closeout_2026-07-24.md",
+      "candidate": "constant FOV full",
+      "matrix": "results/vpi_cuda_owned_bridge_20260724/startup_black_fix_const_full/resid_r15_s07_constant_fov_full.csv",
+      "review_video": "C:/Users/Admin/Videos/orin nx/review/performance/20260724_regular05_startup_black_fix/20260724_regular05_startup_black_fix_source_old_const90_constfull_grid_30fps.mp4",
+      "old_stream_left80_max_first180": 0.044722222,
+      "const90_left80_max_first180": 0.004270833,
+      "constant_fov_full_left80_max_first180": 0.0,
+      "constant_fov_full_black_border_p95": 0.0,
+      "constant_fov_full_black_border_max": 0.0,
+      "decision_boundary": "Do not mark accepted until the user confirms that the full-clip constant extra scale has acceptable FOV/scale trade-off."
+    },
+    "P2": {
+      "status": "completed_from_existing_repeat_evidence",
+      "report": "docs/device_stage_stability_p99_repeat_2026-07-24.md",
+      "evidence": [
+        "results/device_stage_lifecycle_perf_20260723/repeat_stream_vs_egl_175139/",
+        "results/device_stage_lifecycle_probe_20260723/repeat/",
+        "results/device_stage_lifecycle_perf_20260723/tegrastats_stream_vs_egl_175646/"
+      ],
+      "ten_run_stream_only": {
+        "rc_all_zero": true,
+        "fallback_total": 0,
+        "wall_mean_improve_pct": 5.303,
+        "stage_avg_mean_improve_pct": 6.346,
+        "egl_wall_p99_sec": 1.981455,
+        "stream_wall_p99_sec": 2.040837,
+        "egl_stage_avg_p99_ms": 10.5999,
+        "stream_stage_avg_p99_ms": 10.6381
+      },
+      "decision_boundary": "Existing repeat evidence supports a small mean lifecycle gain and clean rc/fallback behavior. It does not prove a tail-latency win and does not claim a 30-minute endurance run."
+    },
+    "P3": {
+      "status": "completed",
+      "report": "docs/backend_decision_table_2026-07-24.md",
+      "decision": "Use VPI high-resolution PerspectiveWarp, accepted C++ MMAPI/VPI/NVENC, stream-only reuse, NvBuffer pair, VPI C++ Remap, and standalone CUDA dynamic warp as scoped evidence. Keep VPI Python backend swap, PyrLK replacement, Python appsink/appsrc, current EGL-scratch CUDA affine, CUDA double-surface translate, VPI CUDA-owned bridge non-identity, and static local Remap correction as negative evidence.",
+      "boundary": "Backend capability is not the same as project value. Every route remains scoped as baseline, module, device-stage, diagnostic, or negative evidence."
+    },
+    "P4": {
+      "status": "route_recovered_no_implementation_greenlight",
+      "report": "docs/cuda_mmapi_route_recovery_2026-07-24.md",
+      "decision": "Do not continue the failed VPI CUDA-owned bridge. The only CUDA route worth considering is a new official-sample-shaped CUDA-to-encoder verifier, identity first, then integer translate, then affine/matrix only after correctness passes.",
+      "next_verifier": "Start from Jetson Multimedia API CUDA processing with encode shape, verify encoder-compatible identity/marker writeback, then translate, then affine/matrix replay.",
+      "requires_internal_ai_if": "Local Jetson official samples do not settle NvBufSurface/EGLImage/CUDA/NVENC ownership and sync order.",
+      "internal_ai_prompt": "我在做 Jetson Orin NX 异构视频计算与设备侧数据流优化项目，EIS 是代表性实时视觉负载。当前 accepted path 是 MMAPI/NVDEC block-linear NV12 main chain -> NvBufSurfTransform 到 pitch-linear NV12_ER scratch -> VPI CUDA PerspectiveWarp -> transform 回 block-linear -> NVENC。现在的 blocker 是：identity/full-frame copy 可以通过，standalone CUDA-owned RGBA VPI warp 也正确，但在当前 EGL-mapped pitch-linear NV12_ER scratch 或 CUDA-owned bridge 上做 non-identity random sampling 后，返回 NV12/NVENC 会出现 tearing、颜色或内容错误。请搜索公司内部开放且合规可参考的 Jetson / NVIDIA VPI / CUDA / MMAPI / NvBufSurface / EGLImage / NVENC 资料或 sample，重点回答：1. 在 Jetson MMAPI/NVENC 链路中，CUDA kernel 或 VPI CUDA 对中间 surface 做 non-identity warp 后，正确返回 NVENC 的推荐 memory ownership / sync / copy-back 路线是什么？2. 是否应该使用 CUDA-owned intermediate surface，再通过 NvBufSurface/NvBuffer/NvBufSurfTransform 或 documented copy 回 encoder-compatible block-linear NV12？3. EGLImage / cudaGraphicsEGLRegisterImage / NvBufSurfaceMapEglImage / cache sync / layout / pitch / color format 有哪些已知坑？4. 有没有最小可复用 sample、函数、命令或代码片段？5. 如果这条路线不推荐，请明确原因，并给出更接近 NVIDIA 官方实践的替代路径。请返回：最相关资料/仓库、具体文件/函数、关键 API 顺序、最小代码路径、已知坑点、不适合照搬的地方。"
+    },
+    "P5": {
+      "status": "completed",
+      "report": "docs/producer_boundary_and_next_route_2026-07-24.md",
+      "decision": "Keep producer work as a latency-quality and scheduling trade-off story for the current stage. FIFO/consumer health is validated; bounded-delay improves matrix quality with explicit latency; stride5 reduces repeated LP solve cost; full real-time EIS remains unclaimed.",
+      "key_numbers": {
+        "producer_delay90_stride1_total_ms": 68507.848,
+        "producer_delay90_stride5_total_ms": 15687.4,
+        "concurrent_live_stride5_wall_sec": 17.533,
+        "fallback_count": 0,
+        "frame_index_mismatch_count": 0
+      },
+      "next_route": "Do not open a broad producer rewrite before presentation/evidence sync. A future producer loop should target first-row latency without changing accepted matrix quality semantics."
+    },
+    "P6": {
+      "status": "tracked_project_docs_synced",
+      "updated_docs": [
+        "README.md",
+        "docs/presentation/final_benchmark_table.md",
+        "docs/presentation/claim_boundary.md",
+        "docs/evidence_reader_path.md",
+        "docs/presentation/interview_qna.md",
+        "docs/presentation/README.md",
+        "docs/presentation/one_page_summary.md",
+        "docs/evidence_map_2026-07-18.md"
+      ],
+      "external_long_term_context": "updated_minimal_active_task_status",
+      "decision_boundary": "Tracked public project docs are synchronized. The Nutstore long-term context received only a minimal active-task status correction; no raw log or internal source text was copied."
+    },
+    "P7": {
+      "status": "validation_passed_commit_prepared",
+      "validation": {
+        "json_tool": "pass",
+        "onboard": "pass",
+        "doctor": "pass",
+        "running_main_gate_claim": "forbidden_as_expected",
+        "git_diff_check": "pass"
+      },
+      "commit_scope": "source/config/docs only; oral-template TXT, results, raw data, review videos, and secrets excluded"
+    }
+  },
+  "task_queue": [
+    {
+      "id": "P0.1",
+      "title": "Onboarding and control-plane health",
+      "loop_profile": "documentation_loop",
+      "objective": "Run onboard, doctor, Running claim check, loop profile listing, evaluation dataset checks, and git status before new work.",
+      "success_criteria": [
+        "onboard passes with real oral-template proof",
+        "doctor passes",
+        "Running main-gate success claim remains forbidden",
+        "evaluation datasets pass",
+        "only expected dirty files are present"
+      ]
+    },
+    {
+      "id": "P0.2",
+      "title": "State drift audit",
+      "loop_profile": "documentation_loop",
+      "objective": "Align Git HEAD, onboarding manifest, active loop contract, latest completed contract, README, and long-term context state.",
+      "success_criteria": [
+        "current HEAD and active task state are recorded in tracked control-plane files",
+        "known long-term context drift is captured for later allowed maintenance",
+        "the oral template remains excluded from commit scope"
+      ]
+    },
+    {
+      "id": "P0.3",
+      "title": "Register this long loop",
+      "loop_profile": "documentation_loop",
+      "objective": "Make this contract the active task-specific contract so P1-P7 do not drift into old completed contracts.",
+      "success_criteria": [
+        "onboarding_manifest active_task_contract points here",
+        "orin_next_engineering_loop_v1 current_task points here",
+        "all edited JSON parses"
+      ]
+    },
+    {
+      "id": "P1.1",
+      "title": "Startup black fix evidence inventory",
+      "loop_profile": "performance_loop",
+      "objective": "Inventory the existing startup black-border follow-up evidence from vpi_cuda_owned_bridge_v1.",
+      "success_criteria": [
+        "matrix path exists or missing state is classified",
+        "review video path exists or missing state is classified",
+        "black-border metrics are extracted from existing evidence"
+      ]
+    },
+    {
+      "id": "P1.2",
+      "title": "Startup black fix objective closeout",
+      "loop_profile": "quality_loop",
+      "objective": "Use existing metrics and review assets to decide whether the candidate is ready for human acceptance or must remain diagnostic.",
+      "success_criteria": [
+        "left-edge first-frame and full-video black-border metrics are summarized",
+        "candidate remains pending human visual review unless the user explicitly accepts it",
+        "no EIS quality improvement is claimed from this FOV/startup fix"
+      ]
+    },
+    {
+      "id": "P1.3",
+      "title": "Regular extension decision",
+      "loop_profile": "performance_loop",
+      "objective": "If the candidate is accepted or objective evidence is sufficient for a bounded run, decide whether it should be extended to all five Regular clips.",
+      "success_criteria": [
+        "extension route is either executed, prepared, or deferred with a reason",
+        "required success criteria are rc=0, fallback=0, mismatch=0, readable output, and black-border hard-gate health"
+      ]
+    },
+    {
+      "id": "P2.1",
+      "title": "Stability and P99 contract design",
+      "loop_profile": "performance_loop",
+      "objective": "Define a 30-minute or repeat-run stability/P99 evidence contract around accepted EGLImage, stream-only reuse, and NvBuffer pair paths.",
+      "success_criteria": [
+        "metrics include p50/p95/p99, rc, fallback, frame mismatch, output readability, and temperature/activity if available",
+        "same-input and same-matrix semantics remain frozen",
+        "no system package or power-mode change is required without explicit need"
+      ]
+    },
+    {
+      "id": "P2.2",
+      "title": "Stability evidence collection",
+      "loop_profile": "performance_loop",
+      "objective": "Collect or prepare stability/P99 evidence on Jetson; use existing repeat evidence if hardware access blocks new runs.",
+      "success_criteria": [
+        "each accepted candidate has a repeat/stability summary or a classified hardware blocker",
+        "stream-only reuse and NvBuffer pair are compared against accepted EGLImage only under frozen semantics",
+        "power/perf is labeled by its actual source and not overstated"
+      ],
+      "stop_reasons": [
+        "jetson_ssh_or_manual_device_action_required"
+      ]
+    },
+    {
+      "id": "P3.1",
+      "title": "Backend decision table",
+      "loop_profile": "documentation_loop",
+      "objective": "Turn VPI/OpenCV/CUDA/MMAPI positive and negative evidence into an explicit backend decision table.",
+      "success_criteria": [
+        "PerspectiveWarp, Remap, PyrLK, Dense OF, CUDA standalone, EGLImage, stream-only reuse, NvBuffer pair, and CUDA-owned bridge are separated",
+        "every row states evidence, value, risk, and whether it should be used"
+      ]
+    },
+    {
+      "id": "P3.2",
+      "title": "Scale and dataflow evidence audit",
+      "loop_profile": "documentation_loop",
+      "objective": "Clarify which 640x360, 1080p, and 4K results are module-level, stage-level, or pipeline-level evidence.",
+      "success_criteria": [
+        "module/stage/pipeline boundaries are explicit",
+        "no speedup is promoted outside its measured scope"
+      ]
+    },
+    {
+      "id": "P4.1",
+      "title": "CUDA-MMAPI route recovery",
+      "loop_profile": "knowledge_recovery_loop",
+      "objective": "Search local knowledge routing and public/official references for the correct CUDA/NvBufSurface/EGLImage/NVENC random-write route after the current bridge failure.",
+      "success_criteria": [
+        "one concrete route, one risk, and one verifier are identified",
+        "if local/public sources are insufficient, a concise internal-AI prompt is produced in chat",
+        "the failed CUDA-owned bridge is not revived as accepted"
+      ]
+    },
+    {
+      "id": "P4.2",
+      "title": "CUDA-MMAPI verifier preparation",
+      "loop_profile": "performance_loop",
+      "objective": "Prepare or run a minimal identity-first verifier only if the recovered route is concrete enough.",
+      "success_criteria": [
+        "identity must pass before translate",
+        "translate must pass before affine/matrix replay",
+        "tearing, green output, unreadable output, or cache/sync ambiguity stop the route"
+      ],
+      "stop_reasons": [
+        "requires_unavailable_jetson_or_internal_reference",
+        "requires_broad_mmapi_rewrite_before_minimal_verifier"
+      ]
+    },
+    {
+      "id": "P5.1",
+      "title": "Producer boundary audit",
+      "loop_profile": "documentation_loop",
+      "objective": "Summarize FIFO/consumer health, bounded-delay producer evidence, stride scheduling gains, and why full real-time EIS remains unclaimed.",
+      "success_criteria": [
+        "consumer and producer bottlenecks are separated",
+        "delay-quality tradeoff is explicit",
+        "existing producer results are mapped to interview value"
+      ]
+    },
+    {
+      "id": "P5.2",
+      "title": "Producer next-route decision",
+      "loop_profile": "performance_loop",
+      "objective": "Decide whether a small producer follow-up is worth executing after P2-P4, or whether it should remain a boundary story.",
+      "success_criteria": [
+        "decision separates technical feasibility from autumn-recruitment ROI",
+        "no full real-time claim is made without measured live same-input evidence"
+      ]
+    },
+    {
+      "id": "P6.1",
+      "title": "Presentation and evidence sync",
+      "loop_profile": "documentation_loop",
+      "objective": "Update README, final benchmark table, dataflow architecture, claim boundary, evidence reader path, and interview Q&A to reflect P1-P5 outcomes.",
+      "success_criteria": [
+        "only measured or explicitly pending facts are written",
+        "claim boundaries remain conservative and useful",
+        "public docs do not copy internal source text"
+      ]
+    },
+    {
+      "id": "P6.2",
+      "title": "Long-term context maintenance",
+      "loop_profile": "documentation_loop",
+      "objective": "Update the allowed long-term context sections with concise state and next-action information if write access is available or approved.",
+      "success_criteria": [
+        "maintenance rules are respected",
+        "no raw log dump is added",
+        "external long-term file edits are skipped or escalated only when needed"
+      ],
+      "stop_reasons": [
+        "external_workspace_write_requires_user_approval"
+      ]
+    },
+    {
+      "id": "P7.1",
+      "title": "Validation",
+      "loop_profile": "documentation_loop",
+      "objective": "Run JSON, harness, claim, diff, and hygiene checks before checkpoint.",
+      "success_criteria": [
+        "modified JSON parses",
+        "doctor passes",
+        "Running main-gate claim remains forbidden",
+        "git diff --check passes"
+      ]
+    },
+    {
+      "id": "P7.2",
+      "title": "Commit readiness",
+      "loop_profile": "documentation_loop",
+      "objective": "Prepare a clean commit scope when the stage is coherent.",
+      "success_criteria": [
+        "results/raw/review videos remain unstaged",
+        "oral-template TXT and secrets remain unstaged",
+        "commit message includes the required co-author trailer if a commit is made"
+      ]
+    },
+    {
+      "id": "P7.3",
+      "title": "Checkpoint report",
+      "loop_profile": "documentation_loop",
+      "objective": "Report branch, remote, commit hash if committed, and working tree cleanliness. Push only if explicitly requested.",
+      "success_criteria": [
+        "branch and remote are reported",
+        "commit hash is reported if a commit exists",
+        "dirty state is explained",
+        "no force push or unapproved remote write is attempted"
+      ]
+    }
+  ],
+  "knowledge_recovery_policy": {
+    "order": [
+      "try local diagnosis first",
+      "read docs/knowledge_base/routing.md and matched source summaries after a real blocker",
+      "search official/public sources when local knowledge is insufficient",
+      "inspect external code only if it plausibly solves the exact blocker",
+      "if still blocked, stop the loop and report the blocker in chat with an internal-AI prompt"
+    ],
+    "internal_ai_prompt_required_when": [
+      "CUDA/NvBufSurface/EGLImage/NVENC ownership or sync cannot be resolved from local and public sources",
+      "a technical route fork would change the project direction",
+      "the next implementation would require a broad MMAPI rewrite"
+    ]
+  },
+  "forbidden_routes": [
+    "claiming full real-time EIS",
+    "claiming zero-copy full chain",
+    "claiming full-pipeline acceleration from module-only or stage-only timing",
+    "claiming VPI optical-flow acceleration",
+    "claiming all-scene/product-grade EIS",
+    "committing the oral-template TXT, secrets, results, raw data, or review videos"
+  ],
+  "stop_reasons": [
+    "a required hardware or user visual decision is needed and cannot be completed locally",
+    "Jetson SSH or runtime access is unavailable for tasks that require new device evidence",
+    "local and public knowledge cannot resolve a technical route fork and an internal-AI prompt is required",
+    "editing an external long-term context file requires approval and cannot proceed",
+    "user changes the objective"
+  ],
+  "expected_outputs": [
+    "configs/harness/contracts/orin_autumn_recruitment_engineering_loop_v1.json",
+    "updated onboarding manifest and active loop contract",
+    "startup-black-fix closeout notes in tracked project docs or contract fields",
+    "stability/P99 contract or evidence summary",
+    "backend decision table",
+    "CUDA-MMAPI route recovery outcome or internal-AI prompt",
+    "producer boundary summary",
+    "updated presentation and evidence-reader docs",
+    "validation and git hygiene report"
+  ]
+}

@@ -359,6 +359,41 @@ Image-wrapper reuse was rejected because it caused tearing or failures.
 Stream-only reuse is a safe lifecycle improvement because it still recreates the
 image wrappers per frame.
 
+## Q: Did stream-only reuse improve tail latency?
+
+Not conclusively.
+
+The 10-run repeat supports a small mean improvement and clean health gates:
+
+```text
+rc=0 for all runs
+fallback=0 for all runs
+wall mean: 1.946819 s -> 1.843571 s
+stage avg mean: 10.336381 ms -> 9.680414 ms
+```
+
+But the p95/p99 tail is not better in this small repeat:
+
+```text
+EGLImage wall p99: 1.981455 s
+stream wall p99:   2.040837 s
+EGLImage stage p99: 10.599900 ms
+stream stage p99:   10.638100 ms
+```
+
+So the honest claim is:
+
+```text
+small mean lifecycle gain with clean rc/fallback behavior
+```
+
+not:
+
+```text
+tail latency solved
+30-minute endurance proven
+```
+
 ## Q: Why not implement queue depth or double buffering now?
 
 Because the current evidence does not show a large removable idle gap. The
@@ -527,6 +562,93 @@ over the current EGL-mapped NV12_ER scratch surface.
 
 That means the next route should change the memory/surface ownership model, not
 keep patching the same EGL random-write path.
+
+## Q: What happened after the VPI CUDA-owned bridge failed?
+
+I closed it as negative evidence instead of packaging it as an optimization.
+
+What passed:
+
+```text
+identity through the bridge
+standalone CUDA-owned RGBA VPI PerspectiveWarp
+bridge-internal RGBA translate diagnostic
+```
+
+What failed:
+
+```text
+non-identity bridge output after returning to NV12/NVENC
+```
+
+The useful conclusion is:
+
+```text
+VPI CUDA-owned warp can be correct in isolation, but the current bridge does not
+have a visually correct return path to NV12/NVENC for non-identity output.
+```
+
+The next route is not "try the same bridge harder." It is:
+
+```text
+start from an official-sample-shaped CUDA-to-encoder verifier
+identity / marker first
+then integer translate
+then affine or matrix replay only if translate is clean
+```
+
+If the official samples do not settle the NvBufSurface/EGLImage/CUDA/NVENC
+ownership and sync order, I would ask internal AI or an experienced Jetson
+engineer for the exact memory-ownership sequence before coding another broad
+patch.
+
+## Q: What was the Regular05 startup black fix?
+
+Human review found a brief left-edge black exposure in the first seconds of the
+accepted-path comparison. The source did not have that issue, and the exposure
+appeared across accepted EGLImage, stream-only reuse, and NvBuffer pair outputs.
+That pointed to the startup portion of the matrix sequence.
+
+The final objective candidate is `constant FOV full`:
+
+```text
+left80 max first 180: 0
+left80 mean first 180: 0
+black-border p95: 0
+black-border max: 0
+```
+
+I still do not mark it accepted automatically because it uses a full-clip
+constant extra FOV-safe scale. That is a visual trade-off: no measured black
+edge, but potentially more field-of-view loss. It needs human acceptance before
+becoming a final quality/display decision.
+
+## Q: Is the producer path real-time now?
+
+No.
+
+The producer/consumer handoff is healthy:
+
+```text
+fallback=0
+frame-index mismatch=0
+handoff after startup is tens of microseconds
+```
+
+The stride5 scheduling optimization is real:
+
+```text
+producer-only delay90:
+  68.5 s -> 15.7 s for 180 frames
+
+concurrent live stride5:
+  17.5 s for 180 frames
+```
+
+But this is still not full real-time EIS. The remaining issue is producer
+latency and the quality trade-off between offline LP quality and causal or
+bounded-delay smoothing. I would present it as a latency-quality/scheduling
+boundary, not as a finished live product.
 
 ## Q: Why do source, identity_pad_crop, and wave_safe_pad_crop not show stabilization?
 

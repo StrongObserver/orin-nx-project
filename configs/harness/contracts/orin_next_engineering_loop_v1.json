@@ -26,13 +26,13 @@
     ],
     "token_budget_intent": "Reduce repeated startup token cost while preserving enough current-state evidence to avoid stale decisions."
   },
-  "active_task_contract": "none",
+  "active_task_contract": "configs/harness/contracts/orin_autumn_recruitment_engineering_loop_v1.json",
   "current_loop_state": {
     "last_completed_task": "vpi_cuda_owned_bridge_v1",
-    "current_task": "none",
-    "latest_result": "The project positioning was refined on 2026-07-23: EIS is the representative real-time vision workload, while the resume-facing project is Jetson Orin NX heterogeneous video compute and device-side dataflow optimization. Existing evidence covers Regular quality boundaries, VPI PerspectiveWarp module speed/perf-watt, MMAPI/VPI/NVENC accepted device path, wrapper/sync/transform dataflow breakdown, format-matched NvBuffer pair small gains, completed NVTX/Nsight profiling, final evidence package closeout, stream-only reuse lifecycle follow-up, portfolio/reproducibility closeout, C++ Remap operator probe, Remap-MMAPI scratch-stage insertion, local-warp quality bridge negative evidence, native-size Remap pad/crop closure, device-stage lifecycle/dataflow V2, dynamic Remap payload cost boundary, standalone CUDA dynamic warp benchmark, and CUDA/NvBufSurface/EGLImage interop safety verification.",
-    "current_blocker": "The CUDA-owned VPI bridge is closed as negative evidence for non-identity MMAPI/NVENC output. Identity passes and standalone CUDA-owned RGBA VPI warp is correct, but the bridge cannot yet return a visually correct non-identity frame to NV12/NVENC. Accepted fallback paths remain VPI-managed EGLImage, stream-only reuse, and NvBuffer pair with low-single-digit measured gains.",
-    "recommended_next_contract": "none"
+    "current_task": "orin_autumn_recruitment_engineering_loop_v1",
+    "latest_result": "The project positioning was refined on 2026-07-23: EIS is the representative real-time vision workload, while the resume-facing project is Jetson Orin NX heterogeneous video compute and device-side dataflow optimization. Existing evidence covers Regular quality boundaries, VPI PerspectiveWarp module speed/perf-watt, MMAPI/VPI/NVENC accepted device path, wrapper/sync/transform dataflow breakdown, format-matched NvBuffer pair small gains, completed NVTX/Nsight profiling, final evidence package closeout, stream-only reuse lifecycle follow-up, portfolio/reproducibility closeout, C++ Remap operator probe, Remap-MMAPI scratch-stage insertion, local-warp quality bridge negative evidence, native-size Remap pad/crop closure, device-stage lifecycle/dataflow V2, dynamic Remap payload cost boundary, standalone CUDA dynamic warp benchmark, CUDA/NvBufSurface/EGLImage interop safety verification, and the vpi_cuda_owned_bridge negative bridge closeout. The user approved a heavier P0.1-P7.3 autumn-recruitment engineering loop on 2026-07-24.",
+    "current_blocker": "No single blocker yet. The CUDA-owned VPI bridge remains negative evidence for non-identity MMAPI/NVENC output, while the active loop now targets state cleanup, startup-black-fix closeout, stability/P99 evidence, backend decision tables, CUDA-MMAPI route recovery, producer boundary explanation, and presentation/evidence synchronization.",
+    "recommended_next_contract": "configs/harness/contracts/orin_autumn_recruitment_engineering_loop_v1.json"
   },
   "global_claim_boundary": {
     "allowed": [

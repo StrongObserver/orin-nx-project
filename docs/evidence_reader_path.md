@@ -10,6 +10,7 @@ Read:
 README.md
 docs/presentation/final_benchmark_table.md
 docs/presentation/claim_boundary.md
+docs/backend_decision_table_2026-07-24.md
 ```
 
 Best one-sentence framing:
@@ -194,6 +195,7 @@ Read:
 
 ```text
 docs/device_stage_lifecycle_perf_result_2026-07-23.md
+docs/device_stage_stability_p99_repeat_2026-07-24.md
 docs/presentation/hardware_acceleration_boundary.md
 ```
 
@@ -224,6 +226,9 @@ Claim:
 
 ```text
 Stream-only reuse is a small accepted lifecycle optimization.
+Existing repeat evidence supports small mean lifecycle gains and clean
+rc/fallback behavior, but it does not prove a tail-latency win or 30-minute
+endurance.
 ```
 
 Do not claim:
@@ -245,6 +250,8 @@ docs/remap_native_size_pad_crop_probe_2026-07-23.md
 docs/cuda_mmapi_interop_safety_verifier_2026-07-24.md
 docs/cuda_affine_mmapi_diagnostic_2026-07-24.md
 docs/cuda_double_surface_debug_2026-07-24.md
+docs/backend_decision_table_2026-07-24.md
+docs/cuda_mmapi_route_recovery_2026-07-24.md
 experiments/vpi_cpp_remap_probe/remap_probe.cpp
 ```
 
@@ -303,6 +310,12 @@ CUDA double-surface debug:
   dual-surface integer translate still tears
   the blocker is narrowed to spatial random sampling/remap over the current
   EGL-mapped NV12_ER scratch route
+
+CUDA-MMAPI route recovery:
+  failed CUDA-owned bridge is not reused
+  next possible route is an official-sample-shaped CUDA-to-encoder verifier
+  identity/marker must pass before translate, and translate must pass before
+  affine or matrix replay
 ```
 
 Claim:
@@ -323,6 +336,65 @@ VIC validated for this pipeline
 Regular EIS quality improved by Remap
 zero-copy
 accepted MMAPI CUDA acceleration from the safety verifier alone
+accepted MMAPI CUDA acceleration from the CUDA-owned bridge
+```
+
+## I Want Startup Black Fix Evidence
+
+Read:
+
+```text
+docs/regular05_startup_black_fix_closeout_2026-07-24.md
+```
+
+Evidence:
+
+```text
+results/vpi_cuda_owned_bridge_20260724/startup_black_fix_const_full/
+C:\Users\Admin\Videos\orin nx\review\performance\20260724_regular05_startup_black_fix\20260724_regular05_startup_black_fix_source_old_const90_constfull_grid_30fps.mp4
+```
+
+Claim:
+
+```text
+The `constant FOV full` candidate objectively removes the measured Regular05
+startup left-edge black exposure: left80 max is 0 and black-border p95/max are
+0 in the recorded check.
+```
+
+Do not claim:
+
+```text
+human visual acceptance before the user confirms the FOV/scale trade-off
+EIS quality improvement
+CUDA-owned bridge success
+full real-time EIS
+```
+
+## I Want Producer Boundary Evidence
+
+Read:
+
+```text
+docs/producer_boundary_and_next_route_2026-07-24.md
+docs/regular05_producer_scheduling_optimization_2026-07-20.md
+docs/hybrid_realtime_matrix_handoff_2026-07-19.md
+```
+
+Key result:
+
+```text
+FIFO/consumer handoff is healthy.
+stride5 reduces producer-only time from about 68.5 s to about 15.7 s for
+180 frames.
+concurrent live stride5 completes in 17.5 s for 180 frames.
+```
+
+Claim:
+
+```text
+Producer work is a latency-quality and scheduling trade-off story. It is not a
+full real-time EIS claim.
 ```
 
 ## I Want Failure Boundaries
