@@ -87,18 +87,21 @@ It showed that static single-cell local Remap correction does not improve the
 selected parallax boundary, so future quality work requires a richer dynamic
 mesh/depth/RS/gyro model and a new scoped contract.
 
-The current active task-specific Done Contract is:
+There is currently no active task-specific Done Contract. The latest completed
+task-specific Done Contract is:
 
 ```text
 C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\orin_hardening_execution_loop_v3.json
 ```
 
-This contract owns the user-approved P0-P44 hardening loop: true endurance and
-power evidence, chroma-aware CUDA verification, one bounded transcode bridge,
+It closed the user-approved P0-P44 hardening loop: true endurance and power
+evidence, chroma-aware CUDA verification, one bounded transcode bridge,
 producer first-row latency, focused Regular01 review evidence, and final
-closeout.
+closeout. Regular01 remains visual-conditional pending optional later review;
+this does not keep the engineering loop active. Create a new narrow contract
+before further implementation.
 
-The latest completed task-specific Done Contract is:
+The previous completed task-specific Done Contract is:
 
 ```text
 C:\Users\Admin\Desktop\orin nx project\configs\harness\contracts\orin_engineering_execution_loop_v2.json
@@ -118,8 +121,7 @@ This contract is closed as negative bridge evidence: identity passes, and
 standalone CUDA-owned RGBA VPI PerspectiveWarp is exact, but the full
 MMAPI/NVENC bridge still fails non-identity visual/color correctness when
 returning to NV12/NVENC. The accepted fallback remains the VPI-managed
-EGLImage / stream-only reuse / NvBuffer pair path. Do not extend this bridge;
-the active hardening contract uses a new official-sample-shaped route.
+EGLImage / stream-only reuse / NvBuffer pair path. Do not extend this bridge.
 
 The standalone CUDA dynamic warp contract is complete and remains supporting
 evidence:

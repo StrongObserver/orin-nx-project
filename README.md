@@ -663,12 +663,17 @@ H264 input
 -> NVENC
 ```
 
-Current active contracts:
+Current control-plane state:
 
 ```text
 configs/harness/contracts/orin_next_engineering_loop_v1.json
-configs/harness/contracts/orin_hardening_execution_loop_v3.json
+active task contract: none
+latest completed: configs/harness/contracts/orin_hardening_execution_loop_v3.json
 ```
+
+The repository is sealed for resume/interview use. Regular01 remains
+visual-conditional with focused review assets available; further implementation
+requires a new narrow contract.
 
 Important completed or supporting contracts:
 
