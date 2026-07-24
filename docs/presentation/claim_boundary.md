@@ -27,6 +27,8 @@ wrapper lifecycle, sync, transform cost, and perf/watt trade-offs.
 | Stream-only reuse gives a small lifecycle gain | 10-run same-source Regular05 repeat: wall mean `1.947 -> 1.844 s`, stage avg `10.336 -> 9.680 ms` |
 | Stream-only reuse has clean short-repeat health but not proven tail improvement | 10-run repeat: `rc=0`, fallback `0`; stream p99 is not better than EGLImage p99 |
 | Device-stage paths pass 50-run repeat health | `device_stage_endurance_50run_2026-07-24.md`: EGLImage, stream-only, and NvBuffer pair all complete 50/50 with `rc=0` and fallback `0` |
+| Device-stage paths pass a true 30-minute repeat | 1802-second run: EGLImage, stream-only, and NvBuffer pair each complete 243/243 with `rc=0`, fallback `0`, mismatch `0`, and readable 180-frame output |
+| Stream-only reuse has a small board-input efficiency gain | INA3221 `VDD_IN`, three interleaved blocks: `11.626 FPS/W` vs EGLImage `11.306 FPS/W`, about `+2.83%` |
 | VPI Remap can be wired into the native-size MMAPI scratch stage | `remap_native_size_pad_crop_probe_2026-07-23.md`: 640x360 main chain, 640x368 VPI scratch, identity/wave_safe `rc=0` |
 | Dynamic Remap payload rebuild is viable but costly | `vpi_dynamic_remap_payload_probe_2026-07-23.md`: MMAPI dynamic Remap stage avg about `13.14-13.16 ms` |
 | Standalone CUDA dynamic warp is a promising operator candidate | `cuda_dynamic_warp_probe_2026-07-23.md`: RGBA dynamic `0.194 ms`, Y8 dynamic `0.138 ms` |
@@ -38,6 +40,9 @@ wrapper lifecycle, sync, transform cost, and perf/watt trade-offs.
 | Regular gate constant-FOV-full technical extension ran | `regular_gate_const_fov_full_extension_2026-07-24.md`: 5/5 `rc=0`, fallback `0`, mismatch `0`; Regular01 remains visual-conditional |
 | Producer/FIFO handoff is healthy but not full real-time | `producer_boundary_and_next_route_2026-07-24.md`: stride5 reduces producer cost, but latency-quality trade-off remains |
 | CUDA-to-encoder official verifier is positive | `cuda_mmapi_official_verifier_2026-07-24.md`: marker, translate dx8, and affine dx8 pass in the official `03_video_cuda_enc` ownership shape |
+| Complete YUV420 CUDA processing is verified in the official encoder shape | Copy and dx8 translate match decoded Y/U/V references exactly; bounded affine stays close on all planes and averages about `0.362 ms` |
+| Block-linear CUDA array ownership is understood | Transcode array copy is exact and all-intra dx8 is coherent; normal inter-frame H264 fails because in-place writes alter decoder reference surfaces |
+| Producer first solved-row latency is reduced without changing matrices | Jetson stride5 batch vs incremental matrices and FIFO outputs are SHA256-identical; first solved row improves `15.799 s -> 1.036 s` |
 
 ## Forbidden Claims
 
@@ -52,6 +57,8 @@ Queue depth or double buffering has been proven beneficial.
 Stream-only reuse proves zero-copy.
 Stream-only reuse proves tail-latency improvement or 30-minute endurance.
 50-run repeat proves 30-minute endurance.
+30-minute repeat proves a stream-only p99 win.
+Three power blocks prove product-grade or universal power savings.
 VPI optical flow accelerates our motion estimation.
 Running / Parallax / Crowd are solved.
 The result is product-grade or all-scene EIS quality.
@@ -68,6 +75,10 @@ Regular gate constant-FOV-full extension is fully human accepted before Regular0
 Producer stride5 proves full real-time EIS.
 Official CUDA encoder verifier proves the current MMAPI transcode scratch route is fixed.
 Official CUDA encoder verifier proves full-pipeline acceleration.
+Chroma-aware CUDA verifier proves full EIS pipeline acceleration.
+All-intra CUDA array success proves normal inter-frame H264 transcode success.
+The current in-place decoder DMABUF bridge is accepted for normal H264.
+Incremental prefix output removes the 90-frame lookahead or total LP compute.
 ```
 
 ## Precise Wording

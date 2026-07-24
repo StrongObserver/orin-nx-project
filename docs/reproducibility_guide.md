@@ -534,6 +534,55 @@ startup FOV v2 black-border p95: 0.000000000
 startup FOV v2 max black-border ratio: 0.000633681
 ```
 
+## L5.10 - Hardening Evidence
+
+Purpose: reproduce the final endurance, board-input power, complete-YUV CUDA,
+array-ownership, and producer-delivery boundaries.
+
+Tracked implementations:
+
+```text
+scripts/run_device_stage_endurance.py
+scripts/run_device_stage_power.py
+scripts/sample_ina_power.py
+scripts/patch_video_cuda_enc_yuv420_verifier.py
+scripts/patch_mmapi_cuda_encoder_dmabuf_bridge.py
+scripts/make_yuv420_reference.py
+scripts/compare_yuv420_raw.py
+scripts/live_matrix_producer.py
+tests/
+```
+
+Primary ignored evidence:
+
+```text
+results/device_stage_endurance_20260724/regular05_30min_hardening/
+results/device_stage_power_hardening_20260724/interleaved/
+results/cuda_yuv420_affine_20260724/
+results/cuda_transcode_bridge_20260724/
+results/producer_incremental_20260724/
+```
+
+Expected result summary:
+
+```text
+endurance: 1802 s, 243/243 healthy runs per path
+power: stream-only about +2.83% FPS/W vs EGLImage over three paired blocks
+official CUDA YUV420: copy/translate exact; bounded affine close on Y/U/V
+transcode array: copy exact and all-intra translate correct; normal H264 blocked
+  by in-place decoder-reference pollution
+producer: first solved row 15.799 s -> 1.036 s with byte-identical matrices and
+  FIFO output
+```
+
+Claim boundary:
+
+```text
+These are hardening, ownership, and scheduling results. They do not prove
+zero-copy, full real-time EIS, a normal-H264 CUDA transcode acceleration path,
+or a stream-only p99 win.
+```
+
 ## L6 - Public / Interview Package
 
 Purpose: read the project as a portfolio.

@@ -48,9 +48,13 @@ Quality boundary -> CPU baseline -> VPI module evidence
 | Stream-only reuse | 10-run repeat wall mean `1.946819 s -> 1.843571 s`; stage avg `10.336381 ms -> 9.680414 ms` | Small lifecycle optimization; image wrappers are still recreated |
 | Device-stage repeat / P99 | 10-run stream-only repeat has `rc=0`, fallback `0`, and mean gains, but stream p99 is not better than EGLImage in this small sample | Stability boundary, not a 30-minute endurance claim |
 | Device-stage 50-run repeat | EGLImage / stream-only / NvBuffer all complete 50/50 with `rc=0`, fallback `0`; stream mean improves slightly but p99 is worse | Stability evidence, not tail-latency win or 30-minute endurance |
+| Device-stage 30-minute endurance | EGLImage / stream-only / NvBuffer each complete 243/243 alternating runs with `rc=0`, fallback `0`, mismatch `0`, and 180 readable frames per run | True 1802 s endurance evidence; stream mean improves `0.51%` but p99 regresses `2.68%` |
+| Device-stage board-input efficiency | Three interleaved blocks per path using INA3221 `VDD_IN`: EGLImage `8.239 W / 11.306 FPS/W`, stream-only `8.001 W / 11.626 FPS/W`, NvBuffer `8.276 W / 11.208 FPS/W` | Small block-level result; stream-only is about `2.83%` better in FPS/W, not product power |
 | Regular gate startup black fix | `constant FOV full` is accepted on Regular05 and extended to 5 Regular clips with `rc=0`, fallback `0`, mismatch `0`; Regular01 remains visual-conditional | Display/FOV safety fix, not EIS quality improvement |
 | CUDA-MMAPI official verifier | Official `03_video_cuda_enc` shape runs marker, `dx=8` translate, and affine `dx=8` with coherent output | CUDA-to-encoder ownership verifier, not full transcode-pipeline acceleration |
-| Producer boundary | FIFO/consumer is healthy; stride5 cuts producer-only time `68.5 s -> 15.7 s` for 180 frames | Scheduling trade-off, not full real-time EIS |
+| Chroma-aware CUDA verifier | Official encoder ownership shape processes complete Y/U/V: copy and dx8 translate are exact versus matched references; affine Y/U/V MAE is `1.52/0.67/0.54`, about `0.362 ms` | Full-color CUDA verifier, not accepted normal-H264 transcode acceleration |
+| CUDA array transcode bridge | Block-linear NV12 array copy is exact; all-intra dx8 passes at `0.103 px` spread, but normal inter-frame H264 accumulates warp because decoder reference surfaces are modified in place | Positive ownership diagnosis plus negative normal-H264 bridge boundary |
+| Producer boundary | stride5 cuts producer-only time `68.5 s -> 15.7 s`; incremental prefix output moves first solved row `15.799 s -> 1.036 s` with byte-identical matrices and FIFO output | Earlier delivery with unchanged total compute and 90-frame lookahead; not full real-time EIS |
 
 ### Architecture
 
@@ -151,8 +155,22 @@ Current sealed stage:
   Device-stage repeat/P99 evidence now includes a 50-run alternating repeat:
   all three paths are healthy, stream-only has a small mean wall gain, but no
   tail-latency win is proven.
+  A true 1802-second endurance run now covers 243 alternating runs per path:
+  all 729 runs have rc=0, fallback=0, mismatch=0, and 180 readable frames.
+  Stream-only improves mean wall time by about 0.51% but regresses p99 by 2.68%.
+  INA3221 VDD_IN block sampling adds device-stage board-input evidence:
+  stream-only is about 2.83% better in FPS/W than EGLImage in three paired
+  blocks; this remains a small engineering result, not product power.
   CUDA-MMAPI route recovery now has an official `03_video_cuda_enc` verifier:
   marker, translate, and affine dx=8 are readable and spatially coherent.
+  The verifier now processes complete Y/U/V. Copy and translate match their
+  references exactly; a bounded affine remains close on all planes. A
+  block-linear CUDA-array transcode bridge also proves copy safety and all-I
+  translate correctness, but normal H264 fails because in-place writes pollute
+  decoder reference surfaces. A separate encoder surface pool would be needed.
+  Producer incremental prefix output preserves every matrix value while moving
+  the first solved row from about 15.8s to 1.04s on Jetson. Total producer time
+  remains about 15.7s and the 90-frame lookahead remains explicit.
   Backend decision and CUDA-MMAPI route recovery docs now define which routes
   are main results, supporting evidence, negative evidence, or deferred.
 
@@ -649,7 +667,7 @@ Current active contracts:
 
 ```text
 configs/harness/contracts/orin_next_engineering_loop_v1.json
-none
+configs/harness/contracts/orin_hardening_execution_loop_v3.json
 ```
 
 Important completed or supporting contracts:

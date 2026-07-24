@@ -233,6 +233,12 @@ endurance.
 The 50-run repeat extends health evidence: EGLImage, stream-only reuse, and
 NvBuffer pair all complete 50/50 with rc=0 and fallback=0. It still does not
 prove stream-only p99 improvement.
+The hardening run adds a true 1802-second repeat. EGLImage, stream-only reuse,
+and NvBuffer pair each complete 243/243 runs with rc=0, fallback=0, mismatch=0,
+and readable 180-frame output. Stream-only improves mean wall time by about
+0.51% but regresses p99 by about 2.68%.
+Three interleaved INA3221 VDD_IN blocks measure stream-only at 11.626 FPS/W
+versus EGLImage at 11.306 FPS/W, a small 2.83% board-input efficiency gain.
 ```
 
 Do not claim:
@@ -327,6 +333,18 @@ CUDA-MMAPI official verifier:
   marker output is readable and black-border healthy
   translate dx8 and affine dx8 pass spatial-coherence checks
   this does not fix the rejected transcode scratch route by itself
+
+Chroma-aware CUDA verifier:
+  complete Y/U/V copy and dx8 translate match decoded references exactly
+  bounded affine Y/U/V MAE is about 1.515/0.671/0.536
+  CUDA affine processing averages about 0.362 ms
+
+Block-linear CUDA array bridge:
+  array copy is exact
+  all-intra dx8 passes with 0.103 px spread and 0.104 px shift error
+  normal inter-frame H264 accumulates the warp because in-place writes alter
+  decoder reference surfaces
+  a separate encoder surface pool is required before normal-H264 promotion
 ```
 
 Claim:
@@ -402,6 +420,8 @@ FIFO/consumer handoff is healthy.
 stride5 reduces producer-only time from about 68.5 s to about 15.7 s for
 180 frames.
 concurrent live stride5 completes in 17.5 s for 180 frames.
+incremental prefix output moves the first solved row from 15.799 s to 1.036 s
+on Jetson while preserving byte-identical 180-row matrices and FIFO H264.
 ```
 
 Claim:
@@ -409,6 +429,8 @@ Claim:
 ```text
 Producer work is a latency-quality and scheduling trade-off story. It is not a
 full real-time EIS claim.
+Incremental output reduces extra compute blocking before the first matrix, but
+does not remove the full motion prepass, 90-frame lookahead, or total LP work.
 ```
 
 ## I Want Failure Boundaries

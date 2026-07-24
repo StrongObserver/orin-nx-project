@@ -27,12 +27,15 @@ semantics, or lacks measured same-input evidence.
 | CUDA affine over current EGL scratch | identity passes; translate/affine tears | Negative integration evidence | No | Current EGL-mapped scratch random sampling is rejected |
 | CUDA double-surface debug | full-frame copy passes; integer translate tears | Narrows root cause | Yes, as negative evidence | Copy safety does not imply random sampling safety |
 | VPI CUDA-owned bridge | identity passes; standalone RGBA VPI warp exact; bridge return to NV12/NVENC fails | Negative bridge evidence | No | Do not reuse as optimization path |
+| Official complete-YUV CUDA verifier | YUV420M copy/translate exact; bounded affine close on Y/U/V, about `0.362 ms` | Positive full-color operator/ownership evidence | Yes, as verifier | Not full EIS or normal-H264 transcode acceleration |
+| Block-linear CUDA array bridge | array copy exact; all-intra dx8 coherent; normal H264 accumulates warp | Positive ownership diagnosis plus negative normal-H264 integration evidence | Diagnostic only | In-place writes pollute decoder reference surfaces; separate encoder pool required |
 | Accepted C++ EGLImage path | Five Regular paths and Regular05 device stage evidence | Main device-stage correctness path | Yes | Not zero-copy, not full real-time |
 | Stream-only reuse | 10-run mean gain: wall +5.303%, stage avg +6.346%; rc/fallback clean | Small accepted lifecycle optimization | Yes | Tail latency not proven better |
 | NvBuffer pair | Preserves `resid_r15_s07`, small and variable stage gains | Quality-preserving dataflow alternative | Yes | Not zero-copy |
 | Python GStreamer appsink/appsrc | appsink `7.93 ms/frame`; pass-through encode `15.81 ms/frame` | Negative path-selection evidence | No | Python-in-loop is not the next acceleration path |
 | Queue depth / double buffering | Nsight does not show enough idle-gap trigger yet | Deferred | No | Needs new evidence before implementation |
 | Static local Remap correction | Parallax10 metrics did not improve | Negative quality evidence | No | Future quality route needs dynamic mesh/depth/RS/gyro model |
+| Incremental producer output | First solved row `15.799 s -> 1.036 s`; matrices and FIFO output SHA256-identical | Positive delivery-scheduling result | Yes | Total compute and 90-frame lookahead remain |
 
 ## Route Classes
 

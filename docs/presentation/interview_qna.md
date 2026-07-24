@@ -409,6 +409,21 @@ all paths are stable in the 50-run repeat; stream-only has a small mean gain,
 but no p99 win is proven.
 ```
 
+The later hardening run turns this into real endurance evidence:
+
+```text
+duration: 1802 s
+accepted EGLImage: 243/243 healthy, wall p99 2.051 s
+stream-only reuse: 243/243 healthy, wall p99 2.106 s
+NvBuffer pair:     243/243 healthy, wall p99 2.067 s
+```
+
+All 729 runs have rc=0, fallback=0, mismatch=0, and readable 180-frame output.
+Stream-only improves mean wall time by about 0.51%, but its p99 is about 2.68%
+worse. INA3221 VDD_IN sampling over three paired blocks gives stream-only about
+2.83% better FPS/W than EGLImage. The honest statement is stable endurance plus
+a small board-input efficiency gain, not a p99 win or product power result.
+
 ## Q: Why not implement queue depth or double buffering now?
 
 Because the current evidence does not show a large removable idle gap. The
@@ -639,6 +654,41 @@ This proves CUDA-to-encoder ownership is viable in the official encode sample
 shape. It still does not prove the rejected transcode scratch path is fixed, and
 it is not a full-pipeline acceleration claim.
 
+## Q: Did the CUDA verifier process chroma, or only luma?
+
+The first official verifier modified only the Y plane. The hardening loop then
+extended it to complete YUV420 processing:
+
+```text
+Y/U/V copy: exact against matched no-op reference
+Y/U/V dx8 translate: exact against matched software reference
+bounded affine decoded MAE: Y=1.515, U=0.671, V=0.536
+CUDA affine processing average: about 0.362 ms
+```
+
+The important engineering detail was using the actual per-plane pitches:
+Y `768`, U/V `512` in the official YUV420M encoder surface. Reusing only the
+first-plane pitch caused an invalid-value failure and was corrected before
+translation or affine claims were accepted.
+
+## Q: Why did the CUDA array transcode bridge pass all-I video but fail normal H264?
+
+The block-linear decoder-capture surface appears in CUDA as a two-plane array,
+not pitch memory. Array-to-pitch staging made copy exact, and all-intra dx8 was
+coherent for all 180 frames:
+
+```text
+band spread p95: 0.103 px
+expected shift error p95: 0.104 px
+```
+
+With ordinary inter-frame H264, the first eight frames were correct and the
+shift then accumulated. The CUDA kernel was modifying decoder capture buffers
+in place; those buffers also participate in decoder reference-frame lifecycle.
+All-I input removed that dependency and made the same kernel correct. Therefore
+normal H264 needs a separate encoder surface pool. The current in-place bridge
+is diagnostic evidence, not an accepted acceleration path.
+
 ## Q: What was the Regular05 startup black fix?
 
 Human review found a brief left-edge black exposure in the first seconds of the
@@ -715,6 +765,21 @@ producer total: about 15.69 s
 So the next useful producer question is not a consumer rewrite. It is whether
 the producer can emit early rows incrementally while preserving the accepted
 bounded-delay quality semantics.
+
+That scoped follow-up is now complete. Incremental prefix output reuses the same
+motion prepass, LP solve, mask safety, and source-to-destination matrices, but
+flushes each row after its scheduled prefix is solved:
+
+```text
+Jetson first solved row: 15.799 s -> 1.036 s
+Regular05 batch vs incremental matrices: SHA256 identical
+Regular02 / Regular04 cross-clip matrices: SHA256 identical
+live FIFO vs precomputed FIFO H264: SHA256 identical
+fallback=0, mismatch=0, 180 readable frames
+```
+
+Total producer time remains about 15.7 seconds and the 90-frame lookahead still
+exists. This is a first-delivery scheduling improvement, not full real-time EIS.
 
 ## Q: Why do source, identity_pad_crop, and wave_safe_pad_crop not show stabilization?
 

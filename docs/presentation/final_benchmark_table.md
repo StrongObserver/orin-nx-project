@@ -29,10 +29,14 @@ separate.
 | Stream-only reuse lifecycle | Same Regular05 source, same `resid_r15_s07` matrix | 10-run repeat: wall mean `1.947 -> 1.844 s`, stage avg `10.336 -> 9.680 ms` | Small accepted lifecycle optimization, not image-wrapper reuse |
 | Stream-only repeat tail | Same 10-run repeat | EGLImage wall p99 `1.981 s`, stream wall p99 `2.041 s`; EGLImage stage p99 `10.600 ms`, stream stage p99 `10.638 ms` | Mean gain only; tail-latency win is not proven |
 | Device-stage 50-run repeat | Same Regular05 source/matrix, 50 alternating runs per path | EGLImage/stream/NvBuffer all 50/50 `rc=0`, fallback `0`; stream wall mean `1.885 -> 1.854 s`, stream p99 `2.070 s` | Stability evidence; no p99 win and not 30-minute endurance |
+| Device-stage 30-minute endurance | Same Regular05 source/matrix, 1802 s, rotating path order | EGLImage/stream/NvBuffer each 243/243 `rc=0`, fallback `0`, mismatch `0`, readable 180 frames | True endurance health; stream mean `+0.51%`, p99 `-2.68%` |
+| Device-stage VDD_IN efficiency | Three interleaved 3-run blocks per path | EGLImage `8.239 W / 11.306 FPS/W`; stream `8.001 W / 11.626 FPS/W`; NvBuffer `8.276 W / 11.208 FPS/W` | INA3221 board-input evidence; stream FPS/W about `+2.83%`, small sample |
 | Regular gate startup black fix | Accepted stream-only reuse path, `resid_r15_s07` constant-FOV-full matrices | 5/5 `rc=0`, fallback `0`, mismatch `0`; Regular01 p95 black below 1% but max slightly above 1% for 2 frames | Regular05 accepted, five-clip technical run is Regular01 visual-conditional |
 | Backend decision table | All major OpenCV/VPI/CUDA/MMAPI routes | Routes classified as main result, supporting evidence, negative evidence, or deferred | Prevents runnable-but-low-value routes from being overclaimed |
 | CUDA-MMAPI official verifier | Jetson Multimedia API `03_video_cuda_enc` shape | marker `rc=0`; translate dx8 coherence pass; affine dx8 coherence pass | CUDA-to-encoder ownership verifier, not accepted full transcode acceleration |
-| Producer boundary | FIFO/consumer plus bounded-delay/stride producer | producer-only `68.5 s -> 15.7 s`; concurrent live stride5 `17.5 s` for 180 frames | Scheduling trade-off, not full real-time EIS |
+| Chroma-aware CUDA YUV420 verifier | Official `03_video_cuda_enc`, complete Y/U/V processing | copy and dx8 translate produce exact decoded Y/U/V against matched references; affine MAE `Y=1.515`, `U=0.671`, `V=0.536`, avg about `0.362 ms` | Full-color operator/ownership verifier; not full EIS acceleration |
+| CUDA array transcode bridge | Decoder capture / encoder output block-linear NV12 DMABUF | array copy exact; all-intra dx8 spread `0.103 px`, shift error `0.104 px`; normal H264 accumulates warp | In-place decoder-reference pollution boundary; separate encoder surface pool required |
+| Producer incremental output | FIFO/consumer plus bounded-delay stride5 producer | first solved row `15.799 s -> 1.036 s`; 180 matrices and device H264 SHA256 exact | Earlier delivery, not reduced total compute or zero-latency realtime |
 
 ## Regular Baselines
 

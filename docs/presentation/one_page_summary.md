@@ -221,6 +221,15 @@ Stream-only repeat / P99 boundary:
   was worse, 1.993936 s -> 2.070096 s. NvBuffer pair was stable but did not
   beat accepted EGLImage on mean or p99 wall time in this repeat.
 
+30-minute device-stage endurance and power:
+  A true 1802-second alternating run completed 243/243 runs for each of
+  accepted EGLImage, stream-only reuse, and NvBuffer pair. All 729 runs have
+  rc=0, fallback=0, mismatch=0, and readable 180-frame output. Stream-only has
+  a 0.51% mean wall gain but a 2.68% worse p99. Three paired INA3221 VDD_IN
+  blocks measure EGLImage at 8.239 W / 11.306 FPS/W, stream-only at 8.001 W /
+  11.626 FPS/W, and NvBuffer at 8.276 W / 11.208 FPS/W. The stream-only
+  efficiency gain is about 2.83%, with a small-sample boundary.
+
 Identity warp:
   Identity PerspectiveWarp is only slightly faster than the inclusion matrix
   path, so matrix complexity is not the current bottleneck.
@@ -265,8 +274,12 @@ Producer first-row latency audit:
   Existing timing shows the startup cost is producer-side matrix generation,
   not FIFO handoff. LP solve costs about 12.76 s, mask safety about 2.31 s, and
   the producer total is about 15.69 s, while sampled handoff p95 is about 39 us.
-  A future producer loop should target incremental row emission only if it can
-  preserve the accepted bounded-delay quality semantics.
+  Incremental prefix output now emits each row after its scheduled prefix solve
+  without changing the LP, mask-safety, matrix convention, or 90-frame
+  lookahead. On Jetson the first solved row improves from 15.799 s to 1.036 s.
+  Batch and incremental 180-row CSVs are SHA256-identical on Regular05,
+  Regular02, and Regular04; live FIFO and precomputed FIFO H264 outputs are
+  also SHA256-identical. Total compute remains about 15.7 s.
 
 Five Regular viewport-stable check:
   The accepted EGLImage FIFO consumer ran all five stride5 fixed-scale/crop98
@@ -310,6 +323,15 @@ CUDA-MMAPI official verifier:
   positive CUDA-to-encoder verifier route, but it does not fix the rejected
   transcode scratch route or prove full-pipeline acceleration.
 
+Chroma-aware CUDA and array ownership boundary:
+  The official encoder verifier now processes complete Y/U/V. Copy and dx8
+  translate match matched decoded references exactly; a bounded affine has
+  Y/U/V mean absolute differences of about 1.515/0.671/0.536 and averages
+  about 0.362 ms. The block-linear transcode DMABUF appears as a two-plane CUDA
+  array. Array copy is exact and all-intra dx8 passes spatial coherence, but
+  normal H264 accumulates the warp because the in-place modification corrupts
+  decoder reference surfaces. A separate encoder surface pool is required.
+
 Regular05 startup black fix:
   The final constant-FOV-full candidate removes the measured left-edge startup
   black exposure on objective checks: left80 max is 0 and black-border p95/max
@@ -331,9 +353,9 @@ zero-copy: wrapper lifecycle, sync, and transform sandwich costs are still
 measured. The accepted quality recovery result is resid_r15_s07. NVTX/Nsight
 profiling confirms that the accepted C++ stage is wrapper/sync/transform/
 lifecycle dominated, not limited by the PerspectiveWarp submit call alone.
-The newest execution loop adds stronger engineering boundaries: constant-FOV-full
-Regular extension, 50-run device-stage repeat, official CUDA-to-encoder verifier,
-and producer first-row latency attribution.
+The newest hardening loop adds true 30-minute endurance, INA3221 device-stage
+efficiency, complete YUV CUDA verification, a decoder-reference ownership
+boundary, and producer first-row delivery with byte-identical output.
 ```
 
 ## Model Boundary
