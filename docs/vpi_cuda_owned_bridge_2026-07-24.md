@@ -265,7 +265,7 @@ Diagnosis, first 90 frames:
 | source | 0.000000000 | 0.000000000 |
 | old stream | 0.044722222 | 0.002102238 |
 
-Fix:
+First fix:
 
 ```text
 compute inclusion-safe extra scale for resid_r15_s07
@@ -290,6 +290,59 @@ C:\Users\Admin\Videos\orin nx\review\performance\20260724_regular05_startup_blac
 
 The 30fps copy is the review target. Earlier MP4 conversions used 25fps and
 therefore looked slower than the original 30fps H264 source.
+
+Follow-up human review found that `startup FOV v2` still had slight zooming
+because its extra scale changes frame by frame. The second candidate used one
+constant inclusion-safe extra scale for the first 90 frames:
+
+```text
+constant_extra_scale = 1.035641520
+```
+
+Constant-FOV result, first 90 frames:
+
+| Video | max left80 | mean left80 |
+|---|---:|---:|
+| old stream | 0.044722222 | 0.002102238 |
+| startup FOV v2 | 0.000000000 | 0.000000000 |
+| constant FOV | 0.000000000 | 0.000000000 |
+
+Constant-FOV full-video black-border summary:
+
+| Metric | Value |
+|---|---:|
+| black-border p95 | 0.000000000 |
+| max black-border ratio | 0.000646701 |
+| frames > 0.1% black | 0 |
+
+Current recommended review copy:
+
+```text
+C:\Users\Admin\Videos\orin nx\review\performance\20260724_regular05_startup_black_fix\20260724_regular05_startup_black_fix_source_old_v2_const_grid_30fps.mp4
+```
+
+The user then still saw a 3-4s scale switch. Root cause: the 90-frame constant
+candidate returned from scale `1.272814399` to the original `1.229010594` at
+frame 90, exactly around 3 seconds at 30fps. The final candidate uses one
+constant inclusion-safe scale for all 180 frames:
+
+```text
+constant_extra_scale_full = 1.038357587
+```
+
+Final constant-FOV result:
+
+| Video | max left80 first 180 | mean left80 first 180 | black-border p95 | max black-border |
+|---|---:|---:|---:|---:|
+| old stream | 0.044722222 | 0.001074846 | not used for final | not used for final |
+| const90 | 0.004270833 | 0.000023727 | not used for final | not used for final |
+| constant FOV full | 0.000000000 | 0.000000000 | 0.000000000 | 0.000000000 |
+
+Current recommended review copy:
+
+```text
+C:\Users\Admin\Videos\orin nx\review\performance\20260724_regular05_startup_black_fix\20260724_regular05_startup_black_fix_source_old_const90_constfull_grid_30fps.mp4
+```
 
 ## Historical Patcher Behavior
 

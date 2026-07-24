@@ -101,14 +101,17 @@
     },
     "startup_black_fix": {
       "decision": "accepted_candidate_pending_human_review",
-      "matrix": "results/vpi_cuda_owned_bridge_20260724/startup_black_fix_v2/resid_r15_s07_startup_fov_v2.csv",
+      "matrix": "results/vpi_cuda_owned_bridge_20260724/startup_black_fix_const_full/resid_r15_s07_constant_fov_full.csv",
       "path": "accepted stream-only reuse",
       "old_stream_left80_max_first90": 0.044722222,
-      "fixed_left80_max_first90": 0.0,
-      "fixed_left80_mean_first90": 0.0,
-      "fixed_black_border_p95": 0.0,
-      "fixed_black_border_max": 0.000633681,
-      "review_video": "C:/Users/Admin/Videos/orin nx/review/performance/20260724_regular05_startup_black_fix/20260724_regular05_startup_black_fix_source_old_fixed_grid_30fps.mp4"
+      "v2_left80_max_first90": 0.0,
+      "const90_left80_max_first180": 0.004270833,
+      "constant_fov_full_left80_max_first180": 0.0,
+      "constant_fov_full_left80_mean_first180": 0.0,
+      "constant_fov_full_black_border_p95": 0.0,
+      "constant_fov_full_black_border_max": 0.0,
+      "constant_extra_scale_full": 1.038357587,
+      "review_video": "C:/Users/Admin/Videos/orin nx/review/performance/20260724_regular05_startup_black_fix/20260724_regular05_startup_black_fix_source_old_const90_constfull_grid_30fps.mp4"
     },
     "claim_boundary": "Do not claim this CUDA-owned bridge solves non-identity MMAPI device-stage warp, preserves resid_r15_s07, or provides acceleration. Accepted fallback remains the VPI-managed EGLImage/stream-only/NvBuffer pair path with low-single-digit measured gains."
   },
