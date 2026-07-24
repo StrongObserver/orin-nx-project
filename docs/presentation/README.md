@@ -37,89 +37,105 @@ identity.
 9. `../device_stage_stability_p99_repeat_2026-07-24.md`
    - Short-repeat p50/p95/p99 boundary for stream-only reuse and NvBuffer pair.
 
-10. `../cuda_mmapi_route_recovery_2026-07-24.md`
+10. `../device_stage_endurance_50run_2026-07-24.md`
+   - 50-run alternating repeat for accepted EGLImage, stream-only reuse, and
+     NvBuffer pair.
+
+11. `../cuda_mmapi_route_recovery_2026-07-24.md`
    - CUDA-MMAPI route recovery after the CUDA-owned bridge negative closeout.
 
-11. `../producer_boundary_and_next_route_2026-07-24.md`
+12. `../cuda_mmapi_official_verifier_2026-07-24.md`
+   - Official `03_video_cuda_enc`-shaped CUDA-to-encoder marker, translate, and
+     affine verifier.
+
+13. `../producer_boundary_and_next_route_2026-07-24.md`
    - Producer/FIFO/live boundary and why full real-time EIS remains unclaimed.
 
-12. `../regular05_startup_black_fix_closeout_2026-07-24.md`
-   - Objective startup black fix candidate and pending human-acceptance boundary.
+14. `../producer_first_row_latency_audit_2026-07-24.md`
+   - Producer first-row latency root cause: LP solve and mask safety, not FIFO
+     handoff.
 
-13. `project_story.md`
+15. `../regular05_startup_black_fix_closeout_2026-07-24.md`
+   - User-accepted Regular05 constant-FOV-full startup black fix and claim
+     boundary.
+
+16. `../regular_gate_const_fov_full_extension_2026-07-24.md`
+   - Five-Regular technical extension for the accepted constant-FOV-full rule.
+
+17. `project_story.md`
    - Project motivation, current result, and three-minute explanation.
 
-14. `baseline_and_metrics.md`
+18. `baseline_and_metrics.md`
    - Regular gate, dual baseline wording, and metric meanings.
 
-15. `performance_optimization.md`
+19. `performance_optimization.md`
    - How `estimate_scale=0.5 + feature_grid_size=16` became the Regular
      performance baseline.
 
-16. `hardware_acceleration_boundary.md`
+20. `hardware_acceleration_boundary.md`
    - VPI module acceleration, full-pipeline negative result, GStreamer/NVMM
      dataflow boundary, the current MMAPI/VPI/NVENC device-side warp path, and
      the NvBuffer pair, stream-only reuse, and C++ Remap follow-ups.
 
-17. `../vpi_remap_cpp_probe_2026-07-23.md`
+21. `../vpi_remap_cpp_probe_2026-07-23.md`
    - C++ Remap/WarpMap module probe after Python Remap native abort; includes
      OpenCV vs VPI CUDA timing and NV12_ER feasibility.
 
-18. `../remap_mmapi_integration_probe_2026-07-23.md`
+22. `../remap_mmapi_integration_probe_2026-07-23.md`
    - Minimal MMAPI/VPI/NVENC scratch-stage Remap insertion; records the
      original 640x360 WarpGrid size boundary and the 640x368 diagnostic path.
 
-19. `../remap_native_size_pad_crop_probe_2026-07-23.md`
+23. `../remap_native_size_pad_crop_probe_2026-07-23.md`
    - Native 640x360 main-chain pad/crop closure for the 640x368 VPI Remap
      scratch-stage requirement.
 
-20. `../nsight_device_stage_profile_result_2026-07-23.md`
+24. `../nsight_device_stage_profile_result_2026-07-23.md`
    - Completed NVTX/Nsight result: wrapper/sync/transform/lifecycle cost
      dominates, and P6/P7 scheduler work is not triggered.
 
-21. `../device_stage_lifecycle_perf_result_2026-07-23.md`
+25. `../device_stage_lifecycle_perf_result_2026-07-23.md`
    - Stream-only reuse lifecycle follow-up with a 10-run same-source repeat.
 
-22. `resume_bullets.md`
+26. `resume_bullets.md`
    - Short, medium, and long resume wording with claim boundaries.
 
-23. `../../configs/harness/contracts/final_evidence_package_closeout_v1.json`
+27. `../../configs/harness/contracts/final_evidence_package_closeout_v1.json`
    - Current final evidence package closeout contract.
 
-24. `../regular_gate_residual_closed_loop_2026-07-21.md`
+28. `../regular_gate_residual_closed_loop_2026-07-21.md`
    - The accepted `resid_r15_s07` Regular-gate quality recovery result.
 
-25. `../regular_gate_nvbuffer_pair_resid_2026-07-23.md`
+29. `../regular_gate_nvbuffer_pair_resid_2026-07-23.md`
    - Format-matched NvBuffer pair follow-up that preserves the quality anchor
      and gives a small measured device-stage gain.
 
-26. `../device_stage_demo_handoff_2026-07-19.md`
+30. `../device_stage_demo_handoff_2026-07-19.md`
    - Accepted device-side stage demo, review assets, result table, and claim
      boundaries.
 
-27. `../hybrid_realtime_eis_plan_2026-07-19.md`
+31. `../hybrid_realtime_eis_plan_2026-07-19.md`
    - Hybrid real-time plan, updated to use Regular05 source_to_dest for
      EIS-quality work.
 
-28. `../hybrid_realtime_matrix_handoff_2026-07-19.md`
+32. `../hybrid_realtime_matrix_handoff_2026-07-19.md`
    - Historical outdoor-car mock/FIFO/live handoff result; dataflow smoke only.
 
-29. `../layered_artifact_diagnosis_2026-07-19.md`
+33. `../layered_artifact_diagnosis_2026-07-19.md`
    - Why outdoor-car is dataflow smoke only, and how Regular05 should be used
      for EIS quality review.
 
-30. `../../configs/harness/contracts/presentation_closeout_v1.json`
+34. `../../configs/harness/contracts/presentation_closeout_v1.json`
    - Previous closeout contract, superseded by Nsight and final evidence
      package closeout.
 
-31. `../../configs/harness/contracts/regular05_hybrid_matrix_handoff_v1.json`
+35. `../../configs/harness/contracts/regular05_hybrid_matrix_handoff_v1.json`
    - Current Regular05 source_to_dest handoff contract and quality boundary.
 
-32. `challenge_boundary.md`
+36. `challenge_boundary.md`
    - Operating envelope: where Regular succeeds and where challenge sets expose
      model limits.
 
-33. `interview_qna.md`
+37. `interview_qna.md`
    - Concise answers to likely interview questions.
 
 Do not present local `results/` videos or CSV files as repository artifacts.

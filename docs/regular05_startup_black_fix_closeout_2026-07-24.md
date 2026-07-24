@@ -25,7 +25,7 @@ consumer route.
 | old stream | Existing accepted stream-only reuse output | left80 max first 180 = `0.044722222` | diagnostic baseline |
 | startup FOV v2 | Remove first-90-frame left-edge exposure with frame-varying extra scale | left80 max first 90 = `0.000000000`; black-border p95 = `0.000000000` | rejected by human review because slight zooming remained |
 | constant FOV first 90 | Use one constant inclusion-safe scale for first 90 frames | left80 max first 90 = `0.000000000`; black-border p95 = `0.000000000` | diagnostic, still returned scale at frame 90 |
-| constant FOV full | Use one constant inclusion-safe scale for all 180 frames | left80 max first 180 = `0.000000000`; black-border p95 = `0.000000000`; max black-border = `0.000000000` | objective pass, pending human visual acceptance |
+| constant FOV full | Use one constant inclusion-safe scale for all 180 frames | left80 max first 180 = `0.000000000`; black-border p95 = `0.000000000`; max black-border = `0.000000000` | accepted by human review |
 
 ## Evidence
 
@@ -53,14 +53,13 @@ results/vpi_cuda_owned_bridge_20260724/startup_black_fix_const_full/black_summar
 ## Current Decision
 
 `constant FOV full` is objectively clean on the measured black-border and
-left-edge metrics. It should remain pending human visual review because the
-fix buys that cleanliness by applying a constant extra inclusion-safe scale
-across the full 180-frame Regular05 clip.
+left-edge metrics. The user reviewed the 30 fps comparison video and accepted
+`const_full` as matching expectation, with no visible defect and no zooming
+phenomenon. `const90` still has zooming and remains diagnostic only.
 
-Do not mark it accepted until the user confirms that the FOV/scale trade-off is
-visually acceptable. If accepted, the next narrow step is a five-Regular
-extension under the same source-to-destination matrix convention and the same
-accepted stream-only reuse consumer.
+The next narrow step is a five-Regular extension under the same
+source-to-destination matrix convention and the same accepted stream-only reuse
+consumer, if the required per-clip matrices and Jetson runtime are available.
 
 ## Claim Boundary
 
@@ -69,7 +68,8 @@ Allowed:
 ```text
 The startup black exposure in Regular05 has a bounded objective fix candidate:
 constant full-clip FOV scale removes the measured left-edge black border in the
-existing stream-only reuse path.
+existing stream-only reuse path, and the user accepted the Regular05 `const_full`
+review result.
 ```
 
 Forbidden:
@@ -78,6 +78,5 @@ Forbidden:
 Do not present this as EIS quality improvement.
 Do not present it as CUDA-owned bridge success.
 Do not present it as full real-time EIS, zero-copy, or full-pipeline acceleration.
-Do not generalize to all five Regular clips until a five-clip extension is run
-or the decision is explicitly limited to Regular05.
+Do not generalize to all five Regular clips until a five-clip extension is run.
 ```

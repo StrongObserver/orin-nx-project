@@ -47,8 +47,9 @@ Quality boundary -> CPU baseline -> VPI module evidence
 | Nsight/NVTX | `vpiSubmitPerspectiveWarp` about `0.02 ms`; wrapper/sync/transform/lifecycle dominates | Bottleneck attribution |
 | Stream-only reuse | 10-run repeat wall mean `1.946819 s -> 1.843571 s`; stage avg `10.336381 ms -> 9.680414 ms` | Small lifecycle optimization; image wrappers are still recreated |
 | Device-stage repeat / P99 | 10-run stream-only repeat has `rc=0`, fallback `0`, and mean gains, but stream p99 is not better than EGLImage in this small sample | Stability boundary, not a 30-minute endurance claim |
-| Regular05 startup black fix | `constant FOV full` removes measured left-edge startup black exposure: left80 max `0`, black-border p95/max `0` | Objective pass, still pending human visual acceptance because it trades FOV for safety |
-| CUDA-MMAPI route recovery | Failed CUDA-owned bridge is not reused; next candidate is an official-sample-shaped CUDA-to-encoder verifier, identity first | Route decision only, not implementation success |
+| Device-stage 50-run repeat | EGLImage / stream-only / NvBuffer all complete 50/50 with `rc=0`, fallback `0`; stream mean improves slightly but p99 is worse | Stability evidence, not tail-latency win or 30-minute endurance |
+| Regular gate startup black fix | `constant FOV full` is accepted on Regular05 and extended to 5 Regular clips with `rc=0`, fallback `0`, mismatch `0`; Regular01 remains visual-conditional | Display/FOV safety fix, not EIS quality improvement |
+| CUDA-MMAPI official verifier | Official `03_video_cuda_enc` shape runs marker, `dx=8` translate, and affine `dx=8` with coherent output | CUDA-to-encoder ownership verifier, not full transcode-pipeline acceleration |
 | Producer boundary | FIFO/consumer is healthy; stride5 cuts producer-only time `68.5 s -> 15.7 s` for 180 frames | Scheduling trade-off, not full real-time EIS |
 
 ### Architecture
@@ -143,10 +144,15 @@ Current sealed stage:
   CUDA double-surface debug narrows the blocker: full-frame copy is clean, integer translate still tears.
   VPI CUDA-owned bridge is closed as negative evidence and must not be reused
   as an accepted optimization path.
-  Startup black fix constant-FOV-full candidate is objectively clean on measured
-  black-border metrics, but remains pending human visual acceptance.
-  Device-stage repeat/P99 evidence supports a small mean stream-only lifecycle
-  gain, not a proven tail-latency or 30-minute endurance claim.
+  Startup black fix constant-FOV-full candidate is accepted on Regular05 and has
+  been extended to all five Regular clips as a technical run. Regular01 remains
+  visual-conditional because gray-threshold black-border max slightly exceeds
+  1% for two frames while p95 stays below 1%.
+  Device-stage repeat/P99 evidence now includes a 50-run alternating repeat:
+  all three paths are healthy, stream-only has a small mean wall gain, but no
+  tail-latency win is proven.
+  CUDA-MMAPI route recovery now has an official `03_video_cuda_enc` verifier:
+  marker, translate, and affine dx=8 are readable and spatially coherent.
   Backend decision and CUDA-MMAPI route recovery docs now define which routes
   are main results, supporting evidence, negative evidence, or deferred.
 
@@ -688,12 +694,16 @@ docs/nsight_device_stage_profile_result_2026-07-23.md
 docs/device_stage_lifecycle_budget_2026-07-23.md
 docs/device_stage_lifecycle_perf_result_2026-07-23.md
 docs/device_stage_stability_p99_repeat_2026-07-24.md
+docs/device_stage_endurance_50run_2026-07-24.md
 docs/regular_gate_nvbuffer_pair_resid_2026-07-23.md
 docs/cuda_mmapi_interop_safety_verifier_2026-07-24.md
 docs/backend_decision_table_2026-07-24.md
 docs/cuda_mmapi_route_recovery_2026-07-24.md
+docs/cuda_mmapi_official_verifier_2026-07-24.md
 docs/producer_boundary_and_next_route_2026-07-24.md
+docs/producer_first_row_latency_audit_2026-07-24.md
 docs/regular05_startup_black_fix_closeout_2026-07-24.md
+docs/regular_gate_const_fov_full_extension_2026-07-24.md
 ```
 
 Rejected or diagnostic-only routes:

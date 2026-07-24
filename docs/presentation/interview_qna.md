@@ -394,6 +394,21 @@ tail latency solved
 30-minute endurance proven
 ```
 
+The later 50-run repeat made the stability boundary stronger:
+
+```text
+accepted EGLImage: 50/50 rc=0, fallback=0, wall p99 1.993936 s
+stream-only reuse: 50/50 rc=0, fallback=0, wall p99 2.070096 s
+NvBuffer pair:     50/50 rc=0, fallback=0, wall p99 1.994439 s
+```
+
+So the final wording is still conservative:
+
+```text
+all paths are stable in the 50-run repeat; stream-only has a small mean gain,
+but no p99 win is proven.
+```
+
 ## Q: Why not implement queue depth or double buffering now?
 
 Because the current evidence does not show a large removable idle gap. The
@@ -602,6 +617,28 @@ ownership and sync order, I would ask internal AI or an experienced Jetson
 engineer for the exact memory-ownership sequence before coding another broad
 patch.
 
+The next verifier did use the official sample shape. Starting from
+`03_video_cuda_enc`, the project verified CUDA processing before NVENC:
+
+```text
+marker mode:
+  rc=0, 180 readable frames, black-border p95=0
+
+translate dx=8:
+  rc=0, spatial coherence pass
+  band shift spread p95 ~= 0.088 px
+  expected shift error p95 ~= 0.085 px
+
+affine dx=8:
+  rc=0, spatial coherence pass
+  band shift spread p95 ~= 0.084 px
+  expected shift error p95 ~= 0.082 px
+```
+
+This proves CUDA-to-encoder ownership is viable in the official encode sample
+shape. It still does not prove the rejected transcode scratch path is fixed, and
+it is not a full-pipeline acceleration claim.
+
 ## Q: What was the Regular05 startup black fix?
 
 Human review found a brief left-edge black exposure in the first seconds of the
@@ -622,6 +659,22 @@ I still do not mark it accepted automatically because it uses a full-clip
 constant extra FOV-safe scale. That is a visual trade-off: no measured black
 edge, but potentially more field-of-view loss. It needs human acceptance before
 becoming a final quality/display decision.
+
+After review, the user accepted `const_full` for Regular05. `const90` remains
+diagnostic because it still has zooming.
+
+The same constant-FOV-full rule was then extended to five Regular clips through
+the accepted stream-only reuse consumer:
+
+```text
+5/5 rc=0
+5/5 fallback=0
+5/5 frame-index mismatch=0
+```
+
+Regular01 remains visual-conditional because gray-threshold black-border p95 is
+below 1%, but max is slightly above 1% for two frames. The other four clips are
+clean under the current black-border checks.
 
 ## Q: Is the producer path real-time now?
 
@@ -649,6 +702,19 @@ But this is still not full real-time EIS. The remaining issue is producer
 latency and the quality trade-off between offline LP quality and causal or
 bounded-delay smoothing. I would present it as a latency-quality/scheduling
 boundary, not as a finished live product.
+
+The first-row latency audit confirms that FIFO itself is not the bottleneck:
+
+```text
+handoff p95: about 39 us
+LP solve total: about 12.76 s
+mask safety total: about 2.31 s
+producer total: about 15.69 s
+```
+
+So the next useful producer question is not a consumer rewrite. It is whether
+the producer can emit early rows incrementally while preserving the accepted
+bounded-delay quality semantics.
 
 ## Q: Why do source, identity_pad_crop, and wave_safe_pad_crop not show stabilization?
 

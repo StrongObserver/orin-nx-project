@@ -28,9 +28,10 @@ separate.
 | Nsight/NVTX attribution | Accepted EGLImage and NvBuffer pair samples | `VPI:Perspective Warp` about `0.76-0.81 ms`; wrap+submit+sync about `10 ms` under capture | Bottleneck attribution; P6/P7 scheduler work not triggered |
 | Stream-only reuse lifecycle | Same Regular05 source, same `resid_r15_s07` matrix | 10-run repeat: wall mean `1.947 -> 1.844 s`, stage avg `10.336 -> 9.680 ms` | Small accepted lifecycle optimization, not image-wrapper reuse |
 | Stream-only repeat tail | Same 10-run repeat | EGLImage wall p99 `1.981 s`, stream wall p99 `2.041 s`; EGLImage stage p99 `10.600 ms`, stream stage p99 `10.638 ms` | Mean gain only; tail-latency win is not proven |
-| Regular05 startup black fix | Accepted stream-only reuse path, `resid_r15_s07` startup FOV variants | `constant FOV full`: left80 max `0`, black-border p95/max `0` | Objective black-border fix candidate, pending human visual acceptance |
+| Device-stage 50-run repeat | Same Regular05 source/matrix, 50 alternating runs per path | EGLImage/stream/NvBuffer all 50/50 `rc=0`, fallback `0`; stream wall mean `1.885 -> 1.854 s`, stream p99 `2.070 s` | Stability evidence; no p99 win and not 30-minute endurance |
+| Regular gate startup black fix | Accepted stream-only reuse path, `resid_r15_s07` constant-FOV-full matrices | 5/5 `rc=0`, fallback `0`, mismatch `0`; Regular01 p95 black below 1% but max slightly above 1% for 2 frames | Regular05 accepted, five-clip technical run is Regular01 visual-conditional |
 | Backend decision table | All major OpenCV/VPI/CUDA/MMAPI routes | Routes classified as main result, supporting evidence, negative evidence, or deferred | Prevents runnable-but-low-value routes from being overclaimed |
-| CUDA-MMAPI route recovery | After CUDA-owned bridge negative closeout | Next route is official-sample-shaped CUDA-to-encoder verifier, identity first | Route decision only, not implementation success |
+| CUDA-MMAPI official verifier | Jetson Multimedia API `03_video_cuda_enc` shape | marker `rc=0`; translate dx8 coherence pass; affine dx8 coherence pass | CUDA-to-encoder ownership verifier, not accepted full transcode acceleration |
 | Producer boundary | FIFO/consumer plus bounded-delay/stride producer | producer-only `68.5 s -> 15.7 s`; concurrent live stride5 `17.5 s` for 180 frames | Scheduling trade-off, not full real-time EIS |
 
 ## Regular Baselines

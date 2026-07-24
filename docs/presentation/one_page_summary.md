@@ -213,6 +213,14 @@ Stream-only repeat / P99 boundary:
   does not prove a tail-latency win: EGLImage wall p99 is 1.981455 s while
   stream-only wall p99 is 2.040837 s. This is not a 30-minute endurance claim.
 
+50-run device-stage repeat:
+  A later 50-run alternating repeat ran accepted EGLImage, stream-only reuse,
+  and NvBuffer pair under the same Regular05 source and `resid_r15_s07` matrix.
+  All three paths completed 50/50 with rc=0 and fallback=0. Stream-only reuse
+  had a small mean wall-time gain, 1.885004 s -> 1.854220 s, but its wall p99
+  was worse, 1.993936 s -> 2.070096 s. NvBuffer pair was stable but did not
+  beat accepted EGLImage on mean or p99 wall time in this repeat.
+
 Identity warp:
   Identity PerspectiveWarp is only slightly faster than the inclusion matrix
   path, so matrix complexity is not the current bottleneck.
@@ -253,6 +261,13 @@ Producer scheduling:
   This remains a latency-quality and scheduling trade-off story, not full
   real-time EIS.
 
+Producer first-row latency audit:
+  Existing timing shows the startup cost is producer-side matrix generation,
+  not FIFO handoff. LP solve costs about 12.76 s, mask safety about 2.31 s, and
+  the producer total is about 15.69 s, while sampled handoff p95 is about 39 us.
+  A future producer loop should target incremental row emission only if it can
+  preserve the accepted bounded-delay quality semantics.
+
 Five Regular viewport-stable check:
   The accepted EGLImage FIFO consumer ran all five stride5 fixed-scale/crop98
   candidates with rc=0, fallback=0, and mismatch=0. Regular02-05 pass current
@@ -287,11 +302,22 @@ Backend decision / CUDA route recovery:
   Any future CUDA-MMAPI work should start from an official-sample-shaped
   CUDA-to-encoder verifier with identity first, not from the failed bridge.
 
+CUDA-MMAPI official verifier:
+  The official Jetson Multimedia API `03_video_cuda_enc` ownership shape now
+  passes marker, translate dx8, and affine dx8 verification. Marker output is
+  readable with black-border p95=0. Translate and affine both pass spatial
+  coherence, with expected shift error p95 around 0.08 px. This proves a
+  positive CUDA-to-encoder verifier route, but it does not fix the rejected
+  transcode scratch route or prove full-pipeline acceleration.
+
 Regular05 startup black fix:
   The final constant-FOV-full candidate removes the measured left-edge startup
   black exposure on objective checks: left80 max is 0 and black-border p95/max
-  are 0. It remains pending human visual acceptance because it trades extra
-  constant FOV-safe scale for black-edge removal.
+  are 0. The user accepted `const_full` for Regular05 after visual review;
+  `const90` remains diagnostic because it still has zooming. The same
+  constant-FOV-full rule was extended to all five Regular clips with rc=0,
+  fallback=0, and mismatch=0. Regular01 remains visual-conditional because p95
+  black-border is below 1% but max slightly exceeds 1% for two frames.
 ```
 
 Conclusion:
@@ -302,10 +328,12 @@ The strongest acceleration evidence is now PerspectiveWarp module-level
 latency/perf-watt, while the C++ MMAPI/VPI/NVENC path explains the device
 dataflow boundary. The accepted consumer/FIFO path is healthy, but it is not
 zero-copy: wrapper lifecycle, sync, and transform sandwich costs are still
-measured. The accepted quality recovery result is resid_r15_s07. The next best
-proof has now been completed: NVTX/Nsight profiling confirms that the accepted
-C++ stage is wrapper/sync/transform/lifecycle dominated, not limited by the
-PerspectiveWarp submit call alone.
+measured. The accepted quality recovery result is resid_r15_s07. NVTX/Nsight
+profiling confirms that the accepted C++ stage is wrapper/sync/transform/
+lifecycle dominated, not limited by the PerspectiveWarp submit call alone.
+The newest execution loop adds stronger engineering boundaries: constant-FOV-full
+Regular extension, 50-run device-stage repeat, official CUDA-to-encoder verifier,
+and producer first-row latency attribution.
 ```
 
 ## Model Boundary
@@ -374,10 +402,14 @@ docs/nsight_device_stage_profile_result_2026-07-23.md
 results/nsight_device_stage_profile_20260723/
 docs/device_stage_lifecycle_budget_2026-07-23.md
 docs/device_stage_lifecycle_perf_result_2026-07-23.md
+docs/device_stage_endurance_50run_2026-07-24.md
 results/device_stage_lifecycle_perf_20260723/
 docs/vpi_remap_cpp_probe_2026-07-23.md
 docs/remap_mmapi_integration_probe_2026-07-23.md
 docs/remap_native_size_pad_crop_probe_2026-07-23.md
+docs/cuda_mmapi_official_verifier_2026-07-24.md
+docs/producer_first_row_latency_audit_2026-07-24.md
+docs/regular_gate_const_fov_full_extension_2026-07-24.md
 results/vpi_remap_cpp_probe_20260723/
 results/remap_mmapi_integration_probe_20260723/
 results/remap_native_size_pad_crop_probe_20260723/

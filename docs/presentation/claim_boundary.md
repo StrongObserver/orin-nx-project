@@ -26,6 +26,7 @@ wrapper lifecycle, sync, transform cost, and perf/watt trade-offs.
 | Nsight shows wrapper/sync/transform/lifecycle cost dominates | `nsight_device_stage_profile_result_2026-07-23.md` |
 | Stream-only reuse gives a small lifecycle gain | 10-run same-source Regular05 repeat: wall mean `1.947 -> 1.844 s`, stage avg `10.336 -> 9.680 ms` |
 | Stream-only reuse has clean short-repeat health but not proven tail improvement | 10-run repeat: `rc=0`, fallback `0`; stream p99 is not better than EGLImage p99 |
+| Device-stage paths pass 50-run repeat health | `device_stage_endurance_50run_2026-07-24.md`: EGLImage, stream-only, and NvBuffer pair all complete 50/50 with `rc=0` and fallback `0` |
 | VPI Remap can be wired into the native-size MMAPI scratch stage | `remap_native_size_pad_crop_probe_2026-07-23.md`: 640x360 main chain, 640x368 VPI scratch, identity/wave_safe `rc=0` |
 | Dynamic Remap payload rebuild is viable but costly | `vpi_dynamic_remap_payload_probe_2026-07-23.md`: MMAPI dynamic Remap stage avg about `13.14-13.16 ms` |
 | Standalone CUDA dynamic warp is a promising operator candidate | `cuda_dynamic_warp_probe_2026-07-23.md`: RGBA dynamic `0.194 ms`, Y8 dynamic `0.138 ms` |
@@ -33,8 +34,10 @@ wrapper lifecycle, sync, transform cost, and perf/watt trade-offs.
 | CUDA affine MMAPI diagnostic found a non-identity integration boundary | `cuda_affine_mmapi_diagnostic_2026-07-24.md`: identity kernel passes, translate/affine random sampling tears |
 | CUDA double-surface debug narrows the blocker | `cuda_double_surface_debug_2026-07-24.md`: VIC round-trip and CUDA copy pass, integer translate tears |
 | CUDA-owned VPI bridge is negative closeout evidence | `vpi_cuda_owned_bridge_2026-07-24.md`: identity passes and standalone RGBA VPI warp is exact, but non-identity return to NV12/NVENC fails |
-| Regular05 startup black fix has an objective candidate | `regular05_startup_black_fix_closeout_2026-07-24.md`: constant-FOV-full removes measured left-edge black exposure, pending human visual acceptance |
+| Regular05 startup black fix is accepted for Regular05 | `regular05_startup_black_fix_closeout_2026-07-24.md`: constant-FOV-full removes measured left-edge black exposure and was accepted by human review |
+| Regular gate constant-FOV-full technical extension ran | `regular_gate_const_fov_full_extension_2026-07-24.md`: 5/5 `rc=0`, fallback `0`, mismatch `0`; Regular01 remains visual-conditional |
 | Producer/FIFO handoff is healthy but not full real-time | `producer_boundary_and_next_route_2026-07-24.md`: stride5 reduces producer cost, but latency-quality trade-off remains |
+| CUDA-to-encoder official verifier is positive | `cuda_mmapi_official_verifier_2026-07-24.md`: marker, translate dx8, and affine dx8 pass in the official `03_video_cuda_enc` ownership shape |
 
 ## Forbidden Claims
 
@@ -48,6 +51,7 @@ NvBuffer pair is zero-copy.
 Queue depth or double buffering has been proven beneficial.
 Stream-only reuse proves zero-copy.
 Stream-only reuse proves tail-latency improvement or 30-minute endurance.
+50-run repeat proves 30-minute endurance.
 VPI optical flow accelerates our motion estimation.
 Running / Parallax / Crowd are solved.
 The result is product-grade or all-scene EIS quality.
@@ -60,8 +64,10 @@ CUDA/MMAPI interop safety proves accepted CUDA acceleration.
 CUDA affine MMAPI diagnostic proves an accepted warp path.
 CUDA double-surface debug proves CUDA warp acceleration.
 VPI CUDA-owned bridge is an accepted MMAPI warp path.
-The startup black fix is accepted before human review.
+Regular gate constant-FOV-full extension is fully human accepted before Regular01 review.
 Producer stride5 proves full real-time EIS.
+Official CUDA encoder verifier proves the current MMAPI transcode scratch route is fixed.
+Official CUDA encoder verifier proves full-pipeline acceleration.
 ```
 
 ## Precise Wording

@@ -196,6 +196,7 @@ Read:
 ```text
 docs/device_stage_lifecycle_perf_result_2026-07-23.md
 docs/device_stage_stability_p99_repeat_2026-07-24.md
+docs/device_stage_endurance_50run_2026-07-24.md
 docs/presentation/hardware_acceleration_boundary.md
 ```
 
@@ -229,6 +230,9 @@ Stream-only reuse is a small accepted lifecycle optimization.
 Existing repeat evidence supports small mean lifecycle gains and clean
 rc/fallback behavior, but it does not prove a tail-latency win or 30-minute
 endurance.
+The 50-run repeat extends health evidence: EGLImage, stream-only reuse, and
+NvBuffer pair all complete 50/50 with rc=0 and fallback=0. It still does not
+prove stream-only p99 improvement.
 ```
 
 Do not claim:
@@ -252,6 +256,7 @@ docs/cuda_affine_mmapi_diagnostic_2026-07-24.md
 docs/cuda_double_surface_debug_2026-07-24.md
 docs/backend_decision_table_2026-07-24.md
 docs/cuda_mmapi_route_recovery_2026-07-24.md
+docs/cuda_mmapi_official_verifier_2026-07-24.md
 experiments/vpi_cpp_remap_probe/remap_probe.cpp
 ```
 
@@ -316,6 +321,12 @@ CUDA-MMAPI route recovery:
   next possible route is an official-sample-shaped CUDA-to-encoder verifier
   identity/marker must pass before translate, and translate must pass before
   affine or matrix replay
+
+CUDA-MMAPI official verifier:
+  official 03_video_cuda_enc ownership shape is positive
+  marker output is readable and black-border healthy
+  translate dx8 and affine dx8 pass spatial-coherence checks
+  this does not fix the rejected transcode scratch route by itself
 ```
 
 Claim:
@@ -337,6 +348,7 @@ Regular EIS quality improved by Remap
 zero-copy
 accepted MMAPI CUDA acceleration from the safety verifier alone
 accepted MMAPI CUDA acceleration from the CUDA-owned bridge
+full-pipeline acceleration from the official encoder verifier
 ```
 
 ## I Want Startup Black Fix Evidence
@@ -357,15 +369,16 @@ C:\Users\Admin\Videos\orin nx\review\performance\20260724_regular05_startup_blac
 Claim:
 
 ```text
-The `constant FOV full` candidate objectively removes the measured Regular05
-startup left-edge black exposure: left80 max is 0 and black-border p95/max are
-0 in the recorded check.
+The `constant FOV full` candidate removes the measured Regular05 startup
+left-edge black exposure and was accepted by human review on Regular05.
+The five-Regular technical extension ran with rc=0, fallback=0, and mismatch=0;
+Regular01 remains visual-conditional.
 ```
 
 Do not claim:
 
 ```text
-human visual acceptance before the user confirms the FOV/scale trade-off
+five-clip human acceptance before Regular01 review
 EIS quality improvement
 CUDA-owned bridge success
 full real-time EIS
@@ -377,6 +390,7 @@ Read:
 
 ```text
 docs/producer_boundary_and_next_route_2026-07-24.md
+docs/producer_first_row_latency_audit_2026-07-24.md
 docs/regular05_producer_scheduling_optimization_2026-07-20.md
 docs/hybrid_realtime_matrix_handoff_2026-07-19.md
 ```

@@ -1,0 +1,318 @@
+{
+  "schema_version": 1,
+  "contract_id": "orin_engineering_execution_loop_v2",
+  "status": "active",
+  "loop_type": "engineering_execution_p0_p12",
+  "loop_profile": "performance_loop",
+  "autonomy_level": "L3",
+  "required_platform_label": "jetson",
+  "objective": "Execute the user-approved P0-P12 Orin NX engineering loop without exiting early: accept the Regular05 constant-FOV-full startup-black fix, extend or prepare it across Regular gate, collect or prepare endurance/P99 evidence, recover the CUDA-MMAPI verifier route, audit producer first-row latency, synchronize project docs, and checkpoint cleanly.",
+  "entry_context": {
+    "project_positioning": "Jetson Orin NX heterogeneous video compute and device-side dataflow optimization, with EIS as the representative real-time workload.",
+    "quality_anchor": "resid_r15_s07",
+    "accepted_device_path": "MMAPI/NVDEC block-linear NV12 main chain -> NvBufSurfTransform to pitch-linear NV12_ER scratch -> VPI CUDA PerspectiveWarp -> NvBufSurfTransform back to block-linear NV12 -> NVENC",
+    "previous_loop": "configs/harness/contracts/orin_autumn_recruitment_engineering_loop_v1.json",
+    "latest_completed_contract": "configs/harness/contracts/vpi_cuda_owned_bridge_v1.json",
+    "user_visual_observation": "The user reviewed C:/Users/Admin/Videos/orin nx/review/performance/20260724_regular05_startup_black_fix/20260724_regular05_startup_black_fix_source_old_const90_constfull_grid_30fps.mp4 and accepted const_full as matching expectation with no visible defect or zooming. const90 still has zooming but can be ignored if it does not block progress."
+  },
+  "frozen_variables": [
+    "Keep resid_r15_s07 as the accepted Regular quality anchor unless a new explicit quality contract changes it.",
+    "Use source_to_dest matrix convention for Regular device replay.",
+    "Do not revive vpi_cuda_owned_bridge_v1 as an accepted optimization route.",
+    "Do not claim full real-time EIS, zero-copy full chain, full-pipeline acceleration, VPI optical-flow acceleration, or all-scene/product-grade EIS.",
+    "Do not commit oral-template TXT, secrets, results, raw data, review videos, or internal original material."
+  ],
+  "current_results": {
+    "P0": {
+      "status": "completed",
+      "onboard": "pass",
+      "doctor": "pass",
+      "running_main_gate_claim": "forbidden_as_expected"
+    },
+    "P1": {
+      "status": "completed",
+      "decision": "Promoted constant FOV full from objective-pass-pending-review to human accepted for the Regular05 startup-black fix. const90 remains diagnostic because the user still saw zooming there.",
+      "review_video": "C:/Users/Admin/Videos/orin nx/review/performance/20260724_regular05_startup_black_fix/20260724_regular05_startup_black_fix_source_old_const90_constfull_grid_30fps.mp4",
+      "report": "docs/regular05_startup_black_fix_closeout_2026-07-24.md"
+    },
+    "P2": {
+      "status": "completed_visual_conditional",
+      "report": "docs/regular_gate_const_fov_full_extension_2026-07-24.md",
+      "summary_csv": "results/regular_gate_const_fov_full_extension_20260724/regular_gate_const_fov_full_summary.csv",
+      "review_video": "C:/Users/Admin/Videos/orin nx/review/performance/20260724_regular_gate_const_fov_full_extension/20260724_regular_gate_const_fov_full_resid_r15_s07_5clip_grid.mp4",
+      "result": {
+        "rc_zero": "5/5",
+        "fallback_zero": "5/5",
+        "mismatch_zero": "5/5",
+        "black_border_clean": "4/5",
+        "visual_conditional": "regular_gate01_regular_10 has black p95 below 1% but max slightly above 1% for 2 frames; needs human review because this matches prior dark-edge sensitivity."
+      }
+    },
+    "P3": {
+      "status": "completed",
+      "decision": "Use a bounded 50-run alternating repeat as the practical endurance evidence for this loop. Do not claim 30-minute endurance unless a separate longer run is executed.",
+      "runner": "scripts/run_device_stage_endurance.py"
+    },
+    "P4": {
+      "status": "completed",
+      "path": "accepted EGLImage",
+      "runs": 50,
+      "rc0": 50,
+      "fallback_total": 0,
+      "wall_mean_sec": 1.885004,
+      "wall_p99_sec": 1.993936
+    },
+    "P5": {
+      "status": "completed",
+      "path": "stream-only reuse",
+      "runs": 50,
+      "rc0": 50,
+      "fallback_total": 0,
+      "wall_mean_sec": 1.85422,
+      "wall_p99_sec": 2.070096,
+      "stage_avg_mean_ms": 9.786855,
+      "stage_avg_p99_ms": 10.928,
+      "decision": "small mean wall-time gain, but p99 tail is worse than accepted EGLImage in this repeat"
+    },
+    "P6": {
+      "status": "completed",
+      "path": "NvBuffer pair",
+      "runs": 50,
+      "rc0": 50,
+      "fallback_total": 0,
+      "wall_mean_sec": 1.896002,
+      "wall_p99_sec": 1.994439,
+      "stage_avg_mean_ms": 10.050546,
+      "stage_avg_p99_ms": 10.6787,
+      "decision": "stable quality-preserving alternative, but not faster than accepted EGLImage in this repeat"
+    },
+    "P7": {
+      "status": "completed",
+      "report": "docs/cuda_mmapi_official_verifier_2026-07-24.md",
+      "decision": "Use NVIDIA Jetson Multimedia API 03_video_cuda_enc as the official-sample-shaped CUDA-to-encoder verifier route. This avoids the rejected transcode scratch random-sampling path."
+    },
+    "P8": {
+      "status": "completed",
+      "mode": "marker",
+      "rc": 0,
+      "frames": 180,
+      "black_border_p95": 0.0,
+      "max_black_border": 0.000008681,
+      "decision": "official marker verifier output is readable and black-border healthy"
+    },
+    "P9": {
+      "status": "completed",
+      "mode": "translate_dx8",
+      "rc": 0,
+      "frames": 180,
+      "black_border_p95": 0.0125,
+      "band_shift_spread_p95_px": 0.087772,
+      "expected_shift_error_p95_px": 0.084687,
+      "coherence_status": "pass",
+      "decision": "translate output is spatially coherent; black border is expected from dx=8"
+    },
+    "P10": {
+      "status": "completed",
+      "mode": "affine_dx8",
+      "rc": 0,
+      "frames": 180,
+      "black_border_p95": 0.0109375,
+      "band_shift_spread_p95_px": 0.08364,
+      "expected_shift_error_p95_px": 0.082077,
+      "coherence_status": "pass",
+      "decision": "affine matrix path is spatially coherent in the official encode sample shape"
+    },
+    "P11": {
+      "status": "completed",
+      "report": "docs/producer_first_row_latency_audit_2026-07-24.md",
+      "decision": "Producer first-row latency is dominated by producer-side matrix generation, especially LP solve and mask safety, not FIFO handoff or C++ consumer cost.",
+      "key_numbers": {
+        "lp_solve_total_ms": 12756.410,
+        "mask_safety_total_ms": 2308.349,
+        "producer_total_elapsed_ms": 15687.400,
+        "live_wall_time_ms": 17533,
+        "handoff_p95_us": 39.025
+      }
+    },
+    "P12": {
+      "status": "completed",
+      "updated_docs": [
+        "README.md",
+        "docs/presentation/final_benchmark_table.md",
+        "docs/presentation/claim_boundary.md",
+        "docs/evidence_map_2026-07-18.md",
+        "docs/evidence_reader_path.md",
+        "docs/presentation/interview_qna.md",
+        "docs/presentation/README.md",
+        "docs/presentation/one_page_summary.md"
+      ],
+      "validation": {
+        "json_tool": "pass",
+        "onboard": "pass",
+        "doctor": "pass",
+        "running_main_gate_claim": "forbidden_as_expected",
+        "git_diff_check": "pass"
+      },
+      "commit_scope": "source/config/docs/scripts only; oral-template TXT, results, videos, raw data, and secrets excluded"
+    }
+  },
+  "task_queue": [
+    {
+      "id": "P0",
+      "title": "Register execution loop",
+      "objective": "Create this P0-P12 contract, point onboarding and overall loop state to it, and validate control-plane health.",
+      "success_criteria": [
+        "this JSON parses",
+        "onboard points to this contract",
+        "doctor passes",
+        "Running main-gate claim remains forbidden"
+      ]
+    },
+    {
+      "id": "P1",
+      "title": "Startup black fix acceptance closeout",
+      "objective": "Record user acceptance of const_full and update relevant project docs/contracts.",
+      "success_criteria": [
+        "Regular05 constant-FOV-full candidate is marked accepted by human review",
+        "const90 remains diagnostic",
+        "claim boundary still forbids EIS quality, CUDA bridge, zero-copy, or full realtime claims"
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "Regular gate extension",
+      "objective": "Extend or prepare the accepted startup-black/FOV-safe policy across the five Regular clips under frozen source_to_dest semantics.",
+      "success_criteria": [
+        "five Regular route either runs on Jetson or is prepared with a clear hardware blocker",
+        "required checks are rc=0, fallback=0, mismatch=0, readable output, and black-border hard-gate health",
+        "review copies use the categorized review tree"
+      ],
+      "stop_reasons": [
+        "jetson_ssh_or_runtime_blocker",
+        "missing per-clip matrix inputs",
+        "visual or black-border regression"
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Endurance contract design",
+      "objective": "Define the 20-30 minute or repeat-run device-stage endurance protocol.",
+      "success_criteria": [
+        "metrics include rc, fallback, mismatch, output readability, wall/stage p50/p95/p99, temperature/activity, and power-source label",
+        "same-input and same-matrix semantics are frozen",
+        "30-minute claim is not made unless actually measured"
+      ]
+    },
+    {
+      "id": "P4",
+      "title": "Accepted EGLImage endurance",
+      "objective": "Run or prepare the accepted EGLImage baseline endurance evidence.",
+      "success_criteria": [
+        "accepted EGLImage has endurance or repeat summary",
+        "fallback remains zero",
+        "tail metrics are recorded"
+      ]
+    },
+    {
+      "id": "P5",
+      "title": "Stream-only reuse endurance",
+      "objective": "Run or prepare stream-only reuse endurance evidence against accepted EGLImage.",
+      "success_criteria": [
+        "same scope as accepted EGLImage",
+        "mean and p99 are compared honestly",
+        "no tail-latency win is claimed unless measured"
+      ]
+    },
+    {
+      "id": "P6",
+      "title": "NvBuffer pair endurance",
+      "objective": "Run or prepare NvBuffer pair endurance evidence as a dataflow alternative.",
+      "success_criteria": [
+        "same source and matrix",
+        "quality-preserving boundary remains explicit",
+        "no zero-copy claim"
+      ]
+    },
+    {
+      "id": "P7",
+      "title": "CUDA-MMAPI route recovery",
+      "objective": "Use local official samples, local knowledge routing, and public references to settle the next CUDA-MMAPI verifier route.",
+      "success_criteria": [
+        "one concrete route, one risk, and one verifier are identified",
+        "if unclear, internal-AI prompt is produced in chat",
+        "failed CUDA-owned bridge is not reused"
+      ]
+    },
+    {
+      "id": "P8",
+      "title": "CUDA identity/marker verifier",
+      "objective": "Run or prepare official-sample-shaped identity/marker CUDA-to-encoder verifier.",
+      "success_criteria": [
+        "identity or marker output is readable",
+        "no green output, tearing, or unrelated content",
+        "black-border and source-diff checks are recorded"
+      ]
+    },
+    {
+      "id": "P9",
+      "title": "CUDA translate verifier",
+      "objective": "Run integer translate only after identity/marker passes.",
+      "success_criteria": [
+        "translate is spatially coherent",
+        "no band tearing",
+        "ideal-reference comparison is recorded"
+      ]
+    },
+    {
+      "id": "P10",
+      "title": "CUDA affine/matrix verifier",
+      "objective": "Run affine or source_to_dest matrix replay only after translate passes.",
+      "success_criteria": [
+        "matrix output is readable",
+        "fallback and mismatch are zero if matrix replay is used",
+        "no accepted acceleration claim before same-input timing and visual correctness"
+      ]
+    },
+    {
+      "id": "P11",
+      "title": "Producer first-row latency audit",
+      "objective": "Audit the existing producer/FIFO startup latency and decide whether a small follow-up is worthwhile.",
+      "success_criteria": [
+        "startup wait source is classified",
+        "technical feasibility and autumn-recruitment ROI are separated",
+        "no full-real-time claim is made"
+      ]
+    },
+    {
+      "id": "P12",
+      "title": "Sync docs and checkpoint",
+      "objective": "Update docs/contracts with measured outcomes, validate control plane, commit clean source/config/docs scope, and report status.",
+      "success_criteria": [
+        "JSON parses",
+        "onboard and doctor pass",
+        "Running main-gate claim remains forbidden",
+        "git diff --check passes",
+        "commit excludes oral-template TXT, results, videos, raw data, and secrets"
+      ]
+    }
+  ],
+  "knowledge_recovery_policy": {
+    "order": [
+      "try local diagnosis first",
+      "read docs/knowledge_base/routing.md and matched source summaries after a real blocker",
+      "search official/public sources when local knowledge is insufficient",
+      "inspect external code only if it plausibly solves the exact blocker",
+      "if still blocked, stop the loop and report the blocker in chat with an internal-AI prompt"
+    ]
+  },
+  "expected_outputs": [
+    "configs/harness/contracts/orin_engineering_execution_loop_v2.json",
+    "updated startup-black closeout with human acceptance",
+    "Regular gate extension evidence or prepared run contract",
+    "endurance/P99 protocol and evidence or hardware blocker",
+    "CUDA-MMAPI verifier route result or internal-AI prompt",
+    "producer first-row latency audit",
+    "updated presentation/evidence docs",
+    "clean checkpoint commit"
+  ]
+}
